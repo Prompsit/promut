@@ -2,8 +2,9 @@ from app.models import User, Corpus, Engine, RunningEngines
 from app.utils import user_utils, utils, datatables
 from app.utils.trainer import Trainer
 from app import db, app
-from flask import Blueprint, render_template, request, jsonify, redirect, escape, url_for
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from flask_login import login_required
+from markupsafe import escape
 
 import shutil
 import psutil

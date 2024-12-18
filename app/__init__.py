@@ -17,7 +17,23 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
-babel = Babel(app)
+
+"""
+def get_locale():
+    if "LANGUAGES" not in app.config:
+        return "en"
+    if user_utils.isUserLoginEnabled() and current_user.is_authenticated and current_user.lang in list(app.config["LANGUAGES"].keys()):
+        return current_user.lang  if current_user.lang != None else "en"
+    elif 'lang' in session and session['lang'] in list(app.config["LANGUAGES"].keys()):
+        return session['lang']
+    else:
+        result = request.accept_languages.best_match(list(app.config["LANGUAGES"].keys()))
+    return result if result != None else "en"
+"""
+
+from app.utils import lang_utils
+
+babel = Babel(app, locale_selector=lang_utils.get_locale)
 dropzone = Dropzone(app)
 migrate = Migrate(app, db)
 
@@ -48,23 +64,24 @@ blueprints = [["/auth", auth_blueprint],
 for blueprint in blueprints:
     app.register_blueprint(blueprint[1], url_prefix=blueprint[0])
 
-from app import routes, models
+from app import routes, models, app
 
-db.create_all()
-db.session.commit()
-
-for running_engine in models.RunningEngines.query.all():
-    db.session.delete(running_engine)    
+with app.app_context():
+    db.create_all()
     db.session.commit()
 
-TOPICS = ["General", "Technical", "Legal", "Financial", "Medical", "Religion", "Politics", "Administrative",
-          "Subtitles", "Patents", "News", "Books", "Other"]
+    for running_engine in models.RunningEngines.query.all():
+        db.session.delete(running_engine)    
+        db.session.commit()
 
-for topic in TOPICS:
-    if models.Topic.query.filter_by(name=topic).first() is None:
-        topic_obj = models.Topic(name=topic)
-        db.session.add(topic_obj)
-db.session.commit()
+    TOPICS = ["General", "Technical", "Legal", "Financial", "Medical", "Religion", "Politics", "Administrative",
+            "Subtitles", "Patents", "News", "Books", "Other"]
+
+    for topic in TOPICS:
+        if models.Topic.query.filter_by(name=topic).first() is None:
+            topic_obj = models.Topic(name=topic)
+            db.session.add(topic_obj)
+    db.session.commit()
 
 folders = ['USERSPACE_FOLDER', 'STORAGE_FOLDER', 'FILES_FOLDER', 'ENGINES_FOLDER', 'USERS_FOLDER']
 

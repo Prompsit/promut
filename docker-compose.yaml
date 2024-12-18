@@ -4,10 +4,14 @@ services:
     mutnmt:
         container_name: mutnmt
         image: mutnmt:latest
+        build: .
         ports:
-            - 5000:5000
+            - "8086:5000"
         environment: 
-            - DEBUG=0
+            DEBUG: 1
+            CREDENTIALS_USERNAME: admin
+            CREDENTIALS_PASSWORD: admin
+            SHELL: /bin/bash
         volumes:
             - ./data:/opt/mutnmt/data
             - ./app/preloaded:/opt/mutnmt/app/preloaded
@@ -15,7 +19,6 @@ services:
             resources:
                 reservations:
                     devices:
-                        -
-                            driver: nvidia
-                            count: all
-                            capabilities: [gpu, utility]
+                        - driver: nvidia
+                          device_ids: ['0']
+                          capabilities: [gpu, utility]

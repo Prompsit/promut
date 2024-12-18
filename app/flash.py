@@ -1,4 +1,5 @@
-from flask import flash, Markup
+from flask import flash
+from markupsafe import Markup 
 from enum import Enum
 
 class Flash(Enum):

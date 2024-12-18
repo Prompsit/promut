@@ -11,14 +11,11 @@ mkdir -p /opt/mutnmt/data/userspace
 cd $ROOT
 source venv/bin/activate
 
-gunicorn -w 4 -b 0.0.0.0:5000 -k gevent --daemon --access-logfile $ROOT/data/logs/gunicorn.log --error-logfile $ROOT/data/logs/gunicorn-error.log app:app
-
 redis-server conf/redis.conf
 
-nohup celery worker --workdir $ROOT \
-                    -A app.utils.tasks.celery --loglevel=info \
-                    --max-tasks-per-child 1 \
-                    --logfile=$ROOT/data/logs/celery-worker.log &
+celery -A app.utils.tasks.celery --workdir $ROOT worker \
+		--loglevel=info \
+		--logfile=$ROOT/data/logs/celery-worker.log --detach
 
 if [ -z "$DEBUG" ] || [ "$DEBUG" == "0" ]
 then

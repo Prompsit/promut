@@ -3,7 +3,7 @@ from app import db, app
 from app.utils.power import PowerUtils
 from app.utils import tasks
 from app.utils.GPUManager import GPUManager
-from celery.task.control import revoke
+from celery.app.control import Control
 
 import datetime
 import logging
@@ -25,7 +25,10 @@ class Trainer(object):
     @staticmethod
     def finish(engine):
         if engine.bg_task_id is not None:
-            revoke(engine.bg_task_id, terminate=True)
+            # Changed revoke() method to be used directly from the celery.app.control.Control class
+            # if this does not work or any errors happen, then change it
+            # DELETE THESE COMMENTS IF THIS DOES NOT HAPPEN
+            Control.revoke(engine.bg_task_id, terminate=True)
             engine.bg_task_id = None
         
         if engine.pid is not None:

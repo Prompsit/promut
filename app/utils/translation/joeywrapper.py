@@ -3,21 +3,45 @@
 from app import app
 from app.utils.GPUManager import GPUManager
 
-from torchtext.legacy import data
-from torchtext.legacy.data import Dataset, Iterator, Field
+#from torchtext.legacy import data
+#from torchtext.legacy.data import Dataset, Iterator, Field
 
-from joeynmt.helpers import load_config, get_latest_checkpoint, \
-    load_checkpoint
-from joeynmt.vocabulary import build_vocab
-from joeynmt.model import build_model
-from joeynmt.prediction import validate_on_data
-from joeynmt.constants import UNK_TOKEN, EOS_TOKEN, BOS_TOKEN, PAD_TOKEN
+#from joeynmt.helpers import load_config, get_latest_checkpoint, load_checkpoint
+#from joeynmt.vocabulary import build_vocab
+#from joeynmt.model import build_model
+#from joeynmt.prediction import validate_on_data
+#from joeynmt.constants import UNK_TOKEN, EOS_TOKEN, BOS_TOKEN, PAD_TOKEN
 
 import os
 import logging
 import sys
 import time
 
+class MonoLineDataset():
+    @staticmethod
+    def sort_key(ex):
+        return None
+
+class JoeyWrapper:
+    def __init__(self, engine_path, is_admin):
+        return None
+
+    def load(self):
+        return None
+
+    def load_line_as_data(self, line, level, lowercase, src_vocab, trg_vocab):
+        return None
+
+    def joey_translate(self, message_text, model, src_vocab, trg_vocab,
+              logger, beam_size, beam_alpha, level, lowercase,
+              max_output_length, use_cuda, nbest, cuda_device):
+
+       return None
+
+    def translate(self, line, nbest=1):
+        return None 
+
+"""
 class MonoLineDataset(Dataset):
     @staticmethod
     def sort_key(ex):
@@ -153,3 +177,4 @@ class JoeyWrapper:
                             cuda_device=cuda_device)
         else:
             return None
+"""
