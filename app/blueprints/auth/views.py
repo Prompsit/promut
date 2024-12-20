@@ -114,8 +114,8 @@ def demo_log_in():
 
     # If demo user is not present, add
     if User.query.filter_by(demo=True).first() is None:
-        demo_user = User(id=-1, username='Amun', social_id='DEMO', email='demo@example.com', demo=True,
-                         avatar_url='/img/amun.png')
+        demo_user = User(id=-1, username='Amun-PRO', social_id='DEMO', email='demo@example.com', demo=True,
+                         avatar_url='/img/amun.png', admin=True)
         db.session.add(demo_user)
         db.session.commit()
 

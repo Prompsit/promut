@@ -51,211 +51,211 @@ logger = get_task_logger(__name__)
 def launch_training(self, user_id, engine_path, params):
     # Performs necessary steps to configure an engine
     # and get it ready for training
-
-    engine = Engine(path = engine_path)
-    engine.uploader_id = user_id
-    engine.status = "launching"
-    engine.bg_task_id = self.request.id
-
-    db.session.add(engine)
-    db.session.commit()
-
-    used_corpora = {}
-
-    try:
-        os.mkdir(engine_path)
-    except:
-        Flash.issue("The engine could not be created", Flash.ERROR)
-        return url_for('train.train_index', id=id)
-
-    def join_corpora(list_name, phase, source_lang, target_lang):
-        corpus = Corpus(owner_id=user_id, visible=False)
-        for train_corpus in params[list_name]:
-            corpus_data = json.loads(train_corpus)
-            corpus_id = corpus_data['id']
-            corpus_size = corpus_data['size']
-
-            if corpus_id not in used_corpora: used_corpora[corpus_id] = 0
-
-            try:
-                og_corpus = Corpus.query.filter_by(id = corpus_id).first()
-
-                # We relate the original corpus with this engine in the database,
-                # for informational purposes. This way the user will be able to know
-                # which corpora were used to train the engine
-                engine.engine_corpora.append(Corpus_Engine(corpus=og_corpus, engine=engine, phase=phase, is_info=True, selected_size=corpus_size))
-
-                corpus.user_source_id = og_corpus.user_source_id
-                corpus.user_target_id = og_corpus.user_target_id
-                for file_entry in og_corpus.corpus_files:
-                    with open(file_entry.file.path, 'rb') as file_d:
-                        db_file = data_utils.upload_file(FileStorage(stream=file_d, filename=file_entry.file.name),
-                                    file_entry.file.user_language_id, selected_size=corpus_size, offset=used_corpora[corpus_id],
-                                    user_id=user_id)
-                    corpus.corpus_files.append(Corpus_File(db_file, role="source" if file_entry.file.language.code == source_lang else "target"))
-                used_corpora[corpus_id] += corpus_size
-            except:
-                raise Exception
-
-        try:
-            db.session.add(corpus)
-            db.session.commit()
-        except:
-            db.session.rollback()
-            raise Exception
-
-        # We put the contents of the several files in a new single one, and we shuffle the sentences
-        try:
-            data_utils.join_corpus_files(corpus, shuffle=True, user_id=user_id)
-        except:
-            db.session.delete(corpus)
-            db.session.commit()
-            raise Exception
-
-        return corpus
-
-    try:
-        train_corpus = join_corpora('training[]', phase="train", source_lang=params['source_lang'], target_lang=params['target_lang'])
-        dev_corpus = join_corpora('dev[]', phase="dev", source_lang=params['source_lang'], target_lang=params['target_lang'])
-        test_corpus = join_corpora('test[]', phase="test", source_lang=params['source_lang'], target_lang=params['target_lang'])
-
-        # We train a SentencePiece model using the training corpus and we tokenize
-        # everything with that. We save the model in the engine folder to tokenize
-        # translation input later
-        data_utils.train_tokenizer(engine, train_corpus, params['vocabularySize'])
-        data_utils.tokenize(train_corpus, engine)
-        data_utils.tokenize(dev_corpus, engine)
-        data_utils.tokenize(test_corpus, engine)
-
-        engine.name = params['nameText']
-        engine.description = params['descriptionText']
-        engine.model_path = os.path.join(engine.path, "model")
-
-        source_lang = UserLanguage.query.filter_by(code=params['source_lang'], user_id=user_id).one()
-        engine.user_source_id = source_lang.id
-
-        target_lang = UserLanguage.query.filter_by(code=params['target_lang'], user_id=user_id).one()
-        engine.user_target_id = target_lang.id
-
-        engine.engine_corpora.append(Corpus_Engine(corpus=train_corpus, engine=engine, phase="train"))
-        engine.engine_corpora.append(Corpus_Engine(corpus=dev_corpus, engine=engine, phase="dev"))
-        engine.engine_corpora.append(Corpus_Engine(corpus=test_corpus, engine=engine, phase="test"))
-
-        engine.status = "training_pending"
-        engine.launched = datetime.datetime.utcnow().replace(tzinfo=None)
-
-        user = User.query.filter_by(id = user_id).first()
-        user.user_engines.append(LibraryEngine(engine=engine, user=user))
-
-        config_file_path = os.path.join(engine.path, 'config.yaml')
-
-        shutil.copyfile(os.path.join(app.config['BASE_CONFIG_FOLDER'], 'transformer-small.yaml'), config_file_path)
+    with app.app_context():
+        engine = Engine(path = engine_path)
+        engine.uploader_id = user_id
+        engine.status = "launching"
+        engine.bg_task_id = self.request.id
 
         db.session.add(engine)
         db.session.commit()
 
-        # Engine configuration
-        config = None
+        used_corpora = {}
 
         try:
-            with open(config_file_path, 'r') as config_file:
-                config = yaml.load(config_file, Loader=yaml.FullLoader)
+            os.mkdir(engine_path)
         except:
-            raise Exception
+            Flash.issue("The engine could not be created", Flash.ERROR)
+            return url_for('train.train_index', id=id)
 
-        config["data"]["src"] = engine.source.code
-        config["data"]["trg"] = engine.target.code
+        def join_corpora(list_name, phase, source_lang, target_lang):
+            corpus = Corpus(owner_id=user_id, visible=False)
+            for train_corpus in params[list_name]:
+                corpus_data = json.loads(train_corpus)
+                corpus_id = corpus_data['id']
+                corpus_size = corpus_data['size']
 
-        def link_files(corpus, phase):
-            for file_entry in corpus.corpus_files:
-                tok_path = '{}.mut.spe'.format(file_entry.file.path)
-                tok_name = phase
+                if corpus_id not in used_corpora: used_corpora[corpus_id] = 0
 
-                os.link(tok_path, os.path.join(engine.path, '{}.{}'.format(tok_name, 
-                        params['source_lang'] if file_entry.role == "source" else params['target_lang'])))
+                try:
+                    og_corpus = Corpus.query.filter_by(id = corpus_id).first()
 
-                config["data"][phase] = os.path.join(engine.path, tok_name)
-                config["training"]["model_dir"] = os.path.join(engine.path, "model")
+                    # We relate the original corpus with this engine in the database,
+                    # for informational purposes. This way the user will be able to know
+                    # which corpora were used to train the engine
+                    engine.engine_corpora.append(Corpus_Engine(corpus=og_corpus, engine=engine, phase=phase, is_info=True, selected_size=corpus_size))
+
+                    corpus.user_source_id = og_corpus.user_source_id
+                    corpus.user_target_id = og_corpus.user_target_id
+                    for file_entry in og_corpus.corpus_files:
+                        with open(file_entry.file.path, 'rb') as file_d:
+                            db_file = data_utils.upload_file(FileStorage(stream=file_d, filename=file_entry.file.name),
+                                        file_entry.file.user_language_id, selected_size=corpus_size, offset=used_corpora[corpus_id],
+                                        user_id=user_id)
+                        corpus.corpus_files.append(Corpus_File(db_file, role="source" if file_entry.file.language.code == source_lang else "target"))
+                    used_corpora[corpus_id] += corpus_size
+                except:
+                    raise Exception
+
+            try:
+                db.session.add(corpus)
+                db.session.commit()
+            except:
+                db.session.rollback()
+                raise Exception
+
+            # We put the contents of the several files in a new single one, and we shuffle the sentences
+            try:
+                data_utils.join_corpus_files(corpus, shuffle=True, user_id=user_id)
+            except:
+                db.session.delete(corpus)
+                db.session.commit()
+                raise Exception
+
+            return corpus
 
         try:
-            link_files(train_corpus, "train")
-            link_files(dev_corpus, "dev")
-            link_files(test_corpus, "test")
+            train_corpus = join_corpora('training[]', phase="train", source_lang=params['source_lang'], target_lang=params['target_lang'])
+            dev_corpus = join_corpora('dev[]', phase="dev", source_lang=params['source_lang'], target_lang=params['target_lang'])
+            test_corpus = join_corpora('test[]', phase="test", source_lang=params['source_lang'], target_lang=params['target_lang'])
+
+            # We train a SentencePiece model using the training corpus and we tokenize
+            # everything with that. We save the model in the engine folder to tokenize
+            # translation input later
+            data_utils.train_tokenizer(engine, train_corpus, params['vocabularySize'])
+            data_utils.tokenize(train_corpus, engine)
+            data_utils.tokenize(dev_corpus, engine)
+            data_utils.tokenize(test_corpus, engine)
+
+            engine.name = params['nameText']
+            engine.description = params['descriptionText']
+            engine.model_path = os.path.join(engine.path, "model")
+
+            source_lang = UserLanguage.query.filter_by(code=params['source_lang'], user_id=user_id).one()
+            engine.user_source_id = source_lang.id
+
+            target_lang = UserLanguage.query.filter_by(code=params['target_lang'], user_id=user_id).one()
+            engine.user_target_id = target_lang.id
+
+            engine.engine_corpora.append(Corpus_Engine(corpus=train_corpus, engine=engine, phase="train"))
+            engine.engine_corpora.append(Corpus_Engine(corpus=dev_corpus, engine=engine, phase="dev"))
+            engine.engine_corpora.append(Corpus_Engine(corpus=test_corpus, engine=engine, phase="test"))
+
+            engine.status = "training_pending"
+            engine.launched = datetime.datetime.utcnow().replace(tzinfo=None)
+
+            user = User.query.filter_by(id = user_id).first()
+            user.user_engines.append(LibraryEngine(engine=engine, user=user))
+
+            config_file_path = os.path.join(engine.path, 'config.yaml')
+
+            shutil.copyfile(os.path.join(app.config['BASE_CONFIG_FOLDER'], 'transformer-small.yaml'), config_file_path)
+
+            db.session.add(engine)
+            db.session.commit()
+
+            # Engine configuration
+            config = None
+
+            try:
+                with open(config_file_path, 'r') as config_file:
+                    config = yaml.load(config_file, Loader=yaml.FullLoader)
+            except:
+                raise Exception
+
+            config["data"]["src"] = engine.source.code
+            config["data"]["trg"] = engine.target.code
+
+            def link_files(corpus, phase):
+                for file_entry in corpus.corpus_files:
+                    tok_path = '{}.mut.spe'.format(file_entry.file.path)
+                    tok_name = phase
+
+                    os.link(tok_path, os.path.join(engine.path, '{}.{}'.format(tok_name, 
+                            params['source_lang'] if file_entry.role == "source" else params['target_lang'])))
+
+                    config["data"][phase] = os.path.join(engine.path, tok_name)
+                    config["training"]["model_dir"] = os.path.join(engine.path, "model")
+
+            try:
+                link_files(train_corpus, "train")
+                link_files(dev_corpus, "dev")
+                link_files(test_corpus, "test")
+            except:
+                raise Exception 
+
+            # Get vocabulary
+            vocabulary_path = os.path.join(engine.path, "train.vocab")
+            config["data"]["src_vocab"] = vocabulary_path
+            config["data"]["trg_vocab"] = vocabulary_path
+            
+            config["name"] = engine.name
+            config["training"]["epochs"] = int(params['epochsText'])
+            config["training"]["patience"] = int(params['patienceTxt'])
+            config["training"]["batch_size"] = int(params['batchSizeTxt'])
+            config["training"]["validation_freq"] = int(params['validationFreq'])
+            config["testing"]["beam_size"] = int(params['beamSizeTxt'])
+
+            with open(config_file_path, 'w') as config_file:
+                yaml.dump(config, config_file)
+
+            engine.status = "ready"
+            engine.bg_task_id = None
+            db.session.commit()
+
+            return engine.id
         except:
-            raise Exception 
+            db.session.delete(engine)
+            db.session.commit()
 
-        # Get vocabulary
-        vocabulary_path = os.path.join(engine.path, "train.vocab")
-        config["data"]["src_vocab"] = vocabulary_path
-        config["data"]["trg_vocab"] = vocabulary_path
-        
-        config["name"] = engine.name
-        config["training"]["epochs"] = int(params['epochsText'])
-        config["training"]["patience"] = int(params['patienceTxt'])
-        config["training"]["batch_size"] = int(params['batchSizeTxt'])
-        config["training"]["validation_freq"] = int(params['validationFreq'])
-        config["testing"]["beam_size"] = int(params['beamSizeTxt'])
-
-        with open(config_file_path, 'w') as config_file:
-            yaml.dump(config, config_file)
-
-        engine.status = "ready"
-        engine.bg_task_id = None
-        db.session.commit()
-
-        return engine.id
-    except:
-        db.session.delete(engine)
-        db.session.commit()
-
-        Flash.issue("The engine could not be configured", Flash.ERROR)
-        return -1
+            Flash.issue("The engine could not be configured", Flash.ERROR)
+            return -1
 
 @celery.task(bind=True)
 def train_engine(self, engine_id, is_admin):
     # Trains an engine by calling JoeyNMT and keeping
     # track of its progress
-
-    engine = Engine.query.filter_by(id=engine_id).first()
-    engine.status = "launching"
-    db.session.commit()
-
-    gpu_id = GPUManager.wait_for_available_device(is_admin=is_admin)
-    engine.gid = gpu_id
-    db.session.commit()
-
-    try:
-        env = os.environ.copy()
-        env["CUDA_VISIBLE_DEVICES"] = "{}".format(gpu_id)
-        running_joey = subprocess.Popen(["python3", "-m", "joeynmt", "train", "-t",
-                                                os.path.join(engine.path, "config.yaml")], cwd=app.config['JOEYNMT_FOLDER'],
-                                                env=env)
-
-        engine.status = "training"
-        engine.pid = running_joey.pid
+    with app.app_context():
+        engine = Engine.query.filter_by(id=engine_id).first()
+        engine.status = "launching"
         db.session.commit()
 
-        # Trainings are limited to 1 hour
-        start = datetime.datetime.now()
-        difference = 0
-
-        while difference < 3600:
-            time.sleep(10)
-            difference = (datetime.datetime.now() - start).total_seconds()
-            if running_joey.poll() is not None:
-                # JoeyNMT finished (or died) before timeout
-                db.session.refresh(engine)
-                if engine.status != "stopped" and engine.status != "stopped_admin":
-                    Trainer.stop(engine_id)
-                GPUManager.free_device(gpu_id)
-                return
-
-        if running_joey.poll() is None:
-            Trainer.stop(engine_id)
-    finally:
-        engine.status = "stopped"
-        GPUManager.free_device(gpu_id)
+        gpu_id = GPUManager.wait_for_available_device(is_admin=is_admin)
+        engine.gid = gpu_id
         db.session.commit()
+
+        try:
+            env = os.environ.copy()
+            env["CUDA_VISIBLE_DEVICES"] = "{}".format(gpu_id)
+            running_joey = subprocess.Popen(["python3", "-m", "joeynmt", "train", "-t",
+                                                    os.path.join(engine.path, "config.yaml")], cwd=app.config['JOEYNMT_FOLDER'],
+                                                    env=env)
+
+            engine.status = "training"
+            engine.pid = running_joey.pid
+            db.session.commit()
+
+            # Trainings are limited to 1 hour
+            start = datetime.datetime.now()
+            difference = 0
+
+            while difference < 3600:
+                time.sleep(10)
+                difference = (datetime.datetime.now() - start).total_seconds()
+                if running_joey.poll() is not None:
+                    # JoeyNMT finished (or died) before timeout
+                    db.session.refresh(engine)
+                    if engine.status != "stopped" and engine.status != "stopped_admin":
+                        Trainer.stop(engine_id)
+                    GPUManager.free_device(gpu_id)
+                    return
+
+            if running_joey.poll() is None:
+                Trainer.stop(engine_id)
+        finally:
+            engine.status = "stopped"
+            GPUManager.free_device(gpu_id)
+            db.session.commit()
 
 @celery.task(bind=True)
 def monitor_training(self, engine_id):    
@@ -275,8 +275,8 @@ def monitor_training(self, engine_id):
                 redis_conn.hset("power_value", engine_id, power + current_power)
                 redis_conn.hset("power_update", engine_id, updates)
                 engine.power = int(power + current_power) / updates
-
-                db.session.commit()
+                with app.app_context():
+                    db.session.commit()
 
                 time.sleep(10)
                 monitor()
@@ -288,43 +288,44 @@ def monitor_training(self, engine_id):
 
 @celery.task(bind=True)
 def test_training(self, engine_id):
-    try:
-        engine = Engine.query.filter_by(id=engine_id).first()
-        test_dec_file = Corpus_File.query.filter_by(role = "target") \
-                        .filter(Corpus_File.corpus_id.in_(db.session.query(Corpus_Engine.corpus_id) \
-                        .filter_by(engine_id=engine_id, phase = "test", is_info=False))).first().file.path
+    with app.app_context():
+        try:
+            engine = Engine.query.filter_by(id=engine_id).first()
+            test_dec_file = Corpus_File.query.filter_by(role = "target") \
+                            .filter(Corpus_File.corpus_id.in_(db.session.query(Corpus_Engine.corpus_id) \
+                            .filter_by(engine_id=engine_id, phase = "test", is_info=False))).first().file.path
 
-        bleu = 0.0
+            bleu = 0.0
 
-        _, hyps_tmp_file = utils.tmpfile()
-        _, test_crop_file = utils.tmpfile()
-        joey_translate = subprocess.Popen("cat {} | head -n 2000 | python3 -m joeynmt translate {} > {}" \
-                                            .format(os.path.join(engine.path, 'test.' + engine.source.code), os.path.join(engine.path, 'config.yaml'), hyps_tmp_file),
-                                            cwd=app.config['JOEYNMT_FOLDER'], shell=True)
-        joey_translate.wait()
+            _, hyps_tmp_file = utils.tmpfile()
+            _, test_crop_file = utils.tmpfile()
+            joey_translate = subprocess.Popen("cat {} | head -n 2000 | python3 -m joeynmt translate {} > {}" \
+                                                .format(os.path.join(engine.path, 'test.' + engine.source.code), os.path.join(engine.path, 'config.yaml'), hyps_tmp_file),
+                                                cwd=app.config['JOEYNMT_FOLDER'], shell=True)
+            joey_translate.wait()
 
-        decode_hyps = subprocess.Popen("cat {} | head -n 2000 | spm_decode --model={} --input_format=piece > {}.dec" \
-                                            .format(hyps_tmp_file, os.path.join(engine.path, 'train.model'), hyps_tmp_file),
-                                            cwd=app.config['MUTNMT_FOLDER'], shell=True)
-        decode_hyps.wait()
+            decode_hyps = subprocess.Popen("cat {} | head -n 2000 | spm_decode --model={} --input_format=piece > {}.dec" \
+                                                .format(hyps_tmp_file, os.path.join(engine.path, 'train.model'), hyps_tmp_file),
+                                                cwd=app.config['MUTNMT_FOLDER'], shell=True)
+            decode_hyps.wait()
 
-        crop_test = subprocess.Popen("cat {} | head -n 2000 > {}".format(test_dec_file, test_crop_file), cwd=app.config['MUTNMT_FOLDER'], shell=True)
-        crop_test.wait()
+            crop_test = subprocess.Popen("cat {} | head -n 2000 > {}".format(test_dec_file, test_crop_file), cwd=app.config['MUTNMT_FOLDER'], shell=True)
+            crop_test.wait()
 
-        sacreBLEU = subprocess.Popen("cat {}.dec | sacrebleu -b {}".format(hyps_tmp_file, test_crop_file),
-                            cwd=app.config['MUTNMT_FOLDER'], shell=True, stdout=subprocess.PIPE)
-        sacreBLEU.wait()
+            sacreBLEU = subprocess.Popen("cat {}.dec | sacrebleu -b {}".format(hyps_tmp_file, test_crop_file),
+                                cwd=app.config['MUTNMT_FOLDER'], shell=True, stdout=subprocess.PIPE)
+            sacreBLEU.wait()
 
-        score = sacreBLEU.stdout.readline().decode("utf-8")
+            score = sacreBLEU.stdout.readline().decode("utf-8")
 
-        engine.test_task_id = None
-        engine.test_score = float(score)
-        db.session.commit()
+            engine.test_task_id = None
+            engine.test_score = float(score)
+            db.session.commit()
 
-        return { "bleu": float(score) }
-    except Exception as e:
-        db.session.rollback()
-        raise e
+            return { "bleu": float(score) }
+        except Exception as e:
+            db.session.rollback()
+            raise e
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 # Translation tasks
@@ -336,12 +337,13 @@ def launch_engine(user_id, engine_id, is_admin):
     translator = JoeyWrapper(engine.path, is_admin)
     translator.load()
 
-    # If this user is already using another engine, we switch
-    user_engine = RunningEngines.query.filter_by(user_id=user_id).first()
-    if user_engine: db.session.delete(user_engine)
+    with app.app_context():
+        # If this user is already using another engine, we switch
+        user_engine = RunningEngines.query.filter_by(user_id=user_id).first()
+        if user_engine: db.session.delete(user_engine)
 
-    user.user_running_engines.append(RunningEngines(engine=engine, user=user))
-    db.session.commit()
+        user.user_running_engines.append(RunningEngines(engine=engine, user=user))
+        db.session.commit()
 
     tokenizer = Tokenizer(engine)
     tokenizer.load()
@@ -368,11 +370,12 @@ def translate_text(self, user_id, engine_id, lines, is_admin):
         else:
             translations.append("")
 
-    try:
-        db.session.delete(RunningEngines.query.filter_by(user_id=user_id).first())
-        db.session.commit()
-    except:
-        db.session.rollback()
+    with app.app_context():
+        try:
+            db.session.delete(RunningEngines.query.filter_by(user_id=user_id).first())
+            db.session.commit()
+        except:
+            db.session.rollback()
 
     del translator
     return translations
@@ -611,15 +614,16 @@ def process_upload_request(self, user_id, bitext_path, src_path, trg_path, src_l
     type = "bitext" if bitext_path else "bilingual" if trg_path else "monolingual"
 
     def process_file(file, language, corpus, role):
-        db_file = data_utils.upload_file(file, language, user_id=user_id)
+        with app.app_context():
+            db_file = data_utils.upload_file(file, language, user_id=user_id)
 
-        if role == "source":
-            corpus.user_source_id = language
-        else:
-            corpus.user_target_id = language
-        
-        db.session.add(db_file)
-        corpus.corpus_files.append(Corpus_File(db_file, role=role))
+            if role == "source":
+                corpus.user_source_id = language
+            else:
+                corpus.user_target_id = language
+            
+            db.session.add(db_file)
+            corpus.corpus_files.append(Corpus_File(db_file, role=role))
 
         return db_file
 
@@ -687,46 +691,47 @@ def process_upload_request(self, user_id, bitext_path, src_path, trg_path, src_l
         return FileStorage(src_file, filename=file.filename + "-src"), \
                 FileStorage(trg_file, filename=file.filename + "-trg")
 
-    # We create the corpus, retrieve the files and attach them to that corpus
-    target_db_file = None
-    try:
-        corpus = Corpus(name = corpus_name, type = "bilingual" if type == "bitext" else type, 
-                    owner_id = user_id, description = corpus_desc, topic_id = corpus_topic)
+    with app.app_context():
+        # We create the corpus, retrieve the files and attach them to that corpus
+        target_db_file = None
+        try:
+            corpus = Corpus(name = corpus_name, type = "bilingual" if type == "bitext" else type, 
+                        owner_id = user_id, description = corpus_desc, topic_id = corpus_topic)
 
-        if type == "bitext":
-            with open(bitext_path, 'rb') as fbitext:
-                bitext_file = FileStorage(fbitext, filename=os.path.basename(fbitext.name))
-                src_file, trg_file = process_bitext(bitext_file)
+            if type == "bitext":
+                with open(bitext_path, 'rb') as fbitext:
+                    bitext_file = FileStorage(fbitext, filename=os.path.basename(fbitext.name))
+                    src_file, trg_file = process_bitext(bitext_file)
 
-                source_db_file = process_file(src_file, src_lang, corpus, 'source')
-                target_db_file = process_file(trg_file, trg_lang, corpus, 'target')
-        else:
-            with open(src_path, 'rb') as fsrctext:
-                src_file = FileStorage(fsrctext, filename=os.path.basename(fsrctext.name))
-                source_db_file = process_file(src_file, src_lang, corpus, 'source')
-
-            if type == "bilingual":
-                with open(trg_path, 'rb') as ftrgtext:
-                    trg_file = FileStorage(ftrgtext, filename=os.path.basename(ftrgtext.name))
+                    source_db_file = process_file(src_file, src_lang, corpus, 'source')
                     target_db_file = process_file(trg_file, trg_lang, corpus, 'target')
+            else:
+                with open(src_path, 'rb') as fsrctext:
+                    src_file = FileStorage(fsrctext, filename=os.path.basename(fsrctext.name))
+                    source_db_file = process_file(src_file, src_lang, corpus, 'source')
 
-        db.session.add(corpus)
+                if type == "bilingual":
+                    with open(trg_path, 'rb') as ftrgtext:
+                        trg_file = FileStorage(ftrgtext, filename=os.path.basename(ftrgtext.name))
+                        target_db_file = process_file(trg_file, trg_lang, corpus, 'target')
 
-        user = User.query.filter_by(id=user_id).first()
-        user.user_corpora.append(LibraryCorpora(corpus=corpus, user=user))
-    except Exception as e:
-        db.session.rollback()
-        raise Exception("Something went wrong on our end... Please, try again later")
+            db.session.add(corpus)
 
-    if target_db_file:
-        source_lines = utils.file_length(source_db_file.path)
-        target_lines = utils.file_length(target_db_file.path)
-
-        if source_lines != target_lines:
+            user = User.query.filter_by(id=user_id).first()
+            user.user_corpora.append(LibraryCorpora(corpus=corpus, user=user))
+        except Exception as e:
             db.session.rollback()
-            raise Exception("Source and target file should have the same length")
+            raise Exception("Something went wrong on our end... Please, try again later")
 
-    db.session.commit()
+        if target_db_file:
+            source_lines = utils.file_length(source_db_file.path)
+            target_lines = utils.file_length(target_db_file.path)
+
+            if source_lines != target_lines:
+                db.session.rollback()
+                raise Exception("Source and target file should have the same length")
+
+        db.session.commit()
 
     return True
 
