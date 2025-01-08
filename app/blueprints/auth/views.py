@@ -106,6 +106,38 @@ def google_logged_in(blueprint, token):
     else:
         print("No account info available")
 
+@auth_blueprint.route('/provisional_login')
+def provisional_login(email_str):
+    # We log out the user if the session is active
+    if current_user:
+        logout_user()
+
+    # If user is not present, add
+    if User.query.filter_by(email=email_str).first() is None:
+		username = email_str.split("@")[0]
+
+        new_user = User(username = username, social_id = 'USER-' + username, email = email_str, avatar_url='/img/amun.png')
+        db.session.add(new_user)
+        db.session.commit()
+
+        # Add languages to user
+        with open(os.path.join(app.config['MUTNMT_FOLDER'], 'scripts/langs.txt')) as langs_file:
+            for line in langs_file:
+                line = line.strip()
+                if line:
+                    data = line.split(',')
+                    user_language = UserLanguage(code=data[0], name=data[1], user_id=new_user.id)
+                    db.session.add(user_language)
+            db.session.commit()
+
+    user = User.query.filter_by(email=email_str).first()
+
+    if user:
+        login_user(user)
+        return redirect(url_for('library.library_corpora'))
+    else:
+        return redirect(url_for('index'))
+
 @auth_blueprint.route('/demo')
 def demo_log_in():
     # We log out the user if the session is active
