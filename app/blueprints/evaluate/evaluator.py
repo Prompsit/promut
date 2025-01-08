@@ -15,5 +15,5 @@ class Evaluator(abc.ABC):
     # Given both paths to Machine and Human translations,
     # a float value must be returned.
     @abc.abstractmethod
-    def get_value(self, mt_path: str, ht_path: str) -> (float, float, float):
+    def get_value(self, mt_path: str, ht_path: str, source_path: str) -> (float, float, float):
         pass

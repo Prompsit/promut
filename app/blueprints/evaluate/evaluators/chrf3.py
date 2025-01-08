@@ -8,7 +8,7 @@ class Chrf3(Evaluator):
     def get_name(self):
         return "chrF3"
 
-    def get_value(self, mt_path, ht_path):
+    def get_value(self, mt_path, ht_path, source_path = ""):
         def extract_ngrams(words, max_length=4, spaces=False):
             if not spaces:
                 words = ''.join(words.split())

@@ -486,7 +486,7 @@ def evaluate_files(self, user_id, mt_paths, ht_paths, source_path=None):
                 try:
                     ht_eval.append({
                         "name": evaluator.get_name(),
-                        "value": evaluator.get_value(mt_path, ht_path),
+                        "value": evaluator.get_value(mt_path, ht_path, source_path),
                         "is_metric": True
                     })
                 except:
