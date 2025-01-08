@@ -114,7 +114,7 @@ def provisional_login(email_str):
 
     # If user is not present, add
     if User.query.filter_by(email=email_str).first() is None:
-		username = email_str.split("@")[0]
+        username = email_str.split("@")[0]
 
         new_user = User(username = username, social_id = 'USER-' + username, email = email_str, avatar_url='/img/amun.png')
         db.session.add(new_user)
