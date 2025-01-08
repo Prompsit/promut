@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MutNMT</title>
+    <meta charset="utf-8" />
+    {% include "head.html.jinja2" %}
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index' + infix + '.css') }}" />
+</head>
+<body>
+    <div class="container">
+  <form class="data-upload-form mb-4 " action="{{ url_for('auth.provisional_login') }}" enctype="multipart/form-data" method="post">
+    <fieldset>
+                        <div class="form-group col-12 col-sm-6">
+                            <label for="email_str">Email</label>
+                            <input required type="text" class="form-control" id="email_str" name="email_str" placeholder="Enter your email" />
+                        </div>
+                    
+            <div class="col-12 offset-sm-5 col-sm-2 text-right">
+                <input class="btn btn-primary" type="submit" id="submit" value="Login" />
+            </div>
+        </div>
+    </fieldset>
+</form>
+        </div>
+
+  
+    <script src="{{ url_for('static', filename='lib/jquery-3.5.1.min.js') }}"></script>
+</body>
+</html>

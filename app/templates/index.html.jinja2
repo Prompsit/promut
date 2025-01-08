@@ -19,6 +19,9 @@
             <div class="col-sm-9 col-12 text-sm-right mt-4 mt-sm-0">
                 {% if not current_user.is_authenticated %}
                 <div class="btn-group">
+                <a href="/auth/provisional-login" class="btn btn-primary d-block d-sm-inline">
+                        Provisional login
+                    </a>
                     <a href="{{ url_for('google.login') }} " class="btn btn-primary d-block d-sm-inline">
                         <i class="fab fa-google mr-2"></i>
                         Log in

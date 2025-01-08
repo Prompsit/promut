@@ -28,6 +28,13 @@ def index():
     else:
         return render_template('index.html.jinja2')
 
+@app.route('/auth/provisional-login')
+def provisional_login():
+    if current_user.is_authenticated:
+        return redirect(url_for('library.library_corpora'))
+    else:
+        return render_template('provisional-login.html.jinja2')        
+
 @app.route('/about')
 def about():
     return render_template('about.html.jinja2', videos=[

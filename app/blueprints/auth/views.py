@@ -11,7 +11,7 @@ from app.models import OAuth, User, UserLanguage, LibraryEngine, Engine
 from app.utils import user_utils, utils, lang_utils, training_log
 from flask_login import login_required, current_user, login_user, logout_user
 
-from flask import Blueprint, render_template, abort, flash, redirect, url_for, jsonify
+from flask import Blueprint, render_template, abort, flash, request, redirect, url_for, jsonify
 from flask_dance.consumer import oauth_authorized
 from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
 from flask_dance.contrib.google import make_google_blueprint, google
@@ -106,9 +106,11 @@ def google_logged_in(blueprint, token):
     else:
         print("No account info available")
 
-@auth_blueprint.route('/provisional_login')
-def provisional_login(email_str):
+@auth_blueprint.route('/provisional_login', methods=["POST"])
+def provisional_login():
     # We log out the user if the session is active
+
+    email_str = request.form.get('email_str')
     if current_user:
         logout_user()
 
