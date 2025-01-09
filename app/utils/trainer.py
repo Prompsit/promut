@@ -17,8 +17,8 @@ class Trainer(object):
     running_joey = {}
 
     @staticmethod
-    def launch(id, is_admin):
-        task = tasks.train_engine.apply_async(args=[id, is_admin])
+    def launch(id, user_role):
+        task = tasks.train_engine.apply_async(args=[id, user_role])
         monitor_task = tasks.monitor_training.apply_async(args=[id])
         return task.id, monitor_task.id
 

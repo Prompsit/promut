@@ -216,14 +216,14 @@ def launch_training(self, user_id, engine_path, params):
         return -1
 
 @celery.task(bind=True)
-def train_engine(self, engine_id, is_admin):
+def train_engine(self, engine_id, user_role):
     # Trains an engine by calling JoeyNMT and keeping
     # track of its progress
     with app.app_context():
         engine = Engine.query.filter_by(id=engine_id).first()
         engine.status = "launching"
         db.session.commit()
-        gpu_id = GPUManager.wait_for_available_device(is_admin=is_admin)
+        gpu_id = GPUManager.wait_for_available_device(is_admin=(user_role==EnumRoles.ADMIN))
         engine.gid = gpu_id
         db.session.commit()
 
@@ -241,7 +241,8 @@ def train_engine(self, engine_id, is_admin):
             # Trainings are limited to 1 hour
             start = datetime.datetime.now()
             difference = 0
-            while difference < 3600:
+            max_time = 36000 if user_role == EnumRoles.RESEARCHER else 3600
+            while difference < max_time:
                 time.sleep(10)
                 difference = (datetime.datetime.now() - start).total_seconds()
                 if running_joey.poll() is not None:

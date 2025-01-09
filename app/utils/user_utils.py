@@ -37,6 +37,10 @@ def is_normal():
 def is_not_normal():
     return not is_normal()
 
+def get_user_role():
+    user = get_user()
+    return user.role.name
+
 def get_user_folder(subfolder = None, user_id = None):
     base_folder = os.path.join(app.config['USERS_FOLDER'], '{}'.format(get_uid() if user_id is None else user_id))
     if subfolder:

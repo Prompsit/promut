@@ -102,7 +102,7 @@ def train_launch():
     id = request.form.get('engine_id')
     if user_utils.is_normal(): return url_for('index')
 
-    task_id, monitor_task_id = Trainer.launch(id, user_utils.is_admin())
+    task_id, monitor_task_id = Trainer.launch(id, user_utils.get_user_role())
 
     return url_for('train.train_console', id=id)
 
