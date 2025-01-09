@@ -1,4 +1,4 @@
-from app.models import User, Corpus, Engine, RunningEngines
+from app.models import User, Corpus, Engine, RunningEngines, Role
 from app.utils import user_utils, utils, datatables
 from app.utils.trainer import Trainer
 from app import db, app
@@ -83,9 +83,8 @@ def user_datatables_feed():
     user_data = []
     for user in (rows_filtered if search else rows):
         user_data.append([user.id, user.username, user.email,
-                          'Admin' if user.admin else 'Expert' if user.expert else 'Beginner',
-                          user.notes, '',
-                          user.admin, user.expert])
+                          user.role.name,
+                          user.notes, ''])
 
     return dt.response(rows, rows_filtered, user_data)
 
@@ -205,12 +204,11 @@ def stop_engine():
 def become(type, id):
     if user_utils.is_normal(): return redirect(url_for('index'))
 
-    if user_utils.get_user().admin:
+    if user_utils.is_admin():
         user = User.query.filter_by(id = id).first()
-
-        user.expert = (type == "expert")
-        user.admin = (type == "admin")
-
-        db.session.commit()
+        target_role = Role.query.filter_by(name=type.capitalize()).first()
+        if target_role:
+            user.role = target_role
+            db.session.commit()
 
     return redirect(request.referrer)

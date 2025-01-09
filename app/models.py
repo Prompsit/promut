@@ -188,17 +188,27 @@ class User(UserMixin, db.Model):
     username        = db.Column(db.String(250))
     social_id       = db.Column(db.String(250))
     email           = db.Column(db.String(60), unique=True)
-    admin           = db.Column(db.Boolean, default=False)
-    expert          = db.Column(db.Boolean, default=False)
+    #admin           = db.Column(db.Boolean, default=False)
+    #expert          = db.Column(db.Boolean, default=False)
+    #researcher      = db.Column(db.Boolean, default=False)
     banned          = db.Column(db.Boolean, default=False)
     lang            = db.Column(db.String(32))
     avatar_url      = db.Column(db.String(250))
     notes = db.Column(db.String(280))
     demo = db.Column(db.Boolean, default=False)
 
+    role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+    role = db.relationship('Role', back_populates='user')
+    
     corpora = association_proxy("user_corpora", "corpora")
     engines = association_proxy("user_engines", "engines")
     running_engines = association_proxy("user_running_engines", "running_engines")
+
+class Role(db.Model):
+    __tablename__   = 'role'
+    id              = db.Column(db.Integer, primary_key=True)
+    name            = db.Column(db.String(250))
+    user = db.relationship('User', back_populates='role')
 
 class LibraryCorpora(db.Model):
     __tablename__ = 'library_corpora'

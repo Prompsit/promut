@@ -19,7 +19,7 @@ from werkzeug.datastructures import FileStorage
 from nltk.tokenize import sent_tokenize
 from werkzeug.utils import secure_filename
 import xml.parsers.expat
-
+from app.utils.roles import EnumRoles
 import pyter
 import xlsxwriter
 import datetime
@@ -223,7 +223,6 @@ def train_engine(self, engine_id, is_admin):
         engine = Engine.query.filter_by(id=engine_id).first()
         engine.status = "launching"
         db.session.commit()
-
         gpu_id = GPUManager.wait_for_available_device(is_admin=is_admin)
         engine.gid = gpu_id
         db.session.commit()
@@ -242,7 +241,6 @@ def train_engine(self, engine_id, is_admin):
             # Trainings are limited to 1 hour
             start = datetime.datetime.now()
             difference = 0
-
             while difference < 3600:
                 time.sleep(10)
                 difference = (datetime.datetime.now() - start).total_seconds()

@@ -48,7 +48,7 @@
             <p class="h6 m-0">
                 Nothing yet!
 
-                {% if current_user.admin or current_user.expert %}
+                {% if role_with_access %}
                 <a href="{{ url_for('train.train_index') }}">Train an engine now</a> or grab one.
                 {% endif %}
             </p>

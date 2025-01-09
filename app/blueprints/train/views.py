@@ -3,6 +3,7 @@ from app.flash import Flash
 from app.models import LibraryCorpora, LibraryEngine, Engine, File, Corpus_Engine, Corpus, User, Corpus_File, Language, \
     UserLanguage
 from app.utils import user_utils, utils, data_utils, tensor_utils, tasks, training_log
+from app.utils.roles import EnumRoles
 from app.utils.trainer import Trainer
 from app.utils.power import PowerUtils
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, send_file
@@ -359,7 +360,7 @@ def train_resume(engine_id):
 
     engine = Engine.query.filter_by(id=engine_id).first()
 
-    if current_user.id == engine.engine_users[0].user.id or current_user.admin:
+    if current_user.id == engine.engine_users[0].user.id or current_user.role == EnumRoles.ADMIN:
         new_model_path = os.path.join(engine.path, 'model-{}'.format(utils.randomfilename(length=8)))
         while os.path.exists(new_model_path):
             new_model_path = os.path.join(engine.path, 'model-{}'.format(utils.randomfilename(length=8)))

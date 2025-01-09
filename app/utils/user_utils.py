@@ -3,7 +3,7 @@ from app import app, db
 from app.models import Corpus, LibraryEngine, LibraryCorpora, Corpus_Engine, User, UserLanguage
 from sqlalchemy import and_
 import os, shutil
-
+from app.utils.roles import EnumRoles
 def get_uid():
     if isUserLoginEnabled() and current_user.is_authenticated:
         return current_user.id
@@ -20,15 +20,19 @@ def isUserLoginEnabled():
 
 def is_admin():
     user = get_user()
-    return user.admin if user else False
+    return user.role.name == EnumRoles.ADMIN
+
+def is_researcher():
+    user = get_user()
+    return user.role.name == EnumRoles.RESEARCHER
 
 def is_expert():
     user = get_user()
-    return user.expert if user else False
+    return user.role.name == EnumRoles.EXPERT
 
 def is_normal():
     user = get_user()
-    return not (user.admin or user.expert) if user else False
+    return user.role.name == EnumRoles.BEGINNER
 
 def is_not_normal():
     return not is_normal()

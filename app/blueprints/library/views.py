@@ -11,7 +11,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, jsonif
 from datetime import datetime
 from dateutil import tz
 from functools import reduce
-
+from app.utils.user_utils import is_admin, is_expert
 import os
 import hashlib
 import sys
@@ -19,22 +19,22 @@ import shutil
 import pytz
 import ntpath
 import re
-
+from app.utils.roles import EnumRoles
 library_blueprint = Blueprint('library', __name__, template_folder='templates')
-
+from app.utils.user_utils import get_user
 @library_blueprint.route('/corpora')
 def library_corpora():
     user_library = user_utils.get_user_corpora().count()
     public_files = user_utils.get_user_corpora(public=True).count()
-    used_library = user_utils.get_user_corpora(used=True).count() if current_user.admin else 0
-    not_used_library = user_utils.get_user_corpora(not_used=True).count() if current_user.admin else 0
+    used_library = user_utils.get_user_corpora(used=True).count() if is_admin() else 0
+    not_used_library = user_utils.get_user_corpora(not_used=True).count() if is_admin() else 0
 
     languages = UserLanguage.query.filter_by(user_id=current_user.id).order_by(UserLanguage.name).all()
     topics = Topic.query.all()
-
+    role_with_access = is_admin() or is_expert()
     return render_template('library_corpora.html.jinja2', page_name='library_corpora', page_title='Corpora',
                            user_library=user_library, public_files = public_files, languages=languages, topics=topics,
-                           used_library=used_library, not_used_library=not_used_library)
+                           used_library=used_library, not_used_library=not_used_library, role_with_access= role_with_access)
 
 @library_blueprint.route('/engines')
 def library_engines():
@@ -44,9 +44,9 @@ def library_engines():
     user_engines = list(map(lambda l : l.engine, user_library))
     for engine in public_engines:
         engine.grabbed = engine in user_engines
-
+    role_with_access = is_admin() or is_expert()
     return render_template('library_engines.html.jinja2', page_name = 'library_engines', page_title = 'Engines',
-            user_library = user_library, public_engines = public_engines)
+            user_library = user_library, public_engines = public_engines, role_with_access= role_with_access)
 
 @library_blueprint.route('/corpora_feed', methods=["POST"])
 def library_corpora_feed():

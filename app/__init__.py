@@ -1,5 +1,5 @@
 from .config import Config
-
+from app.utils.roles import EnumRoles
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -82,7 +82,10 @@ with app.app_context():
             topic_obj = models.Topic(name=topic)
             db.session.add(topic_obj)
     db.session.commit()
-
+    for role in EnumRoles:
+        new_role = models.Role(name=role)
+        db.session.add(new_role)
+    db.session.commit()
 folders = ['USERSPACE_FOLDER', 'STORAGE_FOLDER', 'FILES_FOLDER', 'ENGINES_FOLDER', 'USERS_FOLDER']
 
 for folder in folders:
