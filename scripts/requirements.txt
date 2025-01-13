@@ -27,3 +27,4 @@ pyter3
 xlsxwriter
 namegenerator
 psutil
+pymarian
