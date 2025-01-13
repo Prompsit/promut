@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tour' + infix + '.css') }}" />
 
     {% block head %}{% endblock %}
+
+    <script>
+    var isResearcher = "{{ is_researcher() }}";
+</script>
 </head>
 <body>
     <div class="container-fluid px-sm-12">
@@ -113,20 +117,12 @@
                             <div class="ml-2">
                                 <div>{{ current_user.username }}</div>
                                 <small class="text-uppercase">
-                                    {% if current_user.admin %}
-                                        admin
-                                    {% elif current_user.expert %}
-                                        expert
-                                    {% elif current_user.demo %}
-                                        demo
-                                    {% else %}
-                                        beginner
-                                    {% endif %}
+                                    {{ current_user.role.name }}
                                 </small>
                             </div>
                         </div>
-
-                        {% if not current_user.admin and not current_user.expert and not current_user.demo %}
+                        
+                        {% if current_user.role == 'Beginner' and not current_user.demo %}
                             <hr />
                             <div class="mt-4 small d-flex align-items-center">
                                 <i class="fas fa-lightbulb"></i>

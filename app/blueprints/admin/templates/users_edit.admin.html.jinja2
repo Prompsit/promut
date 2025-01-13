@@ -30,7 +30,8 @@
                 <label for="userEmail">Role</label>
             </div>
             <div class="col-6">
-                {{ 'Admin' if user.admin else ('Expert' if user.expert else 'Beginner') }}
+                #{{ 'Admin' if user.admin else ('Expert' if user.expert else 'Beginner') }}
+                {{ user.role }}
             </div>
         </div>
         <div class="row mt-2">

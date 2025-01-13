@@ -15,6 +15,15 @@
 {% block content %}
 
 <div class="alert alert-warning alert-dismissible fade show" role="alert">
+{% if is_researcher() %}
+
+<p>The user is an a researcher</p>
+
+{% else %}
+
+<p>The user's a muggle</p>
+{% endif %}
+
     <strong>Beginner users cannot train engines</strong>
     <br />
     You need an expert account to launch engine training,

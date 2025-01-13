@@ -300,7 +300,7 @@
             <p class="h6 m-0">
                 Nothing yet!
 
-                {% if current_user.admin or current_user.expert %}
+                {% if role_with_access %}
                 <a href="{{ url_for('library.library_corpora') }}">Upload a corpus now</a> or grab one
                 {% endif %}
             </p>
