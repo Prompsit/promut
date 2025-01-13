@@ -8,6 +8,7 @@ class Bleu(Evaluator):
         return "BLEU"
 
     def get_value(self, mt_path, ht_path, source_path = ""):
+
         sacreBLEU = subprocess.Popen("cat {} | sacrebleu -b {}".format(mt_path, ht_path), 
                         cwd=app.config['MUTNMT_FOLDER'], shell=True, stdout=subprocess.PIPE)
 

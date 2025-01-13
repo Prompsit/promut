@@ -9,6 +9,7 @@ class Ter(Evaluator):
         return "TER"
 
     def get_value(self, mt_path, ht_path, source_path = ""):
+        
         ter = 0.0
         with open(mt_path, 'r') as mt_file, open(ht_path, 'r') as ht_file:
             for i, (mt_line, ht_line) in enumerate(zip(mt_file, ht_file)):
