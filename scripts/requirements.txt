@@ -28,3 +28,4 @@ xlsxwriter
 namegenerator
 psutil
 pymarian
+chardet
