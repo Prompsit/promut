@@ -49,55 +49,61 @@ logger = get_task_logger(__name__)
 
 @celery.task(bind=True)
 def launch_training(self, user_id, engine_path, params):
-    # Performs necessary steps to configure an engine
-    # and get it ready for training
-    engine = Engine(path = engine_path)
-    engine.uploader_id = user_id
-    engine.status = "launching"
-    engine.bg_task_id = self.request.id
-
     with app.app_context():
+        # Performs necessary steps to configure an engine
+        # and get it ready for training
+
+        engine = Engine(path = engine_path)
+        engine.uploader_id = user_id
+        engine.status = "launching"
+        engine.bg_task_id = self.request.id
+
         db.session.add(engine)
         db.session.commit()
 
-    used_corpora = {}
+        used_corpora = {}
 
-    try:
-        os.mkdir(engine_path)
-    except:
-        Flash.issue("The engine could not be created", Flash.ERROR)
-        return url_for('train.train_index', id=id)
+        print('--------')
+        print(engine_path, flush = True)
+        # /opt/mutnmt/data/userspace/users/-1/engines/d468f01c96fc999b
+        print('--------')
+        #os.mkdir(engine_path)
+        try:
+            os.mkdir(engine_path)
+        except:
+            Flash.issue("The engine could not be created", Flash.ERROR)
+            return url_for('train.train_index', id=id)
 
     def join_corpora(list_name, phase, source_lang, target_lang):
-        corpus = Corpus(owner_id=user_id, visible=False)
-        for train_corpus in params[list_name]:
-            corpus_data = json.loads(train_corpus)
-            corpus_id = corpus_data['id']
-            corpus_size = corpus_data['size']
-
-            if corpus_id not in used_corpora: used_corpora[corpus_id] = 0
-
-            try:
-                og_corpus = Corpus.query.filter_by(id = corpus_id).first()
-
-                # We relate the original corpus with this engine in the database,
-                # for informational purposes. This way the user will be able to know
-                # which corpora were used to train the engine
-                engine.engine_corpora.append(Corpus_Engine(corpus=og_corpus, engine=engine, phase=phase, is_info=True, selected_size=corpus_size))
-
-                corpus.user_source_id = og_corpus.user_source_id
-                corpus.user_target_id = og_corpus.user_target_id
-                for file_entry in og_corpus.corpus_files:
-                    with open(file_entry.file.path, 'rb') as file_d:
-                        db_file = data_utils.upload_file(FileStorage(stream=file_d, filename=file_entry.file.name),
-                                    file_entry.file.user_language_id, selected_size=corpus_size, offset=used_corpora[corpus_id],
-                                    user_id=user_id)
-                    corpus.corpus_files.append(Corpus_File(db_file, role="source" if file_entry.file.language.code == source_lang else "target"))
-                used_corpora[corpus_id] += corpus_size
-            except:
-                raise Exception
-
         with app.app_context():
+            corpus = Corpus(owner_id=user_id, visible=False)
+            for train_corpus in params[list_name]:
+                corpus_data = json.loads(train_corpus)
+                corpus_id = corpus_data['id']
+                corpus_size = corpus_data['size']
+
+                if corpus_id not in used_corpora: used_corpora[corpus_id] = 0
+
+                try:
+                    og_corpus = Corpus.query.filter_by(id = corpus_id).first()
+
+                    # We relate the original corpus with this engine in the database,
+                    # for informational purposes. This way the user will be able to know
+                    # which corpora were used to train the engine
+                    engine.engine_corpora.append(Corpus_Engine(corpus=og_corpus, engine=engine, phase=phase, is_info=True, selected_size=corpus_size))
+
+                    corpus.user_source_id = og_corpus.user_source_id
+                    corpus.user_target_id = og_corpus.user_target_id
+                    for file_entry in og_corpus.corpus_files:
+                        with open(file_entry.file.path, 'rb') as file_d:
+                            db_file = data_utils.upload_file(FileStorage(stream=file_d, filename=file_entry.file.name),
+                                        file_entry.file.user_language_id, selected_size=corpus_size, offset=used_corpora[corpus_id],
+                                        user_id=user_id)
+                        corpus.corpus_files.append(Corpus_File(db_file, role="source" if file_entry.file.language.code == source_lang else "target"))
+                    used_corpora[corpus_id] += corpus_size
+                except:
+                    raise Exception
+
             try:
                 db.session.add(corpus)
                 db.session.commit()
@@ -113,107 +119,106 @@ def launch_training(self, user_id, engine_path, params):
                 db.session.commit()
                 raise Exception
 
-        return corpus
+            return corpus
 
     try:
-        train_corpus = join_corpora('training[]', phase="train", source_lang=params['source_lang'], target_lang=params['target_lang'])
-        dev_corpus = join_corpora('dev[]', phase="dev", source_lang=params['source_lang'], target_lang=params['target_lang'])
-        test_corpus = join_corpora('test[]', phase="test", source_lang=params['source_lang'], target_lang=params['target_lang'])
-
-        # We train a SentencePiece model using the training corpus and we tokenize
-        # everything with that. We save the model in the engine folder to tokenize
-        # translation input later
-        data_utils.train_tokenizer(engine, train_corpus, params['vocabularySize'])
-        data_utils.tokenize(train_corpus, engine)
-        data_utils.tokenize(dev_corpus, engine)
-        data_utils.tokenize(test_corpus, engine)
-
-        engine.name = params['nameText']
-        engine.description = params['descriptionText']
-        engine.model_path = os.path.join(engine.path, "model")
-
-        source_lang = UserLanguage.query.filter_by(code=params['source_lang'], user_id=user_id).one()
-        engine.user_source_id = source_lang.id
-
-        target_lang = UserLanguage.query.filter_by(code=params['target_lang'], user_id=user_id).one()
-        engine.user_target_id = target_lang.id
-
-        engine.engine_corpora.append(Corpus_Engine(corpus=train_corpus, engine=engine, phase="train"))
-        engine.engine_corpora.append(Corpus_Engine(corpus=dev_corpus, engine=engine, phase="dev"))
-        engine.engine_corpora.append(Corpus_Engine(corpus=test_corpus, engine=engine, phase="test"))
-
-        engine.status = "training_pending"
-        engine.launched = datetime.datetime.utcnow().replace(tzinfo=None)
-
-        user = User.query.filter_by(id = user_id).first()
-        user.user_engines.append(LibraryEngine(engine=engine, user=user))
-
-        config_file_path = os.path.join(engine.path, 'config.yaml')
-
-        shutil.copyfile(os.path.join(app.config['BASE_CONFIG_FOLDER'], 'transformer-small.yaml'), config_file_path)
-
         with app.app_context():
+            train_corpus = join_corpora('training[]', phase="train", source_lang=params['source_lang'], target_lang=params['target_lang'])
+            dev_corpus = join_corpora('dev[]', phase="dev", source_lang=params['source_lang'], target_lang=params['target_lang'])
+            test_corpus = join_corpora('test[]', phase="test", source_lang=params['source_lang'], target_lang=params['target_lang'])
+
+            # We train a SentencePiece model using the training corpus and we tokenize
+            # everything with that. We save the model in the engine folder to tokenize
+            # translation input later
+            data_utils.train_tokenizer(engine, train_corpus, params['vocabularySize'])
+            data_utils.tokenize(train_corpus, engine)
+            data_utils.tokenize(dev_corpus, engine)
+            data_utils.tokenize(test_corpus, engine)
+
+            engine.name = params['nameText']
+            engine.description = params['descriptionText']
+            engine.model_path = os.path.join(engine.path, "model")
+
+            source_lang = UserLanguage.query.filter_by(code=params['source_lang'], user_id=user_id).one()
+            engine.user_source_id = source_lang.id
+
+            target_lang = UserLanguage.query.filter_by(code=params['target_lang'], user_id=user_id).one()
+            engine.user_target_id = target_lang.id
+
+            engine.engine_corpora.append(Corpus_Engine(corpus=train_corpus, engine=engine, phase="train"))
+            engine.engine_corpora.append(Corpus_Engine(corpus=dev_corpus, engine=engine, phase="dev"))
+            engine.engine_corpora.append(Corpus_Engine(corpus=test_corpus, engine=engine, phase="test"))
+
+            engine.status = "training_pending"
+            engine.launched = datetime.datetime.utcnow().replace(tzinfo=None)
+
+            user = User.query.filter_by(id = user_id).first()
+            user.user_engines.append(LibraryEngine(engine=engine, user=user))
+
+            config_file_path = os.path.join(engine.path, 'config.yaml')
+
+            shutil.copyfile(os.path.join(app.config['BASE_CONFIG_FOLDER'], 'transformer-small.yaml'), config_file_path)
+
             db.session.add(engine)
             db.session.commit()
 
-        # Engine configuration
-        config = None
+            # Engine configuration
+            config = None
 
-        try:
-            with open(config_file_path, 'r') as config_file:
-                config = yaml.load(config_file, Loader=yaml.FullLoader)
-        except:
-            raise Exception
+            try:
+                with open(config_file_path, 'r') as config_file:
+                    config = yaml.load(config_file, Loader=yaml.FullLoader)
+            except:
+                raise Exception
 
-        config["data"]["src"] = engine.source.code
-        config["data"]["trg"] = engine.target.code
+            config["data"]["src"] = engine.source.code
+            config["data"]["trg"] = engine.target.code
 
-        def link_files(corpus, phase):
-            for file_entry in corpus.corpus_files:
-                tok_path = '{}.mut.spe'.format(file_entry.file.path)
-                tok_name = phase
+            def link_files(corpus, phase):
+                for file_entry in corpus.corpus_files:
+                    tok_path = '{}.mut.spe'.format(file_entry.file.path)
+                    tok_name = phase
 
-                os.link(tok_path, os.path.join(engine.path, '{}.{}'.format(tok_name, 
-                        params['source_lang'] if file_entry.role == "source" else params['target_lang'])))
+                    os.link(tok_path, os.path.join(engine.path, '{}.{}'.format(tok_name, 
+                            params['source_lang'] if file_entry.role == "source" else params['target_lang'])))
 
-                config["data"][phase] = os.path.join(engine.path, tok_name)
-                config["training"]["model_dir"] = os.path.join(engine.path, "model")
+                    config["data"][phase] = os.path.join(engine.path, tok_name)
+                    config["training"]["model_dir"] = os.path.join(engine.path, "model")
 
-        try:
-            link_files(train_corpus, "train")
-            link_files(dev_corpus, "dev")
-            link_files(test_corpus, "test")
-        except:
-            raise Exception 
+            try:
+                link_files(train_corpus, "train")
+                link_files(dev_corpus, "dev")
+                link_files(test_corpus, "test")
+            except:
+                raise Exception 
 
-        # Get vocabulary
-        vocabulary_path = os.path.join(engine.path, "train.vocab")
-        config["data"]["src_vocab"] = vocabulary_path
-        config["data"]["trg_vocab"] = vocabulary_path
-        
-        config["name"] = engine.name
-        config["training"]["epochs"] = int(params['epochsText'])
-        config["training"]["patience"] = int(params['patienceTxt'])
-        config["training"]["batch_size"] = int(params['batchSizeTxt'])
-        config["training"]["validation_freq"] = int(params['validationFreq'])
-        config["testing"]["beam_size"] = int(params['beamSizeTxt'])
+            # Get vocabulary
+            vocabulary_path = os.path.join(engine.path, "train.vocab")
+            config["data"]["src_vocab"] = vocabulary_path
+            config["data"]["trg_vocab"] = vocabulary_path
+            
+            config["name"] = engine.name
+            config["training"]["epochs"] = int(params['epochsText'])
+            config["training"]["patience"] = int(params['patienceTxt'])
+            config["training"]["batch_size"] = int(params['batchSizeTxt'])
+            config["training"]["validation_freq"] = int(params['validationFreq'])
+            config["testing"]["beam_size"] = int(params['beamSizeTxt'])
 
-        with open(config_file_path, 'w') as config_file:
-            yaml.dump(config, config_file)
+            with open(config_file_path, 'w') as config_file:
+                yaml.dump(config, config_file)
 
-        engine.status = "ready"
-        engine.bg_task_id = None
-        with app.app_context():
+            engine.status = "ready"
+            engine.bg_task_id = None
             db.session.commit()
 
-        return engine.id
+            return engine.id
     except:
         with app.app_context():
             db.session.delete(engine)
             db.session.commit()
 
-        Flash.issue("The engine could not be configured", Flash.ERROR)
-        return -1
+            Flash.issue("The engine could not be configured", Flash.ERROR)
+            return -1
 
 @celery.task(bind=True)
 def train_engine(self, engine_id, user_role):
