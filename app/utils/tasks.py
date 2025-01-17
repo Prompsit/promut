@@ -521,7 +521,7 @@ def evaluate_files(self, user_id, mt_paths, ht_paths, source_path=None):
                 rows.append(["Ref {}".format(ht_index + 1), line, None, None, i + 1, []])
 
         for mt_path in mt_paths:
-            scores = spl(mt_path, ht_path)
+            scores = spl(mt_path, ht_path, source_path)
             for i, score in enumerate(scores):
                 rows[i][5].append(score)
 
@@ -543,18 +543,36 @@ def evaluate_files(self, user_id, mt_paths, ht_paths, source_path=None):
 
     return { "result": 200, "evals": all_evals, "spl": ht_rows }, xlsx_file_paths
 
-def spl(mt_path, ht_path):
-    # Scores per line (bleu and ter)
+def spl(mt_path, ht_path, source_path):
+    # Scores per line (bleu, comet, chrf3 and ter)
     logger.info([mt_path, ht_path])
+    rows = []
+
     sacreBLEU = subprocess.Popen("cat {} | sacrebleu -sl -b {} > {}.bpl".format(mt_path, ht_path, mt_path), 
                         cwd=app.config['TMP_FOLDER'], shell=True, stdout=subprocess.PIPE)
     sacreBLEU.wait()
 
-    rows = []
+    if source_path != "":
+        src_path = "-s {0}".format(source_path)
+    
+    comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl".format(mt_path, src_path, ht_path, mt_path), 
+                        shell=True, stdout=subprocess.PIPE)
+
+    # UNCOMMENT FOR CPU COMET !!!
+    #comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl -c 8".format(mt_path, src_path, ht_path, mt_path), 
+    #                shell=True, stdout=subprocess.PIPE)
+
+    # Bleu rows
     with open('{}.bpl'.format(mt_path), 'r') as bl_file:
         rows = [ { "bleu": line.strip() } for line in bl_file]
-
     os.remove("{}.bpl".format(mt_path))
+
+    # Comet rows
+    with open('{}.cpl'.format(mt_path), 'r') as cl_file:
+        for i, row in enumerate(rows):
+            print(cl_file.readline())
+            rows[i]['comet'] = cl_file.readline().strip()
+    os.remove("{}.cpl".format(mt_path))
 
     with open(ht_path) as ht_file, open(mt_path) as mt_file:
         for i, row in enumerate(rows):
@@ -564,6 +582,15 @@ def spl(mt_path, ht_path):
                 ter = round(pyter.ter(ht_line.split(), mt_line.split()), 2)
                 rows[i]['ter'] = 100 if ter > 1 else utils.parse_number(ter * 100, 2)
                 rows[i]['text'] = mt_line
+
+    # chrf3 randomly generated for now
+    import random
+    for i, row in enumerate(rows):
+        rows[i]['chrf3'] = random.randint(0, 100)
+
+    print('------------------------')
+    print(rows, flush = True)
+    print('------------------------')
 
     return rows
 
