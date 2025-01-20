@@ -198,9 +198,15 @@ $(document).ready(function () {
       $(".chart-container div").remove();
       $(".chart-container").append(document.createElement("div"));
 
-      let file_series = { bleu: [], ter: [] };
+      let file_series = { bleu: [], ter: [], chrf: [], comet: [] };
       file_series["bleu"] = evaluation.spl[ht_ix].map((m) =>
         parseFloat(m[5][mt_ix]["bleu"])
+      );
+      file_series["ter"] = evaluation.spl[ht_ix].map((m) =>
+        parseFloat(m[5][mt_ix]["ter"])
+      );
+      file_series["ter"] = evaluation.spl[ht_ix].map((m) =>
+        parseFloat(m[5][mt_ix]["ter"])
       );
       file_series["ter"] = evaluation.spl[ht_ix].map((m) =>
         parseFloat(m[5][mt_ix]["ter"])
