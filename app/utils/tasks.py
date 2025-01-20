@@ -1,5 +1,6 @@
 from flask import url_for
 from flask_login import current_user
+from sacrebleu.metrics import CHRF
 
 from app import app, db
 from app.utils import user_utils, data_utils, utils, ttr
@@ -559,6 +560,17 @@ def spl(mt_path, ht_path):
                 ter = round(pyter.ter(ht_line.split(), mt_line.split()), 2)
                 rows[i]['ter'] = 100 if ter > 1 else utils.parse_number(ter * 100, 2)
                 rows[i]['text'] = mt_line
+
+    with open(ht_path) as ht_file, open(mt_path) as mt_file:
+        for i, row in enumerate(rows):
+            ht_line = ht_file.readline().strip()
+            mt_line = mt_file.readline().strip()
+            if ht_line and mt_line:
+                chrf = CHRF()
+                score = chrf.corpus_score([ht_line], [mt_line])
+                print(score, "score ****")
+                rows[i]['chrf3'] = score
+                rows[i]['text'] = mt_line            
 
     return rows
 
