@@ -49,32 +49,7 @@ logger = get_task_logger(__name__)
 
 @celery.task(bind=True)
 def launch_training(self, user_id, engine_path, params):
-    with app.app_context():
-        # Performs necessary steps to configure an engine
-        # and get it ready for training
-
-        engine = Engine(path = engine_path)
-        engine.uploader_id = user_id
-        engine.status = "launching"
-        engine.bg_task_id = self.request.id
-
-        db.session.add(engine)
-        db.session.commit()
-
-        used_corpora = {}
-
-        print('--------')
-        print(engine_path, flush = True)
-        # /opt/mutnmt/data/userspace/users/-1/engines/d468f01c96fc999b
-        print('--------')
-        #os.mkdir(engine_path)
-        try:
-            os.mkdir(engine_path)
-        except:
-            Flash.issue("The engine could not be created", Flash.ERROR)
-            return url_for('train.train_index', id=id)
-
-    def join_corpora(list_name, phase, source_lang, target_lang):
+    def join_corpora(list_name, phase, source_lang, target_lang, engine_id):
         with app.app_context():
             corpus = Corpus(owner_id=user_id, visible=False)
             for train_corpus in params[list_name]:
@@ -90,6 +65,7 @@ def launch_training(self, user_id, engine_path, params):
                     # We relate the original corpus with this engine in the database,
                     # for informational purposes. This way the user will be able to know
                     # which corpora were used to train the engine
+                    engine = db.session.query(Engine).filter_by(id=engine_id).first()
                     engine.engine_corpora.append(Corpus_Engine(corpus=og_corpus, engine=engine, phase=phase, is_info=True, selected_size=corpus_size))
 
                     corpus.user_source_id = og_corpus.user_source_id
@@ -101,8 +77,9 @@ def launch_training(self, user_id, engine_path, params):
                                         user_id=user_id)
                         corpus.corpus_files.append(Corpus_File(db_file, role="source" if file_entry.file.language.code == source_lang else "target"))
                     used_corpora[corpus_id] += corpus_size
-                except:
-                    raise Exception
+                except Exception as ex:
+                    print(ex, flush = True)
+                    raise ex
 
             try:
                 db.session.add(corpus)
@@ -111,33 +88,62 @@ def launch_training(self, user_id, engine_path, params):
                 db.session.rollback()
                 raise Exception
 
-            # We put the contents of the several files in a new single one, and we shuffle the sentences
-            try:
-                data_utils.join_corpus_files(corpus, shuffle=True, user_id=user_id)
-            except:
-                db.session.delete(corpus)
-                db.session.commit()
-                raise Exception
+                # We put the contents of the several files in a new single one, and we shuffle the sentences
+                try:
+                    data_utils.join_corpus_files(corpus, shuffle=True, user_id=user_id)
+                except:
+                    db.session.delete(corpus)
+                    db.session.commit()
+                    raise Exception
 
-            return corpus
+            return corpus.id
 
     try:
         with app.app_context():
-            train_corpus = join_corpora('training[]', phase="train", source_lang=params['source_lang'], target_lang=params['target_lang'])
-            dev_corpus = join_corpora('dev[]', phase="dev", source_lang=params['source_lang'], target_lang=params['target_lang'])
-            test_corpus = join_corpora('test[]', phase="test", source_lang=params['source_lang'], target_lang=params['target_lang'])
+            # Performs necessary steps to configure an engine
+            # and get it ready for training
 
+            engine = Engine(path = engine_path)
+            engine.uploader_id = user_id
+            engine.status = "launching"
+            engine.bg_task_id = self.request.id
+
+            db.session.add(engine)
+            db.session.commit()
+
+            used_corpora = {}
+
+            try:
+                os.makedirs(engine_path)
+            except:
+                Flash.issue("The engine could not be created", Flash.ERROR)
+                return url_for('train.train_index', id=id)
+
+            train_corpus_id = join_corpora('training[]', phase="train", source_lang=params['source_lang'], target_lang=params['target_lang'], engine_id = engine.id)
+            dev_corpus_id = join_corpora('dev[]', phase="dev", source_lang=params['source_lang'], target_lang=params['target_lang'], engine_id = engine.id)
+            test_corpus_id = join_corpora('test[]', phase="test", source_lang=params['source_lang'], target_lang=params['target_lang'], engine_id = engine.id)
+
+            train_corpus = db.session.query(Corpus).filter_by(id=train_corpus_id).first()
+            dev_corpus = db.session.query(Corpus).filter_by(id=dev_corpus_id).first()
+            test_corpus = db.session.query(Corpus).filter_by(id=test_corpus_id).first()
+
+            #######
+            # this whole section is unneeded for Marian - commented for now - delete later
             # We train a SentencePiece model using the training corpus and we tokenize
             # everything with that. We save the model in the engine folder to tokenize
             # translation input later
-            data_utils.train_tokenizer(engine, train_corpus, params['vocabularySize'])
-            data_utils.tokenize(train_corpus, engine)
-            data_utils.tokenize(dev_corpus, engine)
-            data_utils.tokenize(test_corpus, engine)
+            #data_utils.train_tokenizer(engine, train_corpus_id, params['vocabularySize'])
+            #data_utils.tokenize(train_corpus_id, engine)
+            #data_utils.tokenize(dev_corpus_id, engine)
+            #data_utils.tokenize(test_corpus_id, engine)
+            #######
 
             engine.name = params['nameText']
             engine.description = params['descriptionText']
+
+            # set engine model path and create the folder so Marian can use it
             engine.model_path = os.path.join(engine.path, "model")
+            os.mkdir(engine.model_path)
 
             source_lang = UserLanguage.query.filter_by(code=params['source_lang'], user_id=user_id).one()
             engine.user_source_id = source_lang.id
@@ -152,17 +158,18 @@ def launch_training(self, user_id, engine_path, params):
             engine.status = "training_pending"
             engine.launched = datetime.datetime.utcnow().replace(tzinfo=None)
 
+            #user = db.session.query(User).filter_by(id=user_id).first()
             user = User.query.filter_by(id = user_id).first()
             user.user_engines.append(LibraryEngine(engine=engine, user=user))
 
             config_file_path = os.path.join(engine.path, 'config.yaml')
 
-            shutil.copyfile(os.path.join(app.config['BASE_CONFIG_FOLDER'], 'transformer-small.yaml'), config_file_path)
+            # get Marian engine configuration
+            shutil.copyfile(os.path.join(app.config['BASE_CONFIG_FOLDER'], 'transformer-marian.yaml'), config_file_path)
 
             db.session.add(engine)
             db.session.commit()
 
-            # Engine configuration
             config = None
 
             try:
@@ -171,38 +178,54 @@ def launch_training(self, user_id, engine_path, params):
             except:
                 raise Exception
 
-            config["data"]["src"] = engine.source.code
-            config["data"]["trg"] = engine.target.code
-
             def link_files(corpus, phase):
-                for file_entry in corpus.corpus_files:
-                    tok_path = '{}.mut.spe'.format(file_entry.file.path)
-                    tok_name = phase
+                try:
+                    sets_arr = []
+                    for file_entry in corpus.corpus_files:
+                        # create split filename and create path to it
+                        split_name = '{}.{}'.format(phase, params['source_lang'] if file_entry.role == "source" else params['target_lang'])
+                        split_path = str(os.path.join(engine.path, split_name))
+                        
+                        # link corpus path to split path
+                        corpus_path = file_entry.file.path
+                        os.link(corpus_path, split_path)
 
-                    os.link(tok_path, os.path.join(engine.path, '{}.{}'.format(tok_name, 
-                            params['source_lang'] if file_entry.role == "source" else params['target_lang'])))
+                        sets_arr.append(split_path)
 
-                    config["data"][phase] = os.path.join(engine.path, tok_name)
-                    config["training"]["model_dir"] = os.path.join(engine.path, "model")
+                    # insert it to configs in Marian style for train and valid sets, e.g. "train-sets" array
+                    if phase != "test":
+                        set_name = f"{phase}-sets"
+                        config[set_name] = sets_arr
 
-            try:
-                link_files(train_corpus, "train")
-                link_files(dev_corpus, "dev")
-                link_files(test_corpus, "test")
-            except:
-                raise Exception 
+                except Exception as ex:
+                    logging.exception("An exception was thrown in LINK_FILES")
 
-            # Get vocabulary
-            vocabulary_path = os.path.join(engine.path, "train.vocab")
-            config["data"]["src_vocab"] = vocabulary_path
-            config["data"]["trg_vocab"] = vocabulary_path
+            # link set files and insert in config file
+            link_files(train_corpus, "train")
+            link_files(dev_corpus, "valid")
+            link_files(test_corpus, "test")
             
-            config["name"] = engine.name
-            config["training"]["epochs"] = int(params['epochsText'])
-            config["training"]["patience"] = int(params['patienceTxt'])
-            config["training"]["batch_size"] = int(params['batchSizeTxt'])
-            config["training"]["validation_freq"] = int(params['validationFreq'])
-            config["testing"]["beam_size"] = int(params['beamSizeTxt'])
+            # call marian-vocab to create vocabulary files 
+            data_utils.marian_vocab(engine, params['source_lang'], params['target_lang'], params['vocabularySize'])
+
+            # set vocabulary paths and dimensions
+            src_vocab = os.path.join(engine.path, f"vocab.{params['source_lang']}.yml")
+            trg_vocab = os.path.join(engine.path, f"vocab.{params['target_lang']}.yml")
+            config["vocabs"] = [src_vocab, trg_vocab]
+            config["dim-vocabs"] = [params['vocabularySize'], params['vocabularySize']]
+            
+            # set paths to model files and to training log
+            config["model"] = os.path.join(engine.path, "model/model.npz")
+            config["log"] = os.path.join(engine.path, "model/train.log")
+
+            # set user values for epochs, early stopping patience and validation frequency
+            config["after"] = f"{params['epochsText']}e"
+            config["early-stopping"] = int(params['patienceTxt'])
+            config["valid-freq"] = int(params['validationFreq'])
+
+            # unneeded parameters - commented
+            #config["batch_size"] = int(params['batchSizeTxt'])
+            #config["beam_size"] = int(params['beamSizeTxt'])
 
             with open(config_file_path, 'w') as config_file:
                 yaml.dump(config, config_file)
@@ -212,85 +235,112 @@ def launch_training(self, user_id, engine_path, params):
             db.session.commit()
 
             return engine.id
-    except:
+    except Exception as ex:
         with app.app_context():
             db.session.delete(engine)
             db.session.commit()
 
-            Flash.issue("The engine could not be configured", Flash.ERROR)
+            #Flash.issue("The engine could not be configured", Flash.ERROR)
+            logging.exception("An exception was thrown!")
             return -1
 
 @celery.task(bind=True)
 def train_engine(self, engine_id, user_role):
     # Trains an engine by calling JoeyNMT and keeping
     # track of its progress
-    with app.app_context():
-        engine = Engine.query.filter_by(id=engine_id).first()
-        engine.status = "launching"
-        db.session.commit()
-        gpu_id = GPUManager.wait_for_available_device(is_admin=(user_role==EnumRoles.ADMIN))
-        engine.gid = gpu_id
-        db.session.commit()
-
-        try:
-            env = os.environ.copy()
-            env["CUDA_VISIBLE_DEVICES"] = "{}".format(gpu_id)
-            running_joey = subprocess.Popen(["python3", "-m", "joeynmt", "train", "-t",
-                                                    os.path.join(engine.path, "config.yaml")], cwd=app.config['JOEYNMT_FOLDER'],
-                                                    env=env)
-
-            engine.status = "training"
-            engine.pid = running_joey.pid
+    try:
+        with app.app_context():
+            engine = Engine.query.filter_by(id=engine_id).first()
+            engine.status = "launching"
+            db.session.commit()
+            gpu_id = GPUManager.wait_for_available_device(is_admin=(user_role==EnumRoles.ADMIN))
+            engine.gid = gpu_id
             db.session.commit()
 
-            # Trainings are limited to 1 hour
-            start = datetime.datetime.now()
-            difference = 0
-            max_time = 36000 if user_role == EnumRoles.RESEARCHER else 3600
-            while difference < max_time:
-                time.sleep(10)
-                difference = (datetime.datetime.now() - start).total_seconds()
-                if running_joey.poll() is not None:
-                    # JoeyNMT finished (or died) before timeout
-                    db.session.refresh(engine)
-                    if engine.status != "stopped" and engine.status != "stopped_admin":
-                        Trainer.stop(engine_id)
-                    GPUManager.free_device(gpu_id)
-                    return
+            try:
+                env = os.environ.copy()
 
-            if running_joey.poll() is None:
-                Trainer.stop(engine_id)
-        finally:
-            engine.status = "stopped"
-            GPUManager.free_device(gpu_id)
-            db.session.commit()
+                # get Marian training command and set available GPUs in environment
+                config_path = os.path.join(engine.path, "config.yaml")
+                marian_cmd = "{0}/build/marian -c {1}".format(app.config["MARIAN_FOLDER"], config_path)
+                env["CUDA_VISIBLE_DEVICES"] = "{}".format(gpu_id)
+                print("---- CUDA DEVICES: {0}".format(gpu_id))
+
+                print("CONFIG PATH: " + str(config_path))
+                print("DOES CONFIG EXIST: " + str(os.path.isfile(config_path)))
+
+                print("------- BEFORE STARTING MARIAN", flush = True)
+                # run Marian training command
+                marian_process = subprocess.Popen(marian_cmd, env=env, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                print("------- AFTER STARTING MARIAN", flush = True)
+
+                (stdout, stderr) = marian_process.communicate()
+                print(stdout.decode("utf-8"), flush = True)
+                print("-------------------------------", flush = True)
+                print(stderr.decode("utf-8"), flush = True)
+                print("-------------------------------", flush = True)
+
+                engine.status = "training"
+                engine.pid = marian_process.pid
+                db.session.commit()
+
+                # trainings are limited to 1 hour unless user has researcher role
+                start = datetime.datetime.now()
+                difference = 0
+                max_time = 36000 if user_role == EnumRoles.RESEARCHER else 3600
+                while difference < max_time:
+                    time.sleep(10)
+                    difference = (datetime.datetime.now() - start).total_seconds()
+                    if marian_process.poll() is not None:
+                        # training process finished (or died) before timeout
+                        db.session.refresh(engine)
+                        if engine.status != "stopped" and engine.status != "stopped_admin":
+                            Trainer.stop(engine_id)
+                        GPUManager.free_device(gpu_id)
+                        return
+
+                if marian_process.poll() is None:
+                    Trainer.stop(engine_id)
+
+            except Exception as ex:
+                logging.exception("An exception was thrown in TRAIN_ENGINE!")
+            finally:
+                engine.status = "stopped"
+                GPUManager.free_device(gpu_id)
+                db.session.commit()
+    except Exception as ex:
+        logging.exception("An exception was thrown in TRAIN_ENGINE!")
 
 @celery.task(bind=True)
-def monitor_training(self, engine_id):    
+def monitor_training(self, engine_id):
     redis_conn = redis.Redis()
     
     def monitor():
-        engine = Engine.query.filter_by(id=engine_id).first()
-        if engine:
-            if not engine.has_stopped():
-                current_power = int(PowerUtils.get_mean_power(engine.gid))
-                power = redis_conn.hget("power_value", engine_id)
-                updates = redis_conn.hget("power_update", engine_id)
+        try:
+            with app.app_context():
+                engine = Engine.query.filter_by(id=engine_id).first()
+                if engine:
+                    if not engine.has_stopped():
+                        current_power = int(PowerUtils.get_mean_power(engine.gid))
+                        power = redis_conn.hget("power_value", engine_id)
+                        updates = redis_conn.hget("power_update", engine_id)
 
-                power = int(power) if power else 0
-                updates = int(updates) + 1 if updates else 1
+                        power = int(power) if power else 0
+                        updates = int(updates) + 1 if updates else 1
 
-                redis_conn.hset("power_value", engine_id, power + current_power)
-                redis_conn.hset("power_update", engine_id, updates)
-                engine.power = int(power + current_power) / updates
-                with app.app_context():
-                    db.session.commit()
+                        redis_conn.hset("power_value", engine_id, power + current_power)
+                        redis_conn.hset("power_update", engine_id, updates)
+                        engine.power = int(power + current_power) / updates
+                        db.session.commit()
 
-                time.sleep(10)
-                monitor()
-        else:
-            time.sleep(5)
-            monitor()
+                        time.sleep(10)
+                        monitor()
+                else:
+                    time.sleep(5)
+                    monitor()
+        except Exception as ex:
+            logging.exception("An exception was thrown in MONITOR!")
+
 
     monitor()
 
