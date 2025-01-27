@@ -248,13 +248,19 @@ def train_stats():
     config_file_path = os.path.join(engine.path, 'config.yaml')
     with open(config_file_path, 'r') as config_file:
         config = yaml.load(config_file, Loader=yaml.FullLoader)
-        data["val_freq"] = config["training"]["validation_freq"] if "validation_freq" in config["training"] else None
-        data["epochs"] = config["training"]["epochs"] if "epochs" in config["training"] else None
-        data["patience"] = config["training"]["patience"] if "patience" in config["training"] else None 
-        data["batch_size"] = config["training"]["batch_size"] if "batch_size" in config["training"] else None 
-        data["beam_size"] = config["testing"]["beam_size"] if "beam_size" in config["testing"] else None
 
-    data["vocab_size"] = utils.file_length(os.path.join(engine.path, 'train.vocab'))
+        data["val_freq"] = config["valid-freq"] if "valid-freq" in config else None
+        data["patience"] = config["early-stopping"] if "early-stopping" in config else None 
+        data["beam_size"] = config["beam-size"] if "beam-size" in config else None
+
+        # get epochs parameter from "after" and convert to int
+        epoch_number = int(re.findall(r'\d+', config["after"])[0])
+        data["epochs"] = epoch_number if "after" in config else None
+
+        # batch size no longer needed when training with Marian - for now
+        #data["batch_size"] = config["batch_size"] if "batch_size" in config else None 
+
+    data["vocab_size"] = config["dim-vocabs"][0] if "dim-vocabs" in config else None
 
     return jsonify({
         "result": 200, 
@@ -370,12 +376,12 @@ def train_resume(engine_id):
         config = None
         with open(config_file_path, 'r') as config_file:
             config = yaml.load(config_file, Loader=yaml.FullLoader)
-            current_model = config["training"]["model_dir"]
-            config["training"]["model_dir"] = new_model_path
+            current_model = config["model"]
+            config["model"] = new_model_path
 
-            current_model_ckpt = os.path.join(current_model, 'best.ckpt')
-            if os.path.exists(current_model_ckpt):
-                config["training"]["load_model"] = current_model_ckpt
+            #current_model_ckpt = os.path.join(current_model, 'best.ckpt')
+            #if os.path.exists(current_model_ckpt):
+            #    config["training"]["load_model"] = current_model_ckpt
 
         with open(config_file_path, 'w') as config_file:
             yaml.dump(config, config_file)
