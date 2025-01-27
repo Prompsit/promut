@@ -14,7 +14,7 @@ import os
 app = Flask(__name__, static_folder='static', static_url_path='')
 
 app.config.from_object(Config)
-db = SQLAlchemy(app)
+db = SQLAlchemy(app, session_options={"autoflush": False})
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 

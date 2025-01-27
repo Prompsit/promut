@@ -8,6 +8,7 @@ class Config(object):
     LIST_FOLDER = os.path.join(basedir, 'list')
     PRELOADED_ENGINES_FOLDER = os.path.join(basedir, "preloaded")
     JOEYNMT_FOLDER = os.path.join(basedir, "joeynmt")
+    MARIAN_FOLDER = os.path.join(basedir, "marian")
     DATA_FOLDER = os.path.join(MUTNMT_FOLDER, "data")
     USERSPACE_FOLDER = os.path.join(DATA_FOLDER, "userspace")
     STORAGE_FOLDER = os.path.join(USERSPACE_FOLDER, "storage")
