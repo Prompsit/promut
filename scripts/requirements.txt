@@ -29,3 +29,4 @@ namegenerator
 psutil
 pymarian
 chardet
+numpy==1.26.4
