@@ -32,7 +32,7 @@ RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - && \
         apt-get install -y nodejs && curl -L https://npmjs.org/install.sh | sh
 
 # Create needed folders and virtual environment
-RUN mkdir -p /opt/mutnmt
+RUN mkdir -p /opt/mutnmt/app
 RUN mkdir /opt/mutnmt/scripts
 COPY scripts/ /opt/mutnmt/scripts/
 RUN python3.10 -m venv /opt/mutnmt/venv
@@ -55,7 +55,7 @@ RUN /usr/bin/bash -c "source /opt/mutnmt/venv/bin/activate && \
 
 # Install Marian via cloned repository
 RUN /usr/bin/bash -c "source /opt/mutnmt/venv/bin/activate && \   
-	cd /opt/mutnmt/ && \
+	cd /opt/mutnmt/app/ && \
 	git clone https://github.com/marian-nmt/marian && \
 	mkdir marian/build && \
 	cd marian/build && \
