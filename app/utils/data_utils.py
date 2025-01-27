@@ -2,7 +2,7 @@ from subprocess import CalledProcessError
 
 from app import app, db
 from app.utils import utils, user_utils, tasks
-from app.models import File, Corpus_File
+from app.models import File, Corpus_File, Corpus
 from sqlalchemy.orm.exc import NoResultFound
 
 import os
@@ -11,6 +11,7 @@ import sentencepiece as spm
 import re
 import datetime
 import shutil
+import logging
 
 def process_upload_request(user_id, bitext_file, src_file, trg_file, src_lang, trg_lang, corpus_name, corpus_desc, corpus_topic):
     type = "bitext" if bitext_file else "bilingual"
@@ -172,7 +173,34 @@ def join_corpus_files(corpus, shuffle=False, user_id=None):
 
     return corpus
 
-def train_tokenizer(engine, corpus, vocabularySize=32000):
+def marian_vocab(engine, src_lang, trg_lang, vocabularySize=32000):
+    vocab_src_path = os.path.join(engine.path, f'vocab.{src_lang}.yml')
+    vocab_trg_path = os.path.join(engine.path, f'vocab.{trg_lang}.yml')
+
+    try:
+        os.stat(vocab_src_path)
+        os.stat(vocab_trg_path)
+    except:
+        try:
+    
+            train_src_path = os.path.join(engine.path, f'train.{src_lang}')
+            train_trg_path = os.path.join(engine.path, f'train.{trg_lang}')
+
+            # call Marian command for creating vocabularies from train splits
+            # src
+            marian_cmd = "{0}/build/marian-vocab < {1} > {2}".format(app.config["MARIAN_FOLDER"], train_src_path, vocab_src_path)
+            vocab_src = subprocess.run(marian_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            
+            # trg
+            marian_cmd = "{0}/build/marian-vocab < {1} > {2}".format(app.config["MARIAN_FOLDER"], train_trg_path, vocab_trg_path)
+            vocab_trg = subprocess.run(marian_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            
+        except Exception as ex:
+            logging.exception("An exception was thrown in MARIAN_VOCAB")
+
+    return vocab_src_path, vocab_trg_path
+
+def train_tokenizer(engine, corpus_id, vocabularySize=32000):
     model_path = os.path.join(engine.path, 'train.model')
     vocab_path = os.path.join(engine.path, 'train.vocab')
 
@@ -180,33 +208,40 @@ def train_tokenizer(engine, corpus, vocabularySize=32000):
         os.stat(model_path)
         os.stat(vocab_path)
     except:
-        files_list = []
-        for file_entry in corpus.corpus_files:
-            files_list.append(file_entry.file.path)
-        files = " ".join(files_list)
-        random_sample_path = utils.tmpfile(filename="{}.mut.10m".format(corpus.id))
-        cat_proc = subprocess.Popen("cat {} | shuf | head -n 10000000 > {}".format(files, random_sample_path), shell=True)
-        cat_proc.wait()
+        try:
+            corpus = db.session.query(Corpus).filter_by(id=corpus_id).first()
 
-        train_proc = subprocess.Popen("spm_train --input={} --model_prefix=mut.{} --vocab_size={} --hard_vocab_limit=false" \
-                        .format(random_sample_path, corpus.id, vocabularySize),
-                        cwd=utils.filepath('TMP_FOLDER'), shell=True)
-        train_proc.wait()
+            files_list = []
+            for file_entry in corpus.corpus_files:
+                files_list.append(file_entry.file.path)
+            files = " ".join(files_list)
+            random_sample_path = utils.tmpfile(filename="{}.mut.10m".format(corpus.id))
+            cat_proc = subprocess.Popen("cat {} | shuf | head -n 10000000 > {}".format(files, random_sample_path), shell=True)
+            cat_proc.wait()
 
-        shutil.move(utils.filepath('TMP_FOLDER', "mut.{}.model".format(corpus.id)), model_path)
-        shutil.move(utils.filepath('TMP_FOLDER', "mut.{}.vocab".format(corpus.id)), vocab_path)
-        os.remove(random_sample_path)
-        
-        purge_vocab = subprocess.Popen("cat {} | awk -F '\\t' '{{ print $1 }}' > {}.purged".format(vocab_path, vocab_path), shell=True)
-        purge_vocab.wait()
+            train_proc = subprocess.Popen("spm_train --input={} --model_prefix=mut.{} --vocab_size={} --hard_vocab_limit=false" \
+                            .format(random_sample_path, corpus.id, vocabularySize),
+                            cwd=utils.filepath('TMP_FOLDER'), shell=True)
+            train_proc.wait()
 
-        os.remove(vocab_path)
-        shutil.move("{}.purged".format(vocab_path), vocab_path)
+            shutil.move(utils.filepath('TMP_FOLDER', "mut.{}.model".format(corpus.id)), model_path)
+            shutil.move(utils.filepath('TMP_FOLDER', "mut.{}.vocab".format(corpus.id)), vocab_path)
+            os.remove(random_sample_path)
+            
+            purge_vocab = subprocess.Popen("cat {} | awk -F '\\t' '{{ print $1 }}' > {}.purged".format(vocab_path, vocab_path), shell=True)
+            purge_vocab.wait()
+
+            os.remove(vocab_path)
+            shutil.move("{}.purged".format(vocab_path), vocab_path)
+        except Exception as ex:
+            logging.exception("An exception was thrown in TRAIN_TOKENIZER")
 
     return model_path, vocab_path
 
-def tokenize(corpus, engine):
+def tokenize(corpus_id, engine):
     model_path, vocab_path = os.path.join(engine.path, 'train.model'), os.path.join(engine.path, 'train.vocab')
+
+    corpus = db.session.query(Corpus).filter_by(id=corpus_id).first()
 
     for entry_file in corpus.corpus_files:
         file_tok_path = '{}.mut.spe'.format(entry_file.file.path)
