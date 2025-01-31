@@ -8,6 +8,7 @@ log: /work/tudor/bismut/training/log.txt
 after: 4e
 seed: 42
 mini-batch-fit: True
+mini-batch: 32
 workspace: 8000
 shuffle-in-ram: true # speed up shuffling, may eat all the ram when using very big training files
 
@@ -18,7 +19,7 @@ valid-freq: 1000
 valid-mini-batch: 20
 save-freq: 300
 overwrite: True
-disp-freq: 20
+disp-freq: 50
 #disp-first: 10
 quiet-translation: true
 
