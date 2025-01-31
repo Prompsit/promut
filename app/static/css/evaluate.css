@@ -24,6 +24,15 @@
 .evaluate-status[data-status="error"] .evaluate-status-error {
   display: block;
 }
+.metric {
+  flex: 0 0 25%;
+}
+.chart-container {
+  display: flex;
+}
+.score-graph {
+  width: 50%;
+}
 
 .metric-hint {
   height: 8px;

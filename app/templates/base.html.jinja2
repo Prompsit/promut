@@ -105,6 +105,7 @@
                         <hr />
 
                         {% if current_user.is_authenticated %}
+                        <div class="user-area">
                         <div class="d-flex align-items-center">
                             <img alt="" src="{{ current_user.avatar_url }}" class="img-avatar" />
                             <div class="ml-2">
@@ -130,6 +131,7 @@
                             <a href="{{ url_for('auth.logout') }}" class="text-danger">
                                 <i class="fas fa-power-off"></i> Sign out
                             </a>
+                        </div>
                         </div>
                         {% endif %}
                     </div>

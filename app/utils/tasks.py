@@ -562,8 +562,8 @@ def spl(mt_path, ht_path, source_path):
     # Obtain Comet results in output file
     if source_path != "":
         src_path = "-s {0}".format(source_path)    
-    comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl".format(mt_path, src_path, ht_path, mt_path), 
-                        shell=True, stdout=subprocess.PIPE)
+    # comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl".format(mt_path, src_path, ht_path, mt_path), 
+    #                     shell=True, stdout=subprocess.PIPE)
 
     # UNCOMMENT FOR CPU COMET !!!
     comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl -c 8".format(mt_path, src_path, ht_path, mt_path), 
@@ -594,17 +594,7 @@ def spl(mt_path, ht_path, source_path):
                 ter = round(pyter.ter(ht_line.split(), mt_line.split()), 2)
                 rows[i]['ter'] = 100 if ter > 1 else utils.parse_number(ter * 100, 2)
                 rows[i]['text'] = mt_line
-
-    with open(ht_path) as ht_file, open(mt_path) as mt_file:
-        for i, row in enumerate(rows):
-            ht_line = ht_file.readline().strip()
-            mt_line = mt_file.readline().strip()
-            if ht_line and mt_line:
-                chrf = CHRF()
-                score = chrf.corpus_score([ht_line], [mt_line])
-                print(score, "score ****")
-                rows[i]['chrf3'] = score
-                rows[i]['text'] = mt_line            
+        
 
     return rows
 

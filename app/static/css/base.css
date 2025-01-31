@@ -3,15 +3,18 @@ html {
 }
 
 .img-avatar {
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 38px;
   border-radius: 50% 50%;
 }
 
 .hamburger-menu .nav-pills .fas {
   width: 18px;
 }
-
+.user-area {
+  display: flex;
+  justify-content: space-between;
+}
 @media screen and (max-width: 576px) {
   .hamburger-menu {
     position: fixed;

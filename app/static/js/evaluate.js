@@ -103,7 +103,6 @@ $(document).ready(function () {
   $(".ter-btn").on("click", function () {
     $(".scores-btn-group .btn").removeClass("active");
     $(this).addClass("active");
-    console.log(bpl_chart);
 
     bpl_chart.config.data.datasets[0] = ter_dataset;
     bpl_chart.update();
@@ -196,98 +195,242 @@ $(document).ready(function () {
       }
 
       $(".chart-container div").remove();
+      $("#bleu-chart").remove();
+      $("#ter-chart").remove();
+      $("#comet-chart").remove();
+      $("#chrf-chart").remove();
       $(".chart-container").append(document.createElement("div"));
 
+      let bleuChartEl = document.createElement("div");
+      bleuChartEl.setAttribute("id", "bleu-chart");
+
+      let terChartEl = document.createElement("div");
+      terChartEl.setAttribute("id", "ter-chart");
+
+      let cometChartEl = document.createElement("div");
+      cometChartEl.setAttribute("id", "comet-chart");
+
+      let chrfChartEl = document.createElement("div");
+      chrfChartEl.setAttribute("id", "chrf-chart");
+
+      $(".chart-container").append(bleuChartEl);
+      $(".chart-container").append(terChartEl);
+      $(".chart-container").append(cometChartEl);
+      $(".chart-container").append(chrfChartEl);
+
       let file_series = { bleu: [], ter: [], chrf: [], comet: [] };
+
       file_series["bleu"] = evaluation.spl[ht_ix].map((m) =>
-        parseFloat(m[5][mt_ix]["bleu"])
-      );
-      file_series["ter"] = evaluation.spl[ht_ix].map((m) =>
-        parseFloat(m[5][mt_ix]["ter"])
-      );
-      file_series["ter"] = evaluation.spl[ht_ix].map((m) =>
-        parseFloat(m[5][mt_ix]["ter"])
+        Number(m[5][mt_ix]["bleu"])
       );
       file_series["ter"] = evaluation.spl[ht_ix].map((m) =>
         parseFloat(m[5][mt_ix]["ter"])
       );
 
-      console.log(evaluation, "evaluation*****", mt_ix, ht_ix);
+      file_series["comet"] = evaluation.spl[ht_ix].map((m) =>
+        parseFloat(m[5][mt_ix]["comet"])
+      );
+      file_series["chrf"] = evaluation.spl[ht_ix].map((m) =>
+        parseFloat(m[5][mt_ix]["chrf3"])
+      );
 
-      bpl_chart = new ApexCharts(
-        document.querySelector(".chart-container div"),
-        {
+      //TODO NEW GRAPH
+
+      function graphOptions(metric, color) {
+        var options = {
           series: [
             {
-              name: "BLEU",
-              data: file_series["bleu"].splice(0, 100),
-            },
-            {
-              name: "TER",
-              data: file_series["ter"].splice(0, 100).map((m) => -1 * m),
+              name: metric,
+              data: file_series[metric],
             },
           ],
           chart: {
+            height: 200,
             type: "bar",
-            width: "100%",
-            height: 500,
-            stacked: true,
-            toolbar: {
-              show: true,
-            },
-            zoom: {
-              enabled: true,
-            },
           },
           plotOptions: {
             bar: {
-              colors: {
-                ranges: [
-                  {
-                    from: -100,
-                    to: 0,
-                    color: "#ffc107",
-                  },
-                  {
-                    from: 0,
-                    to: 100,
-                    color: "rgba(87, 119, 144, 1)",
-                  },
-                ],
+              borderRadius: 10,
+              dataLabels: {
+                position: "top", // top, center, bottom
               },
             },
           },
-          dataLabels: { enabled: false },
+          dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+              return val;
+            },
+            offsetY: -20,
+            style: {
+              fontSize: "12px",
+              colors: ["#304758"],
+            },
+          },
+
+          xaxis: {
+            position: "top",
+            axisBorder: {
+              show: false,
+            },
+            axisTicks: {
+              show: false,
+            },
+            crosshairs: {
+              fill: {
+                type: "gradient",
+                gradient: {
+                  colorFrom: color,
+                  colorTo: color,
+                  stops: [0, 100],
+                  opacityFrom: 0.4,
+                  opacityTo: 0.5,
+                },
+              },
+            },
+            tooltip: {
+              enabled: true,
+            },
+          },
           yaxis: {
-            max: 100,
-            min: -100,
+            axisBorder: {
+              show: false,
+            },
+            axisTicks: {
+              show: false,
+            },
             labels: {
-              formatter: (val) => {
-                if (val % parseInt(val) == 0) return parseInt(val);
-                return val.toFixed(2);
+              show: false,
+              formatter: function (val) {
+                return val;
               },
             },
           },
-          colors: ["rgba(87, 119, 144, 1)", "#ffc107"],
-          tooltip: {
-            y: {
-              formatter: function (value, { _, seriesIndex }) {
-                if (seriesIndex == 1) {
-                  // Series 1 is TER
-                  return parseFloat(value * -1).toFixed(2) + "%";
-                } else {
-                  return parseFloat(value).toFixed(2);
-                }
-              },
+          title: {
+            text: metric,
+            floating: true,
+            offsetY: 330,
+            align: "center",
+            style: {
+              color: "#444",
             },
           },
-        }
+        };
+
+        return options;
+      }
+
+      const bleuOptions = graphOptions("bleu", "#0F95E1");
+      const terOptions = graphOptions("ter", "#4CE895");
+      const cometOptions = graphOptions("comet", "#006293");
+      const chrfOptions = graphOptions("chrf", "#259887");
+
+      var bleuChart = new ApexCharts(
+        document.querySelector("#bleu-chart"),
+        bleuOptions
       );
+      bleuChart.render();
+
+      var terChart = new ApexCharts(
+        document.querySelector("#ter-chart"),
+        terOptions
+      );
+      terChart.render();
+
+      var cometChart = new ApexCharts(
+        document.querySelector("#comet-chart"),
+        cometOptions
+      );
+      cometChart.render();
+
+      var chrfChart = new ApexCharts(
+        document.querySelector("#chrf-chart"),
+        chrfOptions
+      );
+      chrfChart.render();
+
+      //TODO END NEW GRAPH
+
+      //* OLD GRAPH
+
+      // bpl_chart = new ApexCharts(
+      //   document.querySelector(".chart-container div"),
+      //   {
+      //     series: [
+      //       {
+      //         name: "BLEU",
+      //         data: file_series["bleu"].splice(0, 100),
+      //       },
+      //       {
+      //         name: "TER",
+      //         data: file_series["ter"].splice(0, 100).map((m) => -1 * m),
+      //       },
+      //     ],
+      //     chart: {
+      //       type: "bar",
+      //       width: "100%",
+      //       height: 500,
+      //       stacked: true,
+      //       toolbar: {
+      //         show: true,
+      //       },
+      //       zoom: {
+      //         enabled: true,
+      //       },
+      //     },
+      //     plotOptions: {
+      //       bar: {
+      //         colors: {
+      //           ranges: [
+      //             {
+      //               from: -100,
+      //               to: 0,
+      //               color: "#ffc107",
+      //             },
+      //             {
+      //               from: 0,
+      //               to: 100,
+      //               color: "rgba(87, 119, 144, 1)",
+      //             },
+      //           ],
+      //         },
+      //       },
+      //     },
+      //     dataLabels: { enabled: false },
+      //     yaxis: {
+      //       max: 100,
+      //       min: -100,
+      //       labels: {
+      //         formatter: (val) => {
+      //           if (val % parseInt(val) == 0) return parseInt(val);
+      //           return val.toFixed(2);
+      //         },
+      //       },
+      //     },
+      //     colors: ["rgba(87, 119, 144, 1)", "#ffc107"],
+      //     tooltip: {
+      //       y: {
+      //         formatter: function (value, { _, seriesIndex }) {
+      //           if (seriesIndex == 1) {
+      //             // Series 1 is TER
+      //             return parseFloat(value * -1).toFixed(2) + "%";
+      //           } else {
+      //             return parseFloat(value).toFixed(2);
+      //           }
+      //         },
+      //       },
+      //     },
+      //   }
+      // );
 
       $(".evaluate-status").attr("data-status", "none");
       $(".evaluate-results").removeClass("d-none");
 
-      bpl_chart.render();
+      // bpl_chart.render();
+
+      //*   END OLD GRAPH
+
+      //! TABLE STUFF
 
       $(".page-number").attr("max", evaluation.spl[ht_ix].length);
       bpl_table = $(".bleu-line").DataTable({
@@ -365,6 +508,8 @@ $(document).ready(function () {
         bpl_table.page(page_val).draw(false);
       });
     };
+
+    //! END OF TABLE
 
     $.ajax({
       url: $(this).attr("action"),
