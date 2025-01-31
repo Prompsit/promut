@@ -169,8 +169,9 @@ def library_engines_feed():
                 for line in log_file:
                     groups = re.search(training_log.validation_regex, line, flags=training_log.re_flags)
                     if groups:
-                        bleu_score = float(groups[6])
-                        score = bleu_score if score is None or bleu_score > score else score
+                        if groups.groups()[5] == "bleu":
+                            bleu_score = float(groups.groups()[6])
+                            score = bleu_score if score is None or bleu_score > score else score
         except IOError:
             pass
 

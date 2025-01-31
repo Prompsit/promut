@@ -264,7 +264,7 @@ def add_pretrained_engines(user_id):
                         flags=training_log.re_flags,
                     )
                     if groups:
-                        date_string = "{} {}".format(groups[1], groups[2])
+                        date_string = "{} {}".format(groups.groups()[0], groups.groups()[1])
                         date = datetime.datetime.strptime(
                             date_string, "%Y-%m-%d %H:%M:%S"
                         )

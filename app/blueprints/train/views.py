@@ -27,6 +27,7 @@ import subprocess
 import glob
 import re
 import json
+import logging
 
 train_blueprint = Blueprint('train', __name__, template_folder='templates')
 
@@ -142,25 +143,35 @@ def train_graph():
     tags = request.form.getlist('tags[]')
     id = request.form.get('id')
 
-    engine = Engine.query.filter_by(id=id).first()
-    tensor = tensor_utils.TensorUtils(id)
+    try:
+        engine = Engine.query.filter_by(id=id).first()
 
-    stats = {}
-    for tag in tags:
-        data = tensor.get_tag(tag)
-        if data:
+        if engine.model_path:
+            train_log_path = os.path.join(engine.model_path, 'train.log')
+        else:
+            train_log_path = os.path.join(engine.path, 'model/train.log')
+        
+        graph_dict_path = os.path.join(engine.path, 'model/graph_dict.yaml')
+        stats = {}
+
+        stats_aux = {}
+        with open(graph_dict_path) as f:
+            stats_aux = yaml.safe_load(f)
+
+        for tag in stats_aux.keys():
             stats[tag] = []
-            data_len = len(data)
+            data_len = len(stats_aux[tag])
+
             data_breakpoint = 1000 if data_len >= 100 else 10 if data_len > 10 else 1
-            for i, item in enumerate(data):
-                if item.step % data_breakpoint == 0 or (i + 1) == data_len:
-                    stats[tag].append({ "time": item.wall_time, "step": item.step, "value": item.value })
-            
-            # The first step contains the initial learning rate which is
-            # normally way bigger than the next one and it makes the chart
-            # look like a straight line
+
+            for i, item in enumerate(stats_aux[tag]):
+                    if item["step"] % data_breakpoint == 0 or (i + 1) == data_len:
+                        stats[tag].append({"time": item["time"], "step": item["step"], "value": item["value"]})
             if tag == "train/train_learning_rate":
                 stats[tag] = stats[tag][1:]
+
+    except Exception as ex:
+        logging.exception("An exception was thrown in TRAIN_GRAPH")
 
     return jsonify({ "stopped": engine.has_stopped(), "stats": stats })
 
@@ -171,14 +182,19 @@ def train_status():
 
     engine = Engine.query.filter_by(id = id).first()
     tensor = tensor_utils.TensorUtils(id)
-    
-    if tensor.is_loaded():
-        stats = {}
 
+    graph_dict_path = os.path.join(engine.path, 'model/graph_dict.yaml')
+    stats_aux = {}
+    stats = {}
+    if os.path.isfile(graph_dict_path):
+        with open(graph_dict_path) as f:
+            stats_aux = yaml.safe_load(f)
+    
+    if stats_aux != {} and "train/train_epoch" in stats_aux and stats_aux["train/train_epoch"] != []:
         epoch_no = 0
-        for data in tensor.get_tag("train/train_epoch"):
-            if data.value > epoch_no:
-                epoch_no = data.value
+        for epoch in stats_aux["train/train_epoch"]:
+            if epoch > epoch_no:
+                epoch_no = epoch
         stats["epoch"] = epoch_no
 
         launched = engine.launched
@@ -206,20 +222,44 @@ def train_stats():
     tps = []
     
     try:
+        graph_dict = {}
+        graph_dict["train/train_batch_loss"] = []
+        graph_dict["train/train_learning_rate"] = []
+        graph_dict["valid/valid_ppl"] = []
+        graph_dict["valid/valid_score"] = []
+        graph_dict["train/train_epoch"] = []
+
         with open(os.path.join(engine.path, "model/train.log"), 'r') as log_file:
             for line in log_file:
                 groups = re.search(training_log.training_regex, line, flags=training_log.re_flags)
                 if groups:
-                    tps.append(float(groups[8]))
+                    tps.append(float(groups.groups()[8]))
+                    time_g = groups.groups()[1]
+                    step_g = int(groups.groups()[4])
+                    graph_dict["train/train_batch_loss"].append({"time": time_g, "step": step_g, "value": float(groups.groups()[6])})
+                    graph_dict["train/train_learning_rate"].append({"time": time_g, "step": step_g, "value": float(groups.groups()[10])})
+                    graph_dict["train/train_epoch"].append(groups.groups()[3])
                 else:
                     # It was not a training line, could be validation
                     groups = re.search(training_log.validation_regex, line, flags=training_log.re_flags)
                     if groups:
-                        bleu_score = float(groups[6])
-                        score = bleu_score if bleu_score > score else score
-                        ppl = float(groups[8])
-    except FileNotFoundError:
-        pass
+                        time_g = groups.groups()[1]
+                        step_g = int(groups.groups()[4])
+                        if groups.groups()[5] == "bleu":
+                            bleu_score = float(groups.groups()[6])
+                            score = bleu_score if bleu_score > score else score
+                            graph_dict["valid/valid_score"].append({"time": time_g, "step": step_g, "value": score})
+                        
+                        if groups.groups()[5] == "perplexity":
+                            ppl = float(groups.groups()[6])
+                            graph_dict["valid/valid_ppl"].append({"time": time_g, "step": step_g, "value": ppl})
+
+        graph_dict_path = os.path.join(engine.path, 'model/graph_dict.yaml')
+        with open(graph_dict_path, 'w+') as outfile:
+            yaml.dump(graph_dict, outfile, default_flow_style=False)
+
+    except Exception as ex:
+        logging.exception("An exception was thrown in TRAIN_STATS")
 
     if len(tps) > 0:
         tps_value = reduce(lambda a, b: a + b, tps)
@@ -291,15 +331,15 @@ def train_log():
             for line in train_log:
                 groups = re.search(training_log.training_regex, line.strip(), flags=re_flags)
                 if groups:
-                    date_string = groups[1]
-                    time_string = groups[2]
-                    epoch, step = groups[5], groups[6]
-                    batch_loss, tps, lr = groups[7], groups[8], groups[9]
+                    date_string = groups.groups()[0]
+                    time_string = groups.groups()[1]
+                    epoch, step = int(groups.groups()[3]), int(groups.groups()[4])
+                    batch_loss, tps, lr = float(groups.groups()[6]), float(groups.groups()[8]), float(groups.groups()[10])
 
                     # date = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
                     rows.append([time_string, epoch, step, batch_loss, tps, lr])
-    except FileNotFoundError:
-        pass
+    except Exception as ex:
+        logging.exception("An exception was thrown in TRAIN_LOG")
 
     if order is not None:
         rows.sort(key=lambda row: row[order], reverse=(dir == "desc"))
