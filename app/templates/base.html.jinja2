@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>
-        {% if page_title %}{{page_title}} — {% endif %}MutNMT
+        {% if page_title %}{{page_title}} — {% endif %} ProMut
     </title>
 
     {% include "head.html.jinja2" %}
@@ -17,7 +17,7 @@
 </script>
 </head>
 <body>
-    <div class="container-fluid px-sm-12">
+    <div class="main-container">
         <div class="row my-3">
             <div class="col-12 col-sm-3">
                 <div class="d-flex align-items-center">
@@ -27,8 +27,7 @@
 
                     <div class="d-flex align-items-center justify-content-between w-100">
                         <a class="h4 mb-0 text-dark" href="{{ url_for('index') }}">
-                            <img alt="MutNMT Logo" src="{{ url_for('static', filename='img/icon.svg') }}" style="width: 48px;" class="d-none d-sm-inline" />
-                            MutNMT
+                            <img alt="ProMut Logo" src="{{ url_for('static', filename='img/logo.png') }}" style="width: 120px; margin: 10px 0 0 -10px;" class="d-none d-sm-inline" />
                         </a>
 
                         <a class="btn btn-link d-sm-none d-none btn-begin-tour">
@@ -45,9 +44,6 @@
                                 <i class="fas fa-arrow-left"></i>
                             </button>
 
-                            <a class="h4 mb-0 text-dark" href="{{ url_for('index') }}">
-                                MutNMT
-                            </a>
                         </div>
 
                         <ul class="nav nav-pills flex-column mt-3">
@@ -101,17 +97,15 @@
                             <hr />
 
                             <a href="#" class="nile-resurrect-btn text-reset text-decoration-none">
-                                <img alt="" class="img-fluid" style="width: 48px;" src="{{ url_for('static', filename='img/nile-resurrect.svg') }}" />
-
-                                <span class="ml-2">
-                                    Nile, please help!
-                                </span>
+                            <i class="fas fa-solid fa-info"></i>
+                                   <p> Guidance </p>
                             </a>
                         </div>
 
                         <hr />
 
                         {% if current_user.is_authenticated %}
+                        <div class="user-area">
                         <div class="d-flex align-items-center">
                             <img alt="" src="{{ current_user.avatar_url }}" class="img-avatar" />
                             <div class="ml-2">
@@ -137,6 +131,7 @@
                             <a href="{{ url_for('auth.logout') }}" class="text-danger">
                                 <i class="fas fa-power-off"></i> Sign out
                             </a>
+                        </div>
                         </div>
                         {% endif %}
                     </div>
@@ -176,9 +171,10 @@
 
     <script src="{{ url_for('static', filename='lib/jquery-3.5.1.min.js') }}"></script>
     <script src="{{ url_for('static', filename='lib/bootstrap.bundle.min.js') }}"></script>
-    <script src="https://unpkg.com/driver.js/dist/driver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
     
-    <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+    <script src=" https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js "></script>
     <script src="{{ url_for('static', filename='js/tour' + infix + '.js') }}"></script>
     <script src="{{ url_for('static', filename='js/base' + infix + '.js') }}"></script>
     {% block resources %}{% endblock %}

@@ -643,7 +643,7 @@ def spl(mt_path, ht_path, source_path):
                 ter = round(pyter.ter(ht_line.split(), mt_line.split()), 2)
                 rows[i]['ter'] = 100 if ter > 1 else utils.parse_number(ter * 100, 2)
                 rows[i]['text'] = mt_line
-
+        
     return rows
 
 def generate_xlsx(user_id, rows, ht_path_index):

@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block content %}
-<h2 class="h5">Evaluate translations</h2>
+<h2 class="h5 primary-header">Evaluate translations</h2>
 
 <form action="{{ url_for('evaluate.evaluate_files') }}" method="post" enctype="multipart/form-data" class="evaluate-form">
     <div class="row mt-3">
@@ -158,7 +158,7 @@
 
     <div class="col-12 mt-4">
         <div class="row">
-            <div class="col-12 col-sm-4 text-center mb-4" id="sample-bleu">
+            <div class="metric text-center mb-4" id="sample-bleu">
                 <strong class="h1 bold metric-value">25.5</strong>
 
                 <div class="metric-hint my-3">
@@ -180,7 +180,7 @@
                 <strong class="metric-name">BLEU</strong>
             </div>
 
-            <div class="col-12 col-sm-4 text-center mb-4" id="sample-chrf3">
+            <div class="metric text-center mb-4" id="sample-chrf3">
                 <strong class="h1 bold metric-value">37.0</strong>
 
                 <div class="metric-hint my-3">
@@ -202,7 +202,7 @@
                 <strong class="metric-name">chrF3</strong>
             </div>
 
-            <div class="col-12 col-sm-4 text-center mb-4" id="sample-ter">
+            <div class="metric text-center mb-4" id="sample-ter">
                 <strong class="h1 bold metric-value">80.2</strong>
 
                 <div class="metric-hint reversed my-3">
@@ -222,6 +222,27 @@
                 </div>
 
                 <strong class="metric-name">TER</strong>
+            </div>
+              <div class="metric text-center mb-4" id="sample-comet">
+                <strong class="h1 bold metric-value">32.2</strong>
+
+                <div class="metric-hint reversed my-3">
+                    <div class="metric-hint-content">
+                        <div class="metric-hint-bar">
+                            <div class="progress">
+                                <div class="progress-bar bg-success metric-bar" role="progressbar" style="width: 100%" aria-role="presentation"></div>
+                            </div>
+
+                            <div class="metric-indicator" style="left: 85%;"></div>
+                        </div>
+                        
+                        <div class="metric-icon">
+                            <i class="far fa-laugh"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <strong class="metric-name">comet</strong>
             </div>
         </div>
     </div>
@@ -274,7 +295,10 @@
     </div>
 
     <div class="my-3 chart-container">
-        <div></div>
+        <div id="bleu-graph" class="score-graph"></div>
+        <div id="chrf-graph" class="score-graph"></div>
+        <div id="ter-graph" class="score-graph"></div>
+        <div id="comet-graph" class="score-graph"></div>
     </div>
     <div class="mb-4">
         <table class="table table-striped table-bordered score-table bleu-line">
@@ -310,6 +334,8 @@
         <td class="sentences-view-mt overflow"></td>
         <td class="sentences-view-bleu"></td>
         <td class="sentences-view-ter"></td>
+          <td class="sentences-view-chrf3"></td>
+        <td class="sentences-view-comet"></td>
     </tr>
 </template>
 
@@ -346,7 +372,7 @@
 </template>
 
 <template id="metric-template">
-    <div class="col-12 col-sm-4 text-center mb-4">
+    <div class="metric text-center mb-4">
         <strong class="h1 bold metric-value"></strong>
 
         <div class="metric-hint my-3">

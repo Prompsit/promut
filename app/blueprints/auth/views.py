@@ -156,7 +156,7 @@ def provisional_login():
             username=username,
             social_id="USER-" + username,
             email=email_str,
-            avatar_url="/img/amun.png",
+            avatar_url="/img/profile.png",
             role=beginner_role,
         )
         db.session.add(new_user)
@@ -201,7 +201,7 @@ def demo_log_in():
             social_id="DEMO",
             email="demo@example.com",
             demo=True,
-            avatar_url="/img/amun.png",
+            avatar_url="/img/profile.png",
             role=admin_role,
         )
         db.session.add(demo_user)

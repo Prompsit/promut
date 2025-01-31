@@ -1,21 +1,36 @@
 /* Variable overrides */
-$primary: #577790 !default;
-$font-family-sans-serif: "Montserrat", Arial, Helvetica, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !default;
+$primary: #017360 !default;
+$font-family-sans-serif: "Roboto", Arial, Helvetica, sans-serif,
+  "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !default;
 
 /* More spacers */
 $spacer: 1rem !default;
 $spacers: (
-    6: ($spacer * 4),
-    7: ($spacer * 5),
-    8: ($spacer * 6),
-    9: ($spacer * 7),
-    10: ($spacer * 8),
-    11: ($spacer * 9),
-    12: ($spacer * 10)
+  6: (
+    $spacer * 4,
+  ),
+  7: (
+    $spacer * 5,
+  ),
+  8: (
+    $spacer * 6,
+  ),
+  9: (
+    $spacer * 7,
+  ),
+  10: (
+    $spacer * 8,
+  ),
+  11: (
+    $spacer * 9,
+  ),
+  12: (
+    $spacer * 10,
+  ),
 );
 
 $theme-colors: (
-    blue-gray: #B3C4D1
+  blue-gray: #b3c4d1,
 );
 
 /* Required imports */
@@ -56,24 +71,25 @@ $theme-colors: (
 
 /* Class overrides */
 .btn-outline-primary {
-    @include button-outline-variant($primary, $color-hover: #fff)
+  @include button-outline-variant($primary, $color-hover: #fff);
 }
 
 .btn-primary {
-    @include button-variant($primary, $primary);
-    color: #fff;
+  @include button-variant($primary, $primary);
+  color: #fff;
 }
 
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .row-striped > [class*="col-"] {
-    padding: 1rem;
+  padding: 1rem;
 }
 
 .row-striped > [class*="col-"]:nth-child(2n) {
-    background-color: var(--light);
+  background-color: var(--light);
 }

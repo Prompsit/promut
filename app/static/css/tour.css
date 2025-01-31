@@ -1,64 +1,59 @@
 .tour-guide {
-    position: fixed;
-    left: 0px;
-    bottom: 0px;
-    max-width: 400px;
-    display: flex;
-    align-items: flex-end;
-    background-color: white;
-    transition: bottom 0.2s linear;
+  position: fixed;
+  left: 25px;
+  bottom: 0px;
+  max-width: 400px;
+  display: flex;
+  align-items: flex-end;
+  background-color: white;
+  transition: bottom 0.2s linear;
 }
 
 .tour-guide.hidden {
-    bottom: -100%;
+  bottom: -100%;
 }
 
 .nile-resurrect-btn {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
+  color: #006293;
+  font-weight: 500;
+  padding-left: 10px;
+}
+.nile-resurrect-btn p {
+  margin-left: 20px;
+  margin-bottom: -3px;
 }
 
 @media screen and (max-width: 576px) {
-    .tour-guide {
-        display: none;
-    }
+  .tour-guide {
+    display: none;
+  }
 }
 
-    .tour-guide .tour-guide-picture {
-        flex: 1 0 150px;
-        background-color: white;
-        background-image: url(/img/nile_covid.svg);
-        background-repeat: no-repeat;
-        background-size: 100% 100%;
-        width: 150px;
-        height: 150px;
-    }
+.tour-guide .tour-guide-bubble {
+  background-color: white;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  position: relative;
+  max-width: 21vw;
+  background-color: #caf0ec;
+  color: #00473c;
+  top: 7px;
+}
 
-    .tour-guide .tour-guide-bubble {
-        background-color: white;
-        margin-left: 0.5rem;
-        padding: 0.5rem;
-        border: solid 1px var(--dark);
-        border-radius: 0.5rem;
-        position: relative;
-    }
+/* .tour-guide .tour-guide-bubble:before {
+  content: "";
+  display: block;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: white;
+  position: absolute;
+  bottom: 0.5rem;
+  transform: rotate(45deg);
+} */
 
-    .tour-guide .tour-guide-bubble:before {
-        content: "";
-        display: block;
-        width: 0.5rem;
-        height: 0.5rem;
-        background-color: white;
-        border-left: solid 1px var(--dark);
-        border-bottom: solid 1px var(--dark);
-        position: absolute;
-        bottom: 0.5rem;
-        left: calc((0.25rem + 1px) / -1);
-        transform: rotate(45deg);
-    }
-
-    .tour-guide .tour-guide-controls {
-        margin-top: 1rem;
-        margin-left: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
+.tour-guide .tour-guide-controls {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
