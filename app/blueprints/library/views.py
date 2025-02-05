@@ -153,7 +153,7 @@ def library_corpora_feed():
 @library_blueprint.route('/engines_feed', methods=["POST"])
 def library_engines_feed():
     public = request.form.get('public') == "true"
-    columns = [Engine.id, Engine.name, Engine.description, Engine.source_id, Engine.uploaded, Engine.uploader_id, None]
+    columns = [Engine.id, Engine.name, Engine.description, Engine.source_id, Engine.uploaded, Engine.uploader_id]
     dt = datatables.Datatables()
 
     rows, rows_filtered, search = dt.parse(Engine, columns, request, 
