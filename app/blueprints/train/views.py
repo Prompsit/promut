@@ -159,16 +159,17 @@ def train_graph():
             stats_aux = yaml.safe_load(f)
 
         for tag in stats_aux.keys():
-            stats[tag] = []
-            data_len = len(stats_aux[tag])
+            if tag != "train/train_epoch":
+                stats[tag] = []
+                data_len = len(stats_aux[tag])
 
-            data_breakpoint = 1000 if data_len >= 100 else 10 if data_len > 10 else 1
+                data_breakpoint = 1000 if data_len >= 100 else 10 if data_len > 10 else 1
 
-            for i, item in enumerate(stats_aux[tag]):
-                    if item["step"] % data_breakpoint == 0 or (i + 1) == data_len:
-                        stats[tag].append({"time": item["time"], "step": item["step"], "value": item["value"]})
-            if tag == "train/train_learning_rate":
-                stats[tag] = stats[tag][1:]
+                for i, item in enumerate(stats_aux[tag]):
+                        if item["step"] % data_breakpoint == 0 or (i + 1) == data_len:
+                            stats[tag].append({"time": item["time"], "step": item["step"], "value": item["value"]})
+                if tag == "train/train_learning_rate":
+                    stats[tag] = stats[tag][1:]
 
     except Exception as ex:
         logging.exception("An exception was thrown in TRAIN_GRAPH")
@@ -193,7 +194,7 @@ def train_status():
     if stats_aux != {} and "train/train_epoch" in stats_aux and stats_aux["train/train_epoch"] != []:
         epoch_no = 0
         for epoch in stats_aux["train/train_epoch"]:
-            if epoch > epoch_no:
+            if int(epoch) > epoch_no:
                 epoch_no = epoch
         stats["epoch"] = epoch_no
 
@@ -238,7 +239,16 @@ def train_stats():
                     step_g = int(groups.groups()[4])
                     graph_dict["train/train_batch_loss"].append({"time": time_g, "step": step_g, "value": float(groups.groups()[6])})
                     graph_dict["train/train_learning_rate"].append({"time": time_g, "step": step_g, "value": float(groups.groups()[10])})
-                    graph_dict["train/train_epoch"].append(groups.groups()[3])
+                    
+                    # this shit wont work
+                    #print('#####################################', flush = True)
+                    #print('#####################################', flush = True)
+                    #print('#####################################', flush = True)
+                    #print(groups.groups(), flush = True)
+                    #print('#####################################', flush = True)
+                    #print('#####################################', flush = True)
+                    #print('#####################################', flush = True)
+                    graph_dict["train/train_epoch"].append(int(groups.groups()[3]))
                 else:
                     # It was not a training line, could be validation
                     groups = re.search(training_log.validation_regex, line, flags=training_log.re_flags)
