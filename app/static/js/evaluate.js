@@ -90,7 +90,7 @@ $(document).ready(function () {
     $(".ht-file-container").append(template);
   });
 
-  let bpl_chart, bleu_dataset, ter_dataset;
+  let bpl_chart, bleu_dataset, ter_dataset, chrf_dataset, comet_dataset;
 
   $(".bleu-btn").on("click", function () {
     $(".scores-btn-group .btn").removeClass("active");
@@ -105,6 +105,22 @@ $(document).ready(function () {
     $(this).addClass("active");
 
     bpl_chart.config.data.datasets[0] = ter_dataset;
+    bpl_chart.update();
+  });
+
+  $(".chrf-btn").on("click", function () {
+    $(".scores-btn-group .btn").removeClass("active");
+    $(this).addClass("active");
+
+    bpl_chart.config.data.datasets[0] = chrf_dataset;
+    bpl_chart.update();
+  });
+
+  $(".comet-btn").on("click", function () {
+    $(".scores-btn-group .btn").removeClass("active");
+    $(this).addClass("active");
+
+    bpl_chart.config.data.datasets[0] = comet_dataset;
     bpl_chart.update();
   });
 
@@ -194,12 +210,10 @@ $(document).ready(function () {
         }
       }
 
-      $(".chart-container div").remove();
       $("#bleu-chart").remove();
       $("#ter-chart").remove();
       $("#comet-chart").remove();
       $("#chrf-chart").remove();
-      $(".chart-container").append(document.createElement("div"));
 
       let bleuChartEl = document.createElement("div");
       bleuChartEl.setAttribute("id", "bleu-chart");
@@ -234,26 +248,36 @@ $(document).ready(function () {
         parseFloat(m[5][mt_ix]["chrf3"])
       );
 
+      const length = file_series["bleu"].length;
+
+      const graphCategories = new Array(length).fill(0).map((_, i) => i + 1);
+
       //TODO NEW GRAPH
 
       function graphOptions(metric, color) {
+        const graphArray = file_series[metric].splice(0, 100);
+
+        const metricName = metric.toUpperCase();
+
         var options = {
           series: [
             {
               name: metric,
-              data: file_series[metric],
+              data: graphArray,
             },
           ],
           chart: {
-            height: 200,
+            height: 240,
             type: "bar",
           },
+          colors: [color],
           plotOptions: {
             bar: {
               borderRadius: 10,
               dataLabels: {
                 position: "top", // top, center, bottom
               },
+              color: color,
             },
           },
           dataLabels: {
@@ -264,17 +288,21 @@ $(document).ready(function () {
             offsetY: -20,
             style: {
               fontSize: "12px",
-              colors: ["#304758"],
+              colors: [color],
             },
           },
 
           xaxis: {
-            position: "top",
+            categories: graphCategories,
+            position: "bottom",
             axisBorder: {
-              show: false,
+              show: true,
             },
             axisTicks: {
-              show: false,
+              show: true,
+            },
+            labels: {
+              showDuplicates: false,
             },
             crosshairs: {
               fill: {
@@ -292,27 +320,44 @@ $(document).ready(function () {
               enabled: true,
             },
           },
+          fill: {
+            colors: [color],
+          },
           yaxis: {
             axisBorder: {
-              show: false,
+              show: true,
             },
             axisTicks: {
-              show: false,
+              show: true,
             },
             labels: {
-              show: false,
+              show: true,
+              color: color,
               formatter: function (val) {
                 return val;
               },
             },
           },
-          title: {
-            text: metric,
-            floating: true,
-            offsetY: 330,
-            align: "center",
-            style: {
-              color: "#444",
+          toolbar: {
+            show: false,
+          },
+          tooltip: {
+            colors: [color],
+          },
+          legend: {
+            show: true,
+            showForSingleSeries: true,
+            position: "top",
+            horizontalAlign: "left",
+            customLegendItems: [metric],
+            fontSize: "14px",
+
+            formatter: function (val) {
+              return val.toUpperCase();
+            },
+            markers: {
+              colors: [color],
+              size: 10,
             },
           },
         };
@@ -448,6 +493,7 @@ $(document).ready(function () {
 
           rows.each(function (row, i) {
             let data = row_data[i];
+
             let sentences_data = data[5];
 
             if (data.length > 6) {
@@ -475,12 +521,30 @@ $(document).ready(function () {
               $(mt_template)
                 .find(".sentences-view-ter")
                 .html(sentence_data.ter);
+              $(mt_template)
+                .find(".sentences-view-comet")
+                .html(sentence_data.comet);
+              $(mt_template)
+                .find(".sentences-view-chrf")
+                .html(sentence_data.chrf3);
               $(row).before(mt_template);
 
               ix++;
             }
 
+            // // if (data.length > 6) {
+            // let templateRef = document.importNode(
+            //   document.querySelector("#sentences-view-ref-template").content,
+            //   true
+            // );
+            // $(templateRef).find(".sentences-view-ref").html(data[1]);
+            // $(row).before(templateRef);
+            // // }
             $(".score-table-line-no").html(data[4]);
+
+            $(".odd td:last").prev().html("");
+
+            $(".odd td:last").html("");
 
             this.columns.adjust();
           });
@@ -497,7 +561,7 @@ $(document).ready(function () {
           {
             targets: 0,
             render: function (data, type, row) {
-              return "<strong>" + data + "</strong>";
+              return data ? "<strong>" + data + "</strong>" : "";
             },
           },
         ],

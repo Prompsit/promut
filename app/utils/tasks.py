@@ -615,8 +615,8 @@ def spl(mt_path, ht_path, source_path):
                         shell=True, stdout=subprocess.PIPE)
 
     # UNCOMMENT FOR CPU COMET !!!
-    #comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl -c 8".format(mt_path, src_path, ht_path, mt_path), 
-    #                shell=True, stdout=subprocess.PIPE)
+    comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl -c 8".format(mt_path, src_path, ht_path, mt_path), 
+                   shell=True, stdout=subprocess.PIPE)
     ##############################
 
     # Bleu rows

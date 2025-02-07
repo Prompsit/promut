@@ -289,7 +289,7 @@
     <div class="row mt-5 evaluate-results-row">
     </div>
 
-    <h2 class="h5 mt-5">Score map</h2>
+    <h2 class="h5 mt-5">Score maps</h2>
     
     <div class="my-3 chart-select">
     </div>
@@ -307,6 +307,8 @@
                 <th>Sentence</th>
                 <th>BLEU</th>
                 <th>TER</th>
+                <th>CHRF</th>
+                <th>COMET</th>
             </thead>
         </table>
 
@@ -325,6 +327,8 @@
         <td class="sentences-view-source overflow"></td>
         <td></td>
         <td></td>
+        <td></td>
+        <td></td>
     </tr>
 </template>
 
@@ -334,10 +338,11 @@
         <td class="sentences-view-mt overflow"></td>
         <td class="sentences-view-bleu"></td>
         <td class="sentences-view-ter"></td>
-          <td class="sentences-view-chrf3"></td>
+        <td class="sentences-view-chrf"></td>
         <td class="sentences-view-comet"></td>
     </tr>
 </template>
+
 
 <template id="mt-file-template">
     <div class="mt-4 d-flex align-items-center mt-file-row">

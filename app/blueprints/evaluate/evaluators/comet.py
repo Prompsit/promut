@@ -20,8 +20,8 @@ class Comet(Evaluator):
                          shell=True, stdout=subprocess.PIPE)
 
         # UNCOMMENT FOR CPU COMET !!!
-        #comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} --average only -c 8".format(mt_path, src_path, ht_path), 
-        #                shell=True, stdout=subprocess.PIPE)
+        comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} --average only -c 8".format(mt_path, src_path, ht_path), 
+                       shell=True, stdout=subprocess.PIPE)
 
         score = comet.stdout.decode("utf-8").strip()
 
