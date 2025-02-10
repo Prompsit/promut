@@ -145,6 +145,17 @@ def launch_training(self, user_id, engine_path, params):
             engine.model_path = os.path.join(engine.path, "model")
             os.mkdir(engine.model_path)
 
+            print("########################################", flush = True)
+            print("########################################", flush = True)
+            print("########################################", flush = True)
+
+            print("-- ENGINE PATH: " + engine.path, flush = True)
+            print("-- ENGINE MODEL PATH: " + engine.model_path, flush = True)
+
+            print("########################################", flush = True)
+            print("########################################", flush = True)
+            print("########################################", flush = True)
+
             source_lang = UserLanguage.query.filter_by(code=params['source_lang'], user_id=user_id).one()
             engine.user_source_id = source_lang.id
 
@@ -208,9 +219,10 @@ def launch_training(self, user_id, engine_path, params):
             # call marian-vocab to create vocabulary files 
             data_utils.marian_vocab(engine, params['source_lang'], params['target_lang'], params['vocabularySize'])
 
-            # set vocabulary paths and dimensions
-            src_vocab = os.path.join(engine.path, f"vocab.{params['source_lang']}.yml")
-            trg_vocab = os.path.join(engine.path, f"vocab.{params['target_lang']}.yml")
+            # set vocabulary paths and dimensions, setting paths to .spm 
+            # so marian can automatically train a sentencepiece tokenizer
+            src_vocab = os.path.join(engine.path, f"vocab.{params['source_lang']}{params['target_lang']}.spm")
+            trg_vocab = os.path.join(engine.path, f"vocab.{params['source_lang']}{params['target_lang']}.spm")
             config["vocabs"] = [src_vocab, trg_vocab]
             config["dim-vocabs"] = [params['vocabularySize'], params['vocabularySize']]
             
@@ -245,7 +257,7 @@ def launch_training(self, user_id, engine_path, params):
             return -1
 
 @celery.task(bind=True)
-def train_engine(self, engine_id, user_role):
+def train_engine(self, engine_id, user_role, retrain_path = ""):
     # Trains an engine by calling JoeyNMT and keeping
     # track of its progress
     try:
@@ -260,9 +272,16 @@ def train_engine(self, engine_id, user_role):
             try:
                 env = os.environ.copy()
 
+                # set marian pretrained path if the user wants to start training the model again
+                marian_pretrained_cmd = ""
+                if retrain_path != "" and os.path.exists(retrain_path):
+                    marian_pretrained_cmd = f"--pretrained-model {retrain_path}"
+                
+                print("---- PRETRAINED MODEL: {0}".format(marian_pretrained_cmd), flush = True)
+
                 # get Marian training command and set available GPUs in environment
                 config_path = os.path.join(engine.path, "config.yaml")
-                marian_cmd = "{0}/build/marian -c {1}".format(app.config["MARIAN_FOLDER"], config_path)
+                marian_cmd = "{0}/build/marian -c {1} {2}".format(app.config["MARIAN_FOLDER"], config_path, marian_pretrained_cmd)
                 env["CUDA_VISIBLE_DEVICES"] = "{}".format(gpu_id)
                 print("---- CUDA DEVICES: {0}".format(gpu_id))
 

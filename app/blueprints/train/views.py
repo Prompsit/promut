@@ -148,10 +148,11 @@ def train_graph():
 
         if engine.model_path:
             train_log_path = os.path.join(engine.model_path, 'train.log')
+            graph_dict_path = os.path.join(engine.model_path, 'graph_dict.yaml')
         else:
             train_log_path = os.path.join(engine.path, 'model/train.log')
-        
-        graph_dict_path = os.path.join(engine.path, 'model/graph_dict.yaml')
+            graph_dict_path = os.path.join(engine.path, 'model/graph_dict.yaml')
+
         stats = {}
 
         stats_aux = {}
@@ -184,7 +185,7 @@ def train_status():
     engine = Engine.query.filter_by(id = id).first()
     tensor = tensor_utils.TensorUtils(id)
 
-    graph_dict_path = os.path.join(engine.path, 'model/graph_dict.yaml')
+    graph_dict_path = os.path.join(engine.model_path, 'graph_dict.yaml')
     stats_aux = {}
     stats = {}
     if os.path.isfile(graph_dict_path):
@@ -230,7 +231,7 @@ def train_stats():
         graph_dict["valid/valid_score"] = []
         graph_dict["train/train_epoch"] = []
 
-        with open(os.path.join(engine.path, "model/train.log"), 'r') as log_file:
+        with open(os.path.join(engine.model_path, "train.log"), 'r') as log_file:
             for line in log_file:
                 groups = re.search(training_log.training_regex, line, flags=training_log.re_flags)
                 if groups:
@@ -239,15 +240,6 @@ def train_stats():
                     step_g = int(groups.groups()[4])
                     graph_dict["train/train_batch_loss"].append({"time": time_g, "step": step_g, "value": float(groups.groups()[6])})
                     graph_dict["train/train_learning_rate"].append({"time": time_g, "step": step_g, "value": float(groups.groups()[10])})
-                    
-                    # this shit wont work
-                    #print('#####################################', flush = True)
-                    #print('#####################################', flush = True)
-                    #print('#####################################', flush = True)
-                    #print(groups.groups(), flush = True)
-                    #print('#####################################', flush = True)
-                    #print('#####################################', flush = True)
-                    #print('#####################################', flush = True)
                     graph_dict["train/train_epoch"].append(int(groups.groups()[3]))
                 else:
                     # It was not a training line, could be validation
@@ -264,7 +256,7 @@ def train_stats():
                             ppl = float(groups.groups()[6])
                             graph_dict["valid/valid_ppl"].append({"time": time_g, "step": step_g, "value": ppl})
 
-        graph_dict_path = os.path.join(engine.path, 'model/graph_dict.yaml')
+        graph_dict_path = os.path.join(engine.model_path, 'graph_dict.yaml')
         with open(graph_dict_path, 'w+') as outfile:
             yaml.dump(graph_dict, outfile, default_flow_style=False)
 
@@ -417,38 +409,43 @@ def train_resume(engine_id):
     engine = Engine.query.filter_by(id=engine_id).first()
 
     if current_user.id == engine.engine_users[0].user.id or current_user.role == EnumRoles.ADMIN:
+        # create new separate path for the next model with some random id in the path
         new_model_path = os.path.join(engine.path, 'model-{}'.format(utils.randomfilename(length=8)))
         while os.path.exists(new_model_path):
+            # if random path already exists, try it again until it doesn't
             new_model_path = os.path.join(engine.path, 'model-{}'.format(utils.randomfilename(length=8)))
+        
+        os.makedirs(new_model_path)
 
+        # create file to actual model npz file
+        model_file_path = os.path.join(new_model_path, "model")
+
+        # load configuration yaml file and change the model's path with the new one
         config_file_path = os.path.join(engine.path, 'config.yaml')
-
         config = None
         with open(config_file_path, 'r') as config_file:
             config = yaml.load(config_file, Loader=yaml.FullLoader)
             current_model = config["model"]
-            config["model"] = new_model_path
-
-            #current_model_ckpt = os.path.join(current_model, 'best.ckpt')
-            #if os.path.exists(current_model_ckpt):
-            #    config["training"]["load_model"] = current_model_ckpt
+            config["model"] = os.path.join(new_model_path, "model.npz")
+            config["log"] = os.path.join(new_model_path, "train.log")
 
         with open(config_file_path, 'w') as config_file:
             yaml.dump(config, config_file)
 
+        # update the model with the new information
         engine.model_path = new_model_path
         engine.launched = datetime.datetime.utcnow().replace(tzinfo=None)
         engine.finished = None
         db.session.commit()
 
-        task_id, _ = Trainer.launch(engine_id, user_utils.is_admin())
-
+        task_id, _ = Trainer.launch(engine_id, user_utils.is_admin(), retrain_path = current_model)
         i = 0
         while engine.has_stopped() and i < 100:
             db.session.refresh(engine)
             i += 1
 
         return redirect(url_for('train.train_console', id=engine_id))
+        
 
 @train_blueprint.route('/test', methods=["POST"])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
