@@ -306,7 +306,7 @@ def train_engine(self, engine_id, user_role, retrain_path = ""):
                 # trainings are limited to 1 hour unless user has researcher role
                 start = datetime.datetime.now()
                 difference = 0
-                max_time = 36000 if user_role == EnumRoles.RESEARCHER else 3600
+                max_time = 36000 if (user_role == EnumRoles.RESEARCHER or user_role == EnumRoles.ADMIN) else 3600
                 while difference < max_time:
                     time.sleep(10)
                     difference = (datetime.datetime.now() - start).total_seconds()
