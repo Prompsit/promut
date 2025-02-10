@@ -59,7 +59,7 @@ RUN /usr/bin/bash -c "source /opt/mutnmt/venv/bin/activate && \
 	git clone https://github.com/marian-nmt/marian && \
 	mkdir marian/build && \
 	cd marian/build && \
-	cmake .. && \
+	cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_SENTENCEPIECE=ON && \
 	make -j4 && \
 	deactivate"
 
