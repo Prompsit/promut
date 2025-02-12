@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 import os
 import subprocess
-import sentencepiece as spm
+#import sentencepiece as spm
 import re
 import datetime
 import shutil

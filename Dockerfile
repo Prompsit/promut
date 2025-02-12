@@ -34,7 +34,7 @@ RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - && \
 # Create needed folders and virtual environment
 RUN mkdir -p /opt/mutnmt/app
 RUN mkdir /opt/mutnmt/scripts
-COPY scripts/ /opt/mutnmt/scripts/
+COPY scripts/requirements.txt /opt/mutnmt/scripts/requirements.txt
 RUN python3.10 -m venv /opt/mutnmt/venv
 
 # Upgrade and install needed pip build tools
