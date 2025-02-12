@@ -35,15 +35,15 @@ class TranslationUtils:
             return None
 
     def text(self, user_id, engine_id, lines):
-        task = tasks.translate_text.apply_async(args=[user_id, engine_id, lines, self.is_admin])
+        task = tasks.translate_text.apply_async(args=[user_id, engine_id, lines])
         return task.id
 
-    def get_inspect(self, user_id, engine_id, line, engines):
-        task = tasks.inspect_details.apply_async(args=[user_id, engine_id, line, engines, self.is_admin])
+    def get_inspect(self, user_id, engine_id, line):
+        task = tasks.inspect_details.apply_async(args=[user_id, engine_id, line])
         return task.id
 
     def get_compare(self, user_id, line, engines):
-        task = tasks.inspect_compare.apply_async(args=[user_id, line, engines, self.is_admin])
+        task = tasks.inspect_compare.apply_async(args=[user_id, line, engines])
         return task.id
 
             
@@ -55,9 +55,9 @@ class TranslationUtils:
         db.session.commit()
 
     def generate_tmx(self, user_id, engine_id, chain_engine_id, text):
-        task = tasks.generate_tmx.apply_async(args=[user_id, engine_id, chain_engine_id, text, self.is_admin])
+        task = tasks.generate_tmx.apply_async(args=[user_id, engine_id, chain_engine_id, text])
         return task.id
 
     def translate_file(self, user_id, engine_id, user_file_path, as_tmx = False, tmx_mode = None):
-        task = tasks.translate_file.apply_async(args=[user_id, engine_id, user_file_path, as_tmx, tmx_mode, self.is_admin])
+        task = tasks.translate_file.apply_async(args=[user_id, engine_id, user_file_path, as_tmx, tmx_mode])
         return task.id

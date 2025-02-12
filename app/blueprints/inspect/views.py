@@ -49,7 +49,7 @@ def inspect_details():
     engine_id = request.form.get('engine_id')
     engines = request.form.getlist('engines[]')
     translators.set_admin(user_utils.is_admin())
-    translation_task_id = translators.get_inspect(user_utils.get_uid(), engine_id, line, engines)
+    translation_task_id = translators.get_inspect(user_utils.get_uid(), engine_id, line)
 
     return translation_task_id
 
