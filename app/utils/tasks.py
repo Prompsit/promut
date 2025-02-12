@@ -272,7 +272,7 @@ def train_engine(self, engine_id, user_role, retrain_path = ""):
             try:
                 env = os.environ.copy()
 
-                # set marian pretrained path if the user wants to start training the model again
+                # set Marian pretrained path if the user wants to start training the model again
                 marian_pretrained_cmd = ""
                 if retrain_path != "" and os.path.exists(retrain_path):
                     marian_pretrained_cmd = f"--pretrained-model {retrain_path}"
@@ -283,27 +283,27 @@ def train_engine(self, engine_id, user_role, retrain_path = ""):
                 config_path = os.path.join(engine.path, "config.yaml")
                 marian_cmd = "{0}/build/marian -c {1} {2}".format(app.config["MARIAN_FOLDER"], config_path, marian_pretrained_cmd)
                 env["CUDA_VISIBLE_DEVICES"] = "{}".format(gpu_id)
-                print("---- CUDA DEVICES: {0}".format(gpu_id))
 
+
+                print("---- CUDA DEVICES: {0}".format(gpu_id))
                 print("CONFIG PATH: " + str(config_path))
                 print("DOES CONFIG EXIST: " + str(os.path.isfile(config_path)))
 
                 print("------- BEFORE STARTING MARIAN", flush = True)
                 # run Marian training command
-                marian_process = subprocess.Popen(marian_cmd, env=env, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                # popen command must be run with shell functionality, and a process group must be created
+                # with preexec_fn in order to be able to kill the process later with SIGTERM, else it won't stop
+                marian_process = subprocess.Popen(marian_cmd, env=env, shell=True, preexec_fn = os.setsid)
+                print("-- PID: " + str(marian_process.pid), flush = True)
                 print("------- AFTER STARTING MARIAN", flush = True)
-
-                (stdout, stderr) = marian_process.communicate()
-                print(stdout.decode("utf-8"), flush = True)
-                print("-------------------------------", flush = True)
-                print(stderr.decode("utf-8"), flush = True)
-                print("-------------------------------", flush = True)
 
                 engine.status = "training"
                 engine.pid = marian_process.pid
                 db.session.commit()
+                print("-- ENGINE PID: " + str(engine.pid), flush = True)
+                print("-- ENGINE ID: " + str(engine_id) + " / " + str(engine.id), flush = True)
 
-                # trainings are limited to 1 hour unless user has researcher role
+                # trainings are limited to 1 hour unless user has researcher or admin role
                 start = datetime.datetime.now()
                 difference = 0
                 max_time = 36000 if (user_role == EnumRoles.RESEARCHER or user_role == EnumRoles.ADMIN) else 3600

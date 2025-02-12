@@ -9,6 +9,7 @@ import datetime
 import logging
 import sys
 import os
+import signal
 import subprocess
 import pynvml
 import threading
@@ -32,7 +33,8 @@ class Trainer(object):
             engine.bg_task_id = None
         
         if engine.pid is not None:
-            executioner = subprocess.Popen("kill -9 {}".format(engine.pid), shell=True)
+            # kill training process group
+            os.killpg(os.getpgid(engine.pid), signal.SIGTERM)
             engine.pid = None
 
         if engine.gid is not None:
@@ -44,6 +46,7 @@ class Trainer(object):
     @staticmethod
     def stop(id, user_stop=False, admin_stop=False):
         engine = Engine.query.filter_by(id = id).first()
+
         Trainer.finish(engine)
 
         engine.status = "stopped" if user_stop else "stopped_admin" if admin_stop else "finished"
