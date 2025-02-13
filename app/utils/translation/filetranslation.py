@@ -13,7 +13,7 @@ import glob
 import subprocess
 
 class FileTranslation:
-    def __init__(self, translator, tokenizer):
+    def __init__(self, translator):
         self.format_mappings = {
             ".pptx": r'.*(slide(s*))$',
             ".docx": r'.*(document.xml)$',
@@ -29,7 +29,6 @@ class FileTranslation:
         self.sentences = {}
 
         self.translator = translator
-        self.tokenizer = tokenizer
 
     def norm_extension(self, extension):
         if extension in [".ppt", ".doc", ".xls"]:
@@ -41,9 +40,11 @@ class FileTranslation:
 
     def line(self, text):
         if text.strip() != "":
-            line_tok = self.tokenizer.tokenize(text)
-            translation = self.translator.translate(line_tok)
-            return self.tokenizer.detokenize(translation)
+            print(text, flush=True)
+            print("aaaxd")
+            # line_tok = self.tokenizer.tokenize(text)
+            return self.translator.translate([text])[0]
+            # return self.tokenizer.detokenize(translation)
         else:
             return ""
 
@@ -52,6 +53,7 @@ class FileTranslation:
         with open(file_path, 'r') as source:
             with open(translated_path, 'w+') as target:
                 for line in source:
+                    print(line, flush=True)
                     translation = self.line(line)
                     if as_tmx: self.sentences[str(user_id)].append({ "source": line.strip(), "target": [translation] })
                     print(translation, file=target)
@@ -153,40 +155,41 @@ class FileTranslation:
         os.remove(dest_path)
 
     def tmx_builder(self, user_id, sentences):
-        engine = RunningEngines.query.filter_by(user_id=user_id).first().engine
-        source_lang = engine.source.code
-        target_lang = engine.target.code
+        with app.app_context():
+            engine = RunningEngines.query.filter_by(user_id=user_id).first().engine
+            source_lang = engine.source.code
+            target_lang = engine.target.code
 
-        with open(os.path.join(app.config['BASE_CONFIG_FOLDER'], 'base.tmx'), 'r') as tmx_file:
-            tmx = etree.parse(tmx_file, etree.XMLParser())
-            body = tmx.getroot().find("body")
-            for sentence in sentences:
-                tu = etree.Element("tu")
+            with open(os.path.join(app.config['BASE_CONFIG_FOLDER'], 'base.tmx'), 'r') as tmx_file:
+                tmx = etree.parse(tmx_file, etree.XMLParser())
+                body = tmx.getroot().find("body")
+                for sentence in sentences:
+                    tu = etree.Element("tu")
 
-                tuv_source = etree.Element("tuv", { etree.QName("http://www.w3.org/XML/1998/namespace", "lang"): source_lang })
-                seg_source = etree.Element("seg")
-                seg_source.text = sentence.get('source')
-                tuv_source.append(seg_source)
-                tu.append(tuv_source)
+                    tuv_source = etree.Element("tuv", { etree.QName("http://www.w3.org/XML/1998/namespace", "lang"): source_lang })
+                    seg_source = etree.Element("seg")
+                    seg_source.text = sentence.get('source')
+                    tuv_source.append(seg_source)
+                    tu.append(tuv_source)
 
-                for target_sentence in sentence.get('target'):
-                    tuv_target = etree.Element("tuv", { etree.QName("http://www.w3.org/XML/1998/namespace", "lang"): target_lang })
-                    seg_target = etree.Element("seg")
-                    seg_target.text = target_sentence
-                    tuv_target.append(seg_target)
-                    tu.append(tuv_target)
+                    for target_sentence in sentence.get('target'):
+                        tuv_target = etree.Element("tuv", { etree.QName("http://www.w3.org/XML/1998/namespace", "lang"): target_lang })
+                        seg_target = etree.Element("seg")
+                        seg_target.text = target_sentence
+                        tuv_target.append(seg_target)
+                        tu.append(tuv_target)
 
-                body.append(tu)
+                    body.append(tu)
 
-        tmx_path = utils.tmpfile('{}.{}-{}.tmx'.format(user_id, engine.source.code, engine.target.code))
-        tmx.write(tmx_path, encoding="UTF-8", xml_declaration=True)
+            tmx_path = utils.tmpfile('{}.{}-{}.tmx'.format(user_id, engine.source.code, engine.target.code))
+            tmx.write(tmx_path, encoding="UTF-8", xml_declaration=True)
 
-        format_proc = subprocess.Popen("xmllint --format {} > {}.format".format(tmx_path, tmx_path), shell=True)
-        format_proc.wait()
+            format_proc = subprocess.Popen("xmllint --format {} > {}.format".format(tmx_path, tmx_path), shell=True)
+            format_proc.wait()
 
-        shutil.move("{}.format".format(tmx_path), tmx_path)
+            shutil.move("{}.format".format(tmx_path), tmx_path)
 
-        return tmx_path
+            return tmx_path
 
     def text_as_tmx(self, user_id, text):
         sentences = []
@@ -210,25 +213,25 @@ class FileTranslation:
             self.translate_bridge(user_id, file_path, extension, as_tmx)
         else:
             self.translate_office(user_id, file_path, as_tmx)
+        with app.app_context():
+            engine = RunningEngines.query.filter_by(user_id=user_id).first()
+            file_path_translated = '{}.{}-{}{}'.format(filename, engine.engine.source.code, engine.engine.target.code, extension)
+            shutil.move(file_path, file_path_translated)
+            file_path = file_path_translated
 
-        engine = RunningEngines.query.filter_by(user_id=user_id).first()
-        file_path_translated = '{}.{}-{}{}'.format(filename, engine.engine.source.code, engine.engine.target.code, extension)
-        shutil.move(file_path, file_path_translated)
-        file_path = file_path_translated
+            if as_tmx:
+                tmx_path = self.tmx_builder(user_id, self.sentences[str(user_id)])
 
-        if as_tmx:
-            tmx_path = self.tmx_builder(user_id, self.sentences[str(user_id)])
+                bundle_path = '{}-tmx-bundle'.format(filename)
+                os.mkdir(bundle_path)
 
-            bundle_path = '{}-tmx-bundle'.format(filename)
-            os.mkdir(bundle_path)
+                filename, extension = os.path.splitext(file_path)
+                basename = os.path.basename(filename)
+                shutil.move(tmx_path, os.path.join(bundle_path, '{}.tmx'.format(basename)))
+                shutil.move(file_path, os.path.join(bundle_path, '{}{}'.format(basename, extension)))
+                shutil.make_archive(filename, 'zip', bundle_path, '.')
+                shutil.rmtree(bundle_path)
 
-            filename, extension = os.path.splitext(file_path)
-            basename = os.path.basename(filename)
-            shutil.move(tmx_path, os.path.join(bundle_path, '{}.tmx'.format(basename)))
-            shutil.move(file_path, os.path.join(bundle_path, '{}{}'.format(basename, extension)))
-            shutil.make_archive(filename, 'zip', bundle_path, '.')
-            shutil.rmtree(bundle_path)
-
-            return filename + '.zip'
+                return filename + '.zip'
 
         return file_path

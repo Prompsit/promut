@@ -32,9 +32,12 @@ class Trainer(object):
             Control.revoke(engine.bg_task_id, terminate=True)
             engine.bg_task_id = None
         
-        if engine.pid is not None:
-            # kill training process group
-            os.killpg(os.getpgid(engine.pid), signal.SIGTERM)
+        try:
+            if engine.pid is not None:
+                # kill training process group
+                os.killpg(os.getpgid(engine.pid), signal.SIGTERM)
+                engine.pid = None
+        except:
             engine.pid = None
 
         if engine.gid is not None:

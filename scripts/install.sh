@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#cd /tmp
-#git clone https://github.com/google/sentencepiece.git
-#cd sentencepiece
-#mkdir build
-#cd build
-#cmake ..
-#make -j $(nproc)
-#make install
-#ldconfig -v
+cd /tmp
+git clone https://github.com/google/sentencepiece.git
+cd sentencepiece
+mkdir build
+cd build
+cmake ..
+make -j $(nproc)
+make install
+ldconfig -v
 
 cd /opt/mutnmt
 
