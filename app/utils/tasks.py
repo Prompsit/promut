@@ -344,6 +344,74 @@ def launch_training(self, user_id, engine_path, params):
             logging.exception("An exception was thrown!")
             return -1
 
+def add_graph_log(engine_model_path, engine_path):
+    try:
+        # log the newly created graph_dict.yaml into the graph_logs.yaml file
+        dict_path = os.path.join(engine_model_path, "graph_dict.yaml")
+        graph_log = os.path.join(engine_path, "graph_logs.yaml")
+
+        if os.path.exists(graph_log):
+            with open(graph_log, "r") as f:
+                graphs_dict = yaml.load(f, Loader = yaml.FullLoader)
+
+            new_index = max(graphs_dict.keys()) + 1
+            graphs_dict[new_index] = dict_path
+
+            with open(graph_log, "w") as f:
+                yaml.dump(graphs_dict, f)
+        else:
+            graphs_dict = {}
+            graphs_dict[1] = dict_path
+
+            with open(graph_log, "w") as f:
+                yaml.dump(graphs_dict, f)
+    except:
+        logging.exception("An exception was thrown in ADD_GRAPH_LOG!")
+
+def refresh_full_graph_log(engine_path):
+    try:
+        # this function will be called throughout the training process to create
+        # and update a log yaml file with all the relevant training values for graph drawing
+
+        full_graph_log = os.path.join(engine_path, "full_graph.yaml")
+        graph_log = os.path.join(engine_path, "graph_logs.yaml")
+
+        # if graph logs yaml file does not exist, then just exit to not crash the functions
+        if not os.path.exists(graph_log):
+            return
+
+        with open(graph_log, "r") as f:
+            graph_paths = yaml.load(f, Loader = yaml.FullLoader)
+
+        full_dict = {}
+        first_log = True
+        for graph_path in graph_paths.values():
+            with open(graph_path, "r") as f:
+                graph_dict = yaml.load(f, Loader = yaml.FullLoader)
+            
+            if first_log:
+                full_dict = graph_dict
+                first_log = False
+            else:
+                for key in graph_dict.keys():
+                    if key != "train/train_epoch":
+                        # get the final step in the current key
+                        max_step = max([i["step"] for i in full_dict[key]])
+
+                        for i, item in enumerate(graph_dict[key]):
+                            # increment the current step by the amount of the final step in the key
+                            # to have a realistic and gradual increase in training steps
+                            graph_dict[key][i]["step"] = item["step"] + max_step
+
+                        full_dict[key] += graph_dict[key]
+                    else:
+                        # if key is epochs, then just copy whatever is there
+                        full_dict["train/train_epoch"] += graph_dict["train/train_epoch"]
+                    
+        with open(full_graph_log, "w") as f:
+            yaml.dump(full_dict, f)
+    except:
+        logging.exception("An exception was thrown in REFRESH_FULL_GRAPH_LOG!")
 
 @celery.task(bind=True)
 def train_engine(self, engine_id, user_role, retrain_path=""):
@@ -399,8 +467,14 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
                 engine.status = "training"
                 engine.pid = marian_process.pid
                 db.session.commit()
+                
+                # add the graph log path to the logs file for historic use
+                add_graph_log(engine.model_path, engine.path)
+
                 print("-- ENGINE PID: " + str(engine.pid), flush = True)
                 print("-- ENGINE ID: " + str(engine_id) + " / " + str(engine.id), flush = True)
+                print("-- ENGINE PATH: " + str(engine.path), flush = True)
+                print("-- ENGINE MODEL PATH: " + str(engine.model_path), flush = True)
 
                 # trainings are limited to 1 hour unless user has researcher or admin role
                 start = datetime.datetime.now()
@@ -422,9 +496,11 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
                         if (engine.status != "stopped" and engine.status != "stopped_admin"):
                             Trainer.stop(engine_id)
                         GPUManager.free_device(gpu_id)
+                        refresh_full_graph_log(engine.path)
                         return
 
                 if marian_process.poll() is None:
+                    refresh_full_graph_log(engine.path)
                     Trainer.stop(engine_id)
 
             except Exception as ex:
@@ -433,6 +509,7 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
                 engine.status = "stopped"
                 GPUManager.free_device(gpu_id)
                 db.session.commit()
+                refresh_full_graph_log(engine.path)
     except Exception as ex:
         logging.exception("An exception was thrown in TRAIN_ENGINE!")
 
