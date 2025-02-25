@@ -4,9 +4,17 @@ import pynvml
 
 class PowerUtils(object):
     # Units are Wh
+
+    # source for android phone using a Google Pixel 8 as an approximate reference:
+    # https://www.reddit.com/r/batteries/comments/pathf6/does_anybody_know_howmany_watts_an_hour_it_takes/
+
+    # source for the c3po reference:
+    # https://www.wired.com/2012/05/how-big-is-c-3p0s-battery/
+
     references = {
+        "phone": { "power": 17, "name": "Phones fully charged" }, 
         "lightbulb": { "power": 15, "name": "CFL light bulbs" },
-        "c3po": { "power": 48.6, "name": "C3PO Droids" } # source: https://www.wired.com/2012/05/how-big-is-c-3p0s-battery/,
+        "c3po": { "power": 48.6, "name": "C3PO Droids" }
     }
 
     @classmethod
