@@ -137,6 +137,79 @@ def train_console(id):
             launched = launched, finished = finished,
             elapsed = engine.runtime, corpora=corpora, elapsed_format=utils.seconds_to_timestring(engine.runtime) if engine.runtime else None)
 
+@train_blueprint.route('/full_training_graph', methods=["POST"])
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def full_train_graph():
+    id = request.form.get('engine_id')
+
+    try:
+        engine = Engine.query.filter_by(id=id).first()
+        
+        graph_dict_path = os.path.join(engine_path, "full_graph.yaml")
+
+        stats = {}
+
+        stats_aux = {}
+        with open(graph_dict_path) as f:
+            stats_aux = yaml.safe_load(f)
+
+        for tag in stats_aux.keys():
+            if tag != "train/train_epoch":
+                stats[tag] = []
+                data_len = len(stats_aux[tag])
+
+                data_breakpoint = 1000 if data_len >= 100 else 10 if data_len > 10 else 1
+
+                for i, item in enumerate(stats_aux[tag]):
+                        if item["step"] % data_breakpoint == 0 or (i + 1) == data_len:
+                            stats[tag].append({"time": item["time"], "step": item["step"], "value": item["value"]})
+                if tag == "train/train_learning_rate":
+                    stats[tag] = stats[tag][1:]
+
+    except Exception as ex:
+        logging.exception("An exception was thrown in FULL_TRAIN_GRAPH")
+
+    return jsonify({"stats": stats })
+
+@train_blueprint.route('/historic_training_data', methods=["POST"])
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def historic_train_graph():
+    id = request.form.get('engine_id')
+    graph_id = request.form.get('graph_id')
+
+    try:
+        engine = Engine.query.filter_by(id=id).first()
+        
+        graph_log = os.path.join(engine.path, "graph_logs.yaml")
+
+        with open(graph_log, "r") as f:
+            graphs_dict = yaml.load(f, Loader = yaml.FullLoader)
+        graph_dict_path = graphs_dict[int(graph_id)]
+
+        stats = {}
+
+        stats_aux = {}
+        with open(graph_dict_path) as f:
+            stats_aux = yaml.safe_load(f)
+
+        for tag in stats_aux.keys():
+            if tag != "train/train_epoch":
+                stats[tag] = []
+                data_len = len(stats_aux[tag])
+
+                data_breakpoint = 1000 if data_len >= 100 else 10 if data_len > 10 else 1
+
+                for i, item in enumerate(stats_aux[tag]):
+                        if item["step"] % data_breakpoint == 0 or (i + 1) == data_len:
+                            stats[tag].append({"time": item["time"], "step": item["step"], "value": item["value"]})
+                if tag == "train/train_learning_rate":
+                    stats[tag] = stats[tag][1:]
+
+    except Exception as ex:
+        logging.exception("An exception was thrown in HISTORIC_TRAIN_GRAPH")
+
+    return jsonify({"stats": stats })
+
 @train_blueprint.route('/graph_data', methods=["POST"])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def train_graph():
@@ -147,10 +220,8 @@ def train_graph():
         engine = Engine.query.filter_by(id=id).first()
 
         if engine.model_path:
-            train_log_path = os.path.join(engine.model_path, 'train.log')
             graph_dict_path = os.path.join(engine.model_path, 'graph_dict.yaml')
         else:
-            train_log_path = os.path.join(engine.path, 'model/train.log')
             graph_dict_path = os.path.join(engine.path, 'model/graph_dict.yaml')
 
         stats = {}
