@@ -3,16 +3,9 @@
 
 const min_amounts = { training: 10000, dev: 1000, test: 1000 };
 const max_amounts =
-  isResearcher === "True"
+  isResearcher === "True" || isAdmin === "True"
     ? { training: 1000000, dev: 5000, test: 5000 }
     : { training: 500000, dev: 5000, test: 5000 };
-
-console.log(
-  typeof isResearcher,
-  isResearcher,
-  max_amounts,
-  "Testing amounts ****"
-);
 
 let corpora_stacks = {
   training: { sentences: 0, corpora: [] },
