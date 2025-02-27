@@ -7,13 +7,6 @@ const max_amounts =
     ? { training: 2000000, dev: 5000, test: 5000 }
     : { training: 500000, dev: 5000, test: 5000 };
 
-console.log(
-  typeof isResearcher,
-  isResearcher,
-  max_amounts,
-  "Testing amounts ****"
-);
-
 let corpora_stacks = {
   training: { sentences: 0, corpora: [] },
   dev: { sentences: 0, corpora: [] },

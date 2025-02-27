@@ -865,13 +865,9 @@ def spl(mt_path, ht_path, source_path):
     # Obtain Comet results in output file
     if source_path != "":
         src_path = "-s {0}".format(source_path)
-    comet = subprocess.run(
-        "pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl".format(
-            mt_path, src_path, ht_path, mt_path
-        ),
-        shell=True,
-        stdout=subprocess.PIPE,
-    )
+
+    comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl".format(mt_path, src_path, ht_path, mt_path),
+                            shell=True, stdout=subprocess.PIPE)
 
     # UNCOMMENT FOR CPU COMET !!!
     # comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl -c 8".format(mt_path, src_path, ht_path, mt_path),

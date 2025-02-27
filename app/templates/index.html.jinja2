@@ -8,12 +8,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index' + infix + '.css') }}" />
 </head>
 <body>
-    <div class="container">
+    <div class="container-navbar">
         <div class="row pt-4 align-items-center">
             <div class="col-sm-3 col-8 offset-2 offset-sm-0">
-                <a href="">
-                    <img class="img-fluid" alt="ProMut" src="{{ url_for('static', filename='img/logo.png') }}" />
-                </a>
+                    <img class="logo-promut" alt="ProMut" src="{{ url_for('static', filename='img/logo.png') }}" />
             </div>
 
             <div class="col-sm-9 col-12 text-sm-right mt-4 mt-sm-0">
@@ -43,54 +41,47 @@
 
     <div class="skew-bar my-4"></div>
 
-    <div class="container">
+    <div class="container-main">
         <div class="row mt-5">
-            <div class="col-12 col-sm-6">
-                <img alt="People" class="img-fluid" src="{{ url_for('static', filename='img/people.svg') }}" />
-            </div>
-            <div class="col-12 col-sm-6 d-flex align-items-center mt-4 mt-sm-0">
-                <p class="h4 text-center skew-decorations">
-                    What you use to train an NMT system when you don't know what an NMT system is.
+            <div class="landing-title-container">
+                <p class="landing-title">
+                   A platform for machine translation literacy acquisition
                 </p>
             </div>
         </div>
 
-        <div class="row mt-5">
-            <div class="col-sm-4 col-12">
-                <h2 class="h4 text-primary">Meet ProMut</h2>
+        <div class="row mt-5 landing-row-container">
+            <div class="col-sm-4 col-12 subtitle">
+                <h2 class="h4 text-primary subtitle">Welcome to ProMut</h2>
                 <p>
-                    If you want to teach or learn about machine translation by doing, this is the place! Manage data and engines, train neural machine translation systems, use, inspect and compare different engines and evaluate them with ProMut! You can also have your own instance of ProMut, using the code on Github.
-                </p>
-
-                <p>
-                    <a href="{{ url_for('about') }}">More about ProMut</a>
+                   The ProMut platform extends and improves the former MutNMT platform to incorporate new features for advance machine translation literacy acquisition. The full workflow, from data to training, testing, inspection and evaluation has been completely reviewed in ProMut. Code is open-source, enabling deployment of instances in a distributed way. 
                 </p>
             </div>
             <div class="col-sm-4 col-12 mt-3 mt-sm-0">
-                <h2 class="h4 text-primary">A MultiTraiNMT outcome</h2>
+                <h2 class="h4 text-primary subtitle">LT-LiDER project</h2>
                 <p>
-                    ProMut has been developed inside the MultiTraiNMT - “Machine Translation training for multilingual citizens” project. It aims to develop, evaluate and disseminate open access materials that will lead to the enhancement of teaching and learning about machine translation.
+                    LT-LiDER is a project that aims at mapping the landscape of technological capabilities required to work as language or translation expert. It also aims at generating the necessary outputs to improve trainers’s skills and motivate them to adopt appropriate pedagogical approaches and strategies for integrating technology into their language or translation classrooms. 
                 </p>
             </div>
             <div class="col-sm-4 col-12 mt-3 mt-sm-0">
-                <h2 class="h4 text-primary">Beyond ProMut</h2>
+                <h2 class="h4 text-primary subtitle">The Former MutNMT</h2>
                 <p>
-                    Also a book and activities to complete your knowledge and fulfill your curiosity have been produced as part of the MultiTraiNMT project. Don’t miss them!
+                   You are invited to check out MutNMT, an online platform to learn Neural Machine Translation by doing. This web application lets the user train, inspect, evaluate and translate using neural engines.
                 </p>
             </div>
         </div>
 
-        <div class="row my-5 align-items-center">
+        <div class="row my-5 align-items-center footer">
             <div class="col-12 col-sm-2">
-                <h2 class="h5 text-primary">Find us on</h2>
+                <h2 class="h5 text-primary dramatic-subtitle">Find us on</h2>
                 <a href="https://github.com/Prompsit/ProMut" class="h1 text-dark">
                     <i class="fab fa-github-square"></i>
                 </a>
             </div>
             <div class="col-12 col-sm-2">
-                <h2 class="h5 text-primary">Powered by</h2>
-                <a href="https://github.com/joeynmt/joeynmt" class="h1 text-dark">
-                    <img alt="JoeyNMT" src="{{ url_for('static', filename='img/joey-small.png') }}" style="height: 40px;" />
+                <h2 class="h5 text-primary dramatic-subtitle">Powered by</h2>
+                <a href="https://marian-nmt.github.io/" class="h1 text-dark">
+                    <img alt="MARIANNMT" src="{{ url_for('static', filename='img/marian-logo.png') }}" style="width: 140px;" />
                 </a>
             </div>
             <div class="col-12 col-sm-8 text-sm-right mt-4 mt-sm-0">
