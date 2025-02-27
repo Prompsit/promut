@@ -12,22 +12,32 @@ This application uses [MariaNTM](https://marian-nmt.github.io/) in its core.
 
 ## Features
 
-ProMut provides the following features:
+ProMut preserves former MutNMT features and adds new ones:
 
-* Upload and manage corpora
-    * Upload corpora in text, TMX or TSV format
-    * Tag corpora depending on domain
-    * Share corpora with other users
+* Upload and manage datasets
+    * Upload datasets in text, TMX or TSV format
+    * NEW - Upload datasets from the OPUS dataset repository
+    * Tag datasets depending on domain
+    * Share datasets with other users
 * Train and manage engines
-    * Select corpora or a subset of those corpora and train a Transformer model
+    * Select datasets or a subset of those datasets and train a Transformer model
+    * NEW - Use MarianNMT instead of JoeyNMT as the core MT framework
     * Track progress of the training process with data tables and charts
-    * Stop, resume or restart training at anytime
+    * Stop and resume training at anytime
+    * NEW - Continue training engines with new data
+    * Manage, share and download engines
+    * Inspect engines training log
+    * NEW - Upload Engines from OPUS-MT
 * Translate text and documents
     * Select an already trained engine to translate text or documents (HTML, TMX, PDF and Office formats supported)
 * Inspect an engine
     * Explore details on tokenization, candidate selection and pre-processed output
+    * NEW - Know how to reuse engines in OPUS-CAT
 * Evaluate translations
     * Upload parallel translation files to evaluate them using BLEU, chrF3, TER and TTR metrics
+    * NEW Add COMET as a new metric
+ 
+
 
 ## Requisites
 
@@ -116,7 +126,7 @@ docker build -t promut .
 
 ## Data persistance
 
-Logs, database and user data like corpora or engines are stored inside the container in `/opt/promut/data`. This folder is mounted in `./data` by default, so that it persists in case of removing the container. Make sure to create the `./data` folder in the project's directory if it does not exist.
+Logs, database and user data like datasets or engines are stored inside the container in `/opt/promut/data`. This folder is mounted in `./data` by default, so that it persists in case of removing the container. Make sure to create the `./data` folder in the project's directory if it does not exist.
 
 ## Launching the container
 
