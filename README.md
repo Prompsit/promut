@@ -5,7 +5,7 @@
 ProMut aims to provide a web application to train neural machine translation with educational purposes. This web application lets the user train, inspect, evaluate and translate using neural engines. It has been cofunded by the European Union as part of the "LT-LiDER -- Language and Translation:
 Literacy in digital environments and resources" project (grant number KA220-HED-15E72916).
 
-ProMut is based on MutNMT which was developed inside the "MultiTraiNMT - Machine Translation training for multilingual citizens" European project (2019-1-ES01-KA203-064245, 01/09/2019–31/08/2022).
+ProMut is based on [MutNMT](https://github.com/Prompsit/mutnmt) which was developed inside the "MultiTraiNMT - Machine Translation training for multilingual citizens" European project (2019-1-ES01-KA203-064245, 01/09/2019–31/08/2022).
 
 This application uses [MariaNTM](https://marian-nmt.github.io/) in its core.
 
