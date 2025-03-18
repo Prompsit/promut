@@ -21,7 +21,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install \
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install \
 						openjdk-17-jdk moreutils default-jdk \
 						autoconf autopoint libtool libboost-system-dev libprotobuf23 \
-						protobuf-compiler libprotobuf-dev openssl libssl-dev bc zip nano
+						protobuf-compiler libprotobuf-dev openssl libssl-dev bc zip nano wget
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install \
 						libgoogle-perftools-dev joe libyajl2 gawk libboost-all-dev libpq-dev && \
