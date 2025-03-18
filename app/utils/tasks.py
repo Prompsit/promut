@@ -323,9 +323,8 @@ def launch_training(self, user_id, engine_path, params):
             config["early-stopping"] = int(params["patienceTxt"])
             config["valid-freq"] = int(params["validationFreq"])
 
-            # unneeded parameters - commented
-            # config["batch_size"] = int(params['batchSizeTxt'])
-            # config["beam_size"] = int(params['beamSizeTxt'])
+            config["mini-batch"] = int(params['batchSizeTxt'])
+            config["beam-size"] = int(params['beamSizeTxt'])
 
             with open(config_file_path, "w") as config_file:
                 yaml.dump(config, config_file)
@@ -969,6 +968,7 @@ def process_upload_request(
     corpus_name,
     corpus_desc="",
     corpus_topic=None,
+    opus = False
 ):
     type = "bitext" if bitext_path else "bilingual" if trg_path else "monolingual"
 
@@ -1063,12 +1063,20 @@ def process_upload_request(
         # We create the corpus, retrieve the files and attach them to that corpus
         target_db_file = None
         try:
+            
+            public = False
+            visible = True
+            if opus:
+                public = True
+
             corpus = Corpus(
                 name=corpus_name,
                 type="bilingual" if type == "bitext" else type,
                 owner_id=user_id,
                 description=corpus_desc,
                 topic_id=corpus_topic,
+                public=public,
+                visible=visible
             )
 
             if type == "bitext":

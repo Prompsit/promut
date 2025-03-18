@@ -4,9 +4,10 @@ from app.utils import utils, user_utils, data_utils, tasks
 from app.flash import Flash
 from flask import Blueprint, render_template, request, jsonify, flash, url_for, redirect
 from flask_login import login_required, current_user
-from sqlalchemy import desc
+from sqlalchemy import desc, select, exists
 
 import os
+import requests
 import subprocess
 import hashlib
 import re
@@ -40,6 +41,13 @@ def data_upload_perform():
 
             source_lang = request.form.get('source_lang')
             target_lang = request.form.get('target_lang')
+            
+            print("------------------------", flush = True)
+            print("------------------------", flush = True)
+            print("- source lang: ", str(source_lang), flush = True)
+            print("- target lang: ", str(target_lang), flush = True)
+            print("------------------------", flush = True)
+            print("------------------------", flush = True)
 
             custom_src_lang_code = request.form.get('sourceCustomLangCode')
             custom_trg_lang_code = request.form.get('targetCustomLangCode')
@@ -88,3 +96,86 @@ def data_upload_status():
         return jsonify({ "result": 200 })
     else:
         return jsonify({ "result": -1 })
+
+@data_blueprint.route('/get-opus-corpora', methods=['POST'])
+#@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def get_opus_corpora_by_langs():
+    src_lang = request.form.get('source_lang')
+    trg_lang = request.form.get('target_lang')
+    
+    full_url = f"http://opus.nlpl.eu/opusapi/?&source={src_lang}&target={trg_lang}&preprocessing=xml&version=latest"
+    data = requests.get(full_url)
+    
+    print(full_url, flush = True)
+
+    output = data.json()
+    datasets = []
+
+    src_lang_aux = src_lang
+    if src_lang > trg_lang:
+        src_lang = trg_lang 
+        trg_lang = src_lang_aux
+
+    for line in output["corpora"]:
+        if line["source"] == src_lang and line["target"] == trg_lang:
+            datasets.append(line)
+
+    return jsonify({ "result": 200, "datasets": datasets })
+
+@data_blueprint.route('/download-opus-corpus', methods=['POST'])
+#@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def download_opus_corpus():
+    try:
+        src_lang = request.form.get('source_lang')
+        trg_lang = request.form.get('target_lang')
+        corpus = request.form.get('corpus')
+        
+        data = requests.get(f"http://opus.nlpl.eu/opusapi/?corpus={corpus}&source={src_lang}&target={trg_lang}&preprocessing=moses&version=latest")
+        output = data.json()
+        
+        url_to_download = output["corpora"][0]["url"]
+        corpus_name = output["corpora"][0]["corpus"]
+
+        USER_ID = -1 # <<<<<< DELETE THIS AFTERWARDS AND TAKE ID FROM LOGIN
+        source_lang_id = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).one().id
+        target_lang_id = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).one().id
+
+        # Check if corpus has already been downloaded for the given source and target languages
+        check = Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).exists()
+
+        if db.session.query(check).scalar():
+            return jsonify({ "result": -1 })
+
+        corpus_dir = os.path.join(opus_workdir, corpus_name)
+        if os.path.isdir(corpus_dir):
+            shutil.rmtree(corpus_dir)
+
+        opus_workdir = os.path.join(app.config["DATA_FOLDER"], "tmp")
+        source_file = os.path.join(opus_workdir, corpus_name, f"prepared_corpus/{corpus_name}.{src_lang}-{trg_lang}.{src_lang}")
+        target_file = os.path.join(opus_workdir, corpus_name, f"prepared_corpus/{corpus_name}.{src_lang}-{trg_lang}.{trg_lang}")
+
+        # Launch bash scrip to download the corpus, paste the files, shuffle a new one,
+        # delete the unwanted files, and split the shuffled file into two (src and trg)
+        path_to_script = os.path.join(app.config['MUTNMT_FOLDER'], "app/blueprints/data/prepare_opus_corpus.sh")
+        TEMP_LOG_FILE = "/opt/mutnmt/data/TMP_FILE.txt"
+        subprocess.run("bash {0} {1} {2} {3} {4} {5} {6}".format(path_to_script, url_to_download, opus_workdir, src_lang, trg_lang, corpus_name, TEMP_LOG_FILE), shell=True, stdout=subprocess.PIPE)
+
+        # Call data_utils.process_upload_request or something similar and simulate all the needed parameters
+        # however, instantly set the corpus as public and as visible
+        task_id = data_utils.process_upload_request(USER_ID, 
+                                                    None,
+                                                    source_file,
+                                                    target_file,
+                                                    source_lang_id,
+                                                    target_lang_id,
+                                                    corpus_name,
+                                                    f"{corpus_name} dataset, downloaded from the OPUS collection",
+                                                    "General",
+                                                    opus = True)
+
+        if os.path.isdir(corpus_dir):
+            shutil.rmtree(corpus_dir)
+
+        return jsonify({ "result": 200})
+    except Exception as ex:
+        return jsonify({ "result": -1})

@@ -13,7 +13,7 @@ import datetime
 import shutil
 import logging
 
-def process_upload_request(user_id, bitext_file, src_file, trg_file, src_lang, trg_lang, corpus_name, corpus_desc, corpus_topic):
+def process_upload_request(user_id, bitext_file, src_file, trg_file, src_lang, trg_lang, corpus_name, corpus_desc, corpus_topic, opus = False):
     type = "bitext" if bitext_file else "bilingual"
 
     bitext_path = None
@@ -24,15 +24,23 @@ def process_upload_request(user_id, bitext_file, src_file, trg_file, src_lang, t
         bitext_path = utils.tmpfile(filename=bitext_file.filename)
         bitext_file.save(bitext_path)
     else:
-        src_path = utils.tmpfile(filename=src_file.filename)
-        src_file.save(src_path)
-
         if type == "bilingual":
-            trg_path = utils.tmpfile(filename=trg_file.filename)
-            trg_file.save(trg_path)
-    
+            if not opus:
+                src_path = utils.tmpfile(filename=src_file.filename)
+                src_file.save(src_path)
+                trg_path = utils.tmpfile(filename=trg_file.filename)
+                trg_file.save(trg_path)
+            else:
+                # if downloaded through opus, the file parameters should already be paths to the files
+                # so just move the final shuffled files to the temporary paths and carry on with how
+                # promut already uploads corpora
+                src_path = utils.tmpfile(filename=src_file)
+                shutil.move(src_file, src_path)
+                trg_path = utils.tmpfile(filename=trg_file)
+                shutil.move(trg_file, trg_path)
+
     task = tasks.process_upload_request.apply_async(args=[user_id, bitext_path, src_path, 
-            trg_path, src_lang, trg_lang, corpus_name, corpus_desc, corpus_topic])
+            trg_path, src_lang, trg_lang, corpus_name, corpus_desc, corpus_topic, opus])
     return task.id
 
 def upload_file(file, language, format="text", selected_size=None, offset=None, user_id=None):
