@@ -22,6 +22,10 @@ import re
 from app.utils.roles import EnumRoles
 library_blueprint = Blueprint('library', __name__, template_folder='templates')
 from app.utils.user_utils import get_user
+import requests
+import zipfile
+from app.utils.opus_db import get_opus_model_link
+import io
 @library_blueprint.route('/corpora')
 def library_corpora():
     user_library = user_utils.get_user_corpora().count()
@@ -327,3 +331,40 @@ def library_corpora_export(id):
     shutil.rmtree(tmp_folder)
 
     return send_file(zip_path + '.zip', as_attachment=True)
+
+
+@library_blueprint.route('/download-model', methods=['POST'])
+@utils.condec(login_required, user_utils.isUserLoginEnabled())      
+def download_model():
+    src_lang = request.form.get('source_lang')
+    trg_lang = request.form.get('target_lang')
+    model_path = os.path.join(app.config["PRELOADED_ENGINES_FOLDER"], f"{src_lang}-{trg_lang}")
+    if not os.path.exists(model_path):
+        os.makedirs(model_path)
+        model_link = get_opus_model_link(src_lang, trg_lang)
+        r = requests.get(model_link, timeout=100, stream=True)
+        z = zipfile.ZipFile(io.BytesIO(r.content))
+        z.extractall(os.path.join(model_path, "model"))
+    date = datetime.strptime("2025-05-25 02:35:5", "%Y-%m-%d %H:%M:%S")
+
+    source_lang = UserLanguage.query.filter_by(
+        code=src_lang, user_id=-1
+    ).one()
+    target_lang = UserLanguage.query.filter_by(
+        code=trg_lang, user_id=-1
+    ).one()
+
+    eng = Engine(
+        name=f"opus-{src_lang}-{trg_lang}",
+        path=model_path,
+        opus_engine=True,
+        description="OPUS model",
+        user_source_id=source_lang.id,
+        user_target_id=target_lang.id,
+        public=True,
+        launched=date,
+        finished=date,
+        status="finished",
+    )
+    db.session.add(eng)
+    db.session.commit()

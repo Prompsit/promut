@@ -6,7 +6,7 @@ services:
         image: mutnmt:latest
         build: .
         ports:
-            - "8086:5000"
+            - "8088:5008"
         environment: 
             DEBUG: 1
             CREDENTIALS_USERNAME: admin
@@ -22,3 +22,20 @@ services:
                         - driver: nvidia
                           count: all
                           capabilities: [gpu, utility, compute]
+
+    opus_db:
+        image: postgres:latest
+        container_name: opus_db
+        ports:
+            - "15432:5432"
+        volumes:
+        - opus_db:/var/lib/postgresql/data
+        environment:
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=pass123
+        - POSTGRES_DB=postgres
+
+
+volumes:
+  opus_db:
+    name: opus_db
