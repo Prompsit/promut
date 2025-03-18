@@ -41,13 +41,6 @@ def data_upload_perform():
 
             source_lang = request.form.get('source_lang')
             target_lang = request.form.get('target_lang')
-            
-            print("------------------------", flush = True)
-            print("------------------------", flush = True)
-            print("- source lang: ", str(source_lang), flush = True)
-            print("- target lang: ", str(target_lang), flush = True)
-            print("------------------------", flush = True)
-            print("------------------------", flush = True)
 
             custom_src_lang_code = request.form.get('sourceCustomLangCode')
             custom_trg_lang_code = request.form.get('targetCustomLangCode')
@@ -103,7 +96,7 @@ def get_opus_corpora_by_langs():
     src_lang = request.form.get('source_lang')
     trg_lang = request.form.get('target_lang')
     
-    full_url = f"http://opus.nlpl.eu/opusapi/?&source={src_lang}&target={trg_lang}&preprocessing=xml&version=latest"
+    full_url = f"http://opus.nlpl.eu/opusapi/?&source={src_lang}&target={trg_lang}&preprocessing=moses&version=latest"
     data = requests.get(full_url)
     
     print(full_url, flush = True)
@@ -143,14 +136,23 @@ def download_opus_corpus():
         # Check if corpus has already been downloaded for the given source and target languages
         check = Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).exists()
 
+        print("---------------------------------", flush = True)
+        print(str(source_lang_id), flush = True)
+        print(str(target_lang_id), flush = True)
+        print(str(db.session.query(check).scalar()), flush = True)
+        print(str(url_to_download), flush = True)
+        print(str(corpus_name), flush = True)
+        print("---------------------------------", flush = True)
+
         if db.session.query(check).scalar():
             return jsonify({ "result": -1 })
 
+        # if corpus doesn't exist in db, but there are folders/files with it, then delete them
+        opus_workdir = os.path.join(app.config["DATA_FOLDER"], "tmp")
         corpus_dir = os.path.join(opus_workdir, corpus_name)
         if os.path.isdir(corpus_dir):
             shutil.rmtree(corpus_dir)
 
-        opus_workdir = os.path.join(app.config["DATA_FOLDER"], "tmp")
         source_file = os.path.join(opus_workdir, corpus_name, f"prepared_corpus/{corpus_name}.{src_lang}-{trg_lang}.{src_lang}")
         target_file = os.path.join(opus_workdir, corpus_name, f"prepared_corpus/{corpus_name}.{src_lang}-{trg_lang}.{trg_lang}")
 
@@ -158,6 +160,17 @@ def download_opus_corpus():
         # delete the unwanted files, and split the shuffled file into two (src and trg)
         path_to_script = os.path.join(app.config['MUTNMT_FOLDER'], "app/blueprints/data/prepare_opus_corpus.sh")
         TEMP_LOG_FILE = "/opt/mutnmt/data/TMP_FILE.txt"
+
+        print("---------------------------------", flush = True)
+        print(str(path_to_script), flush = True)
+        print(str(url_to_download), flush = True)
+        print(str(opus_workdir), flush = True)
+        print(str(src_lang), flush = True)
+        print(str(trg_lang), flush = True)
+        print(str(corpus_name), flush = True)
+        print(str(TEMP_LOG_FILE), flush = True)
+        print("---------------------------------", flush = True)
+
         subprocess.run("bash {0} {1} {2} {3} {4} {5} {6}".format(path_to_script, url_to_download, opus_workdir, src_lang, trg_lang, corpus_name, TEMP_LOG_FILE), shell=True, stdout=subprocess.PIPE)
 
         # Call data_utils.process_upload_request or something similar and simulate all the needed parameters
@@ -173,9 +186,10 @@ def download_opus_corpus():
                                                     "General",
                                                     opus = True)
 
-        if os.path.isdir(corpus_dir):
-            shutil.rmtree(corpus_dir)
+        #if os.path.isdir(corpus_dir):
+        #    shutil.rmtree(corpus_dir)
 
         return jsonify({ "result": 200})
     except Exception as ex:
+        print(str(ex), flush = True)
         return jsonify({ "result": -1})

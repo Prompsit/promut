@@ -35,12 +35,13 @@ def process_upload_request(user_id, bitext_file, src_file, trg_file, src_lang, t
                 # so just move the final shuffled files to the temporary paths and carry on with how
                 # promut already uploads corpora
                 src_path = utils.tmpfile(filename=src_file)
-                shutil.move(src_file, src_path)
+                os.replace(src_file, src_path)
                 trg_path = utils.tmpfile(filename=trg_file)
-                shutil.move(trg_file, trg_path)
+                os.replace(trg_file, trg_path)
 
     task = tasks.process_upload_request.apply_async(args=[user_id, bitext_path, src_path, 
             trg_path, src_lang, trg_lang, corpus_name, corpus_desc, corpus_topic, opus])
+
     return task.id
 
 def upload_file(file, language, format="text", selected_size=None, offset=None, user_id=None):

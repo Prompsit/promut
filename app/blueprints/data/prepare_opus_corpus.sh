@@ -30,7 +30,7 @@ mkdir -p $CORPUS_AUX_DIR
 
 # Go into work folder, download corpus and unzip it
 cd $CORPUS_AUX_DIR
-wget $CORPUS_URL
+wget -q $CORPUS_URL
 unzip $ZIP_PATH
 
 SOURCE_FILE="$CORPUS_NAME.$SRC_LANG-$TRG_LANG.$SRC_LANG"
