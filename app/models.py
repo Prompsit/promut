@@ -63,6 +63,8 @@ class Engine(Resource):
     model_path = db.Column(db.String(256))
     runtime = db.Column(db.Integer)
     test_score = db.Column(db.Float)
+    
+    opus_engine = db.Column(db.Boolean, default=False)
 
     source_id = db.Column(db.String(3), db.ForeignKey('language.code'))
     user_source_id = db.Column(db.Integer, db.ForeignKey('user_language.id'))
@@ -100,6 +102,8 @@ class Corpus(db.Model):
 
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     owner = db.relationship("User", backref="corpora")
+
+    opus_corpus = db.Column(db.Boolean, default=True)
 
     files = association_proxy("corpus_files", "files")
 

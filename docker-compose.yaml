@@ -22,6 +22,23 @@ services:
                         - driver: nvidia
                           device_ids: ['0', '1']
                           capabilities: [gpu, utility, compute]
+
+    opus_db:
+        image: postgres:latest
+        container_name: opus_db
+        ports:
+            - "15432:5432"
+        volumes:
+        - opus_db:/var/lib/postgresql/data
+        environment:
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=pass123
+        - POSTGRES_DB=postgres
+
+volumes:
+  opus_db:
+    name: opus_db
+
 networks:
   default:
     name: mutnmt_tudor

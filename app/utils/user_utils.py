@@ -57,7 +57,39 @@ def library_delete(type, id, user_id = None):
     user_id = get_uid() if not user_id else user_id
 
     if type == "library_corpora":
-        library = LibraryCorpora.query.filter_by(corpus_id = id, user_id = user_id).first()
+        # idk why he did this relationship when you could have just called for Corpus instead of this waste, but okay
+        corpus = Corpus.query.filter_by(id = id).first()
+
+        #print("##################################", flush = True)
+        #print(str(corpus.name), flush = True)
+        #print("Is opus: " + str(corpus.opus_corpus), flush = True)
+        #print("Users: " + str(corpus.owner_id) + " - " + str(user_id), flush = True)
+
+        # check if corpus is from opus
+        if corpus.opus_corpus:
+            # user is admin, and can delete the corpus
+            if is_admin():
+                library = LibraryCorpora.query.filter_by(corpus_id = id, user_id = corpus.owner_id).first()
+            
+            # user is the owner of this opus corpus, and can delete the corpus
+            elif user_id == corpus.owner_id:
+                library = LibraryCorpora.query.filter_by(corpus_id = id, user_id = corpus.owner_id).first()
+            
+            # user is not the owner of this opus corpus
+            else:
+                return False
+
+        else:
+            library = LibraryCorpora.query.filter_by(corpus_id = id, user_id = corpus.owner_id).first()
+
+        #print("---------", flush = True)
+        #print(library, flush = True)
+        #print("---------", flush = True)
+        #print(str(LibraryCorpora.query.filter_by(corpus_id = id).filter(LibraryCorpora.user_id != user_id).count()), flush = True)
+        #print("---------", flush = True)
+
+        if library == None:
+            return False
         if LibraryCorpora.query.filter_by(corpus_id = id).filter(LibraryCorpora.user_id != user_id).count() == 0:
             for file_entry in library.corpus.corpus_files:
                 os.remove(file_entry.file.path)

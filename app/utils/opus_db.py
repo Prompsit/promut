@@ -30,7 +30,7 @@ def get_opus_model_link(lang1, lang2):
         sorted_models = sorted(models_by_date,key=lambda x: x[1], reverse=True)
         return sorted_models[0][0]
     except psycopg2.Error as e:
-        print(f"Error connecting to PostgreSQL: {e}")
+        print(f"Error connecting to PostgreSQL: {e}", flush = True)
     finally:
         if connection:
             cursor.close()

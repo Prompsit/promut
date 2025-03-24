@@ -73,6 +73,11 @@ $(document).ready(function() {
                         if (public_mode) {
                             $(template).find(".grab-btn").attr("href", corpus_data.corpus_grab);
                             $(template).find(".grab-btn").removeClass("d-none");
+
+                            if (corpus_data.opus_corpus && corpus_data.user_is_admin) {
+                                $(template).find(".corpus-delete").attr("href", corpus_data.corpus_delete);
+                                $(template).find(".corpus-delete").removeClass("d-none");
+                            }
                         } else {
                             if (corpus_data.corpus_owner) {
                                 if (corpus_data.corpus_public) {
@@ -214,6 +219,11 @@ $(document).ready(function() {
                         if (public_mode) {
                             $(template).find(".grab-btn").attr("href", engine_data.engine_grab);
                             $(template).find(".grab-btn").removeClass("d-none");
+
+                            if (engine_data.opus_engine && engine_data.user_is_admin) {
+                                $(template).find(".delete-btn").attr("href", engine_data.engine_delete);
+                                $(template).find(".delete-btn").removeClass("d-none");
+                            }
                         } else {
                             if (engine_data.engine_owner) {
                                 if (engine_data.engine_public) {

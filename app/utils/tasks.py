@@ -868,11 +868,6 @@ def spl(mt_path, ht_path, source_path):
     comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl".format(mt_path, src_path, ht_path, mt_path),
                             shell=True, stdout=subprocess.PIPE)
 
-    # UNCOMMENT FOR CPU COMET !!!
-    # comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl -c 8".format(mt_path, src_path, ht_path, mt_path),
-    #                shell=True, stdout=subprocess.PIPE)
-    ##############################
-
     # Bleu rows
     with open("{}.bpl".format(mt_path), "r") as bl_file:
         rows = [{"bleu": line.strip()} for line in bl_file]
@@ -1066,8 +1061,19 @@ def process_upload_request(
             
             public = False
             visible = True
+            opus_corpus = False
             if opus:
                 public = True
+                opus_corpus = True
+
+            print("@@@@@@@@@@@@@@@@@@@@@@@@@", flush = True)
+            print(str(public), flush = True)
+            print("---------", flush = True)
+            print(str(visible), flush = True)
+            print("---------", flush = True)
+            print(str(opus_corpus), flush = True)
+            print("---------", flush = True)
+            print("@@@@@@@@@@@@@@@@@@@@@@@@@", flush = True)
 
             corpus = Corpus(
                 name=corpus_name,
@@ -1076,7 +1082,8 @@ def process_upload_request(
                 description=corpus_desc,
                 topic_id=corpus_topic,
                 public=public,
-                visible=visible
+                visible=visible,
+                opus_corpus=opus_corpus
             )
 
             if type == "bitext":
