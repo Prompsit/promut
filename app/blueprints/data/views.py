@@ -91,11 +91,11 @@ def data_upload_status():
         return jsonify({ "result": -1 })
 
 @data_blueprint.route('/get-opus-corpora', methods=['POST'])
-#@utils.condec(login_required, user_utils.isUserLoginEnabled())
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
 def get_opus_corpora_by_langs():
     src_lang = request.form.get('source_lang')
     trg_lang = request.form.get('target_lang')
-    
+
     full_url = f"http://opus.nlpl.eu/opusapi/?&source={src_lang}&target={trg_lang}&preprocessing=moses&version=latest"
     data = requests.get(full_url)
     
@@ -116,28 +116,36 @@ def get_opus_corpora_by_langs():
     return jsonify({ "result": 200, "datasets": datasets })
 
 @data_blueprint.route('/download-opus-corpus', methods=['POST'])
-#@utils.condec(login_required, user_utils.isUserLoginEnabled())
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
 def download_opus_corpus():
     try:
         src_lang = request.form.get('source_lang')
         trg_lang = request.form.get('target_lang')
         corpus = request.form.get('corpus')
-        
+
         data = requests.get(f"http://opus.nlpl.eu/opusapi/?corpus={corpus}&source={src_lang}&target={trg_lang}&preprocessing=moses&version=latest")
         output = data.json()
         
         url_to_download = output["corpora"][0]["url"]
         corpus_name = output["corpora"][0]["corpus"]
 
-        USER_ID = 0
+        USER_ID = user_utils.get_uid()
         source_lang_id = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).one().id
         target_lang_id = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).one().id
 
         # Check if corpus has already been downloaded for the given source and target languages
         check = Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).exists()
 
+        print("---------------------------------", flush = True)
+        print(str(source_lang_id), flush = True)
+        print(str(target_lang_id), flush = True)
+        print(str(db.session.query(check).scalar()), flush = True)
+        print(str(url_to_download), flush = True)
+        print(str(corpus_name), flush = True)
+        print("---------------------------------", flush = True)
+
         if db.session.query(check).scalar():
-            return jsonify({ "result": -2, "reason": f"Corpus '{corpus_name}' already exists!" })
+            return jsonify({ "result": -1 })
 
         # if corpus doesn't exist in db, but there are folders/files with it, then delete them
         opus_workdir = os.path.join(app.config["DATA_FOLDER"], "tmp")
@@ -152,6 +160,16 @@ def download_opus_corpus():
         # delete the unwanted files, and split the shuffled file into two (src and trg)
         path_to_script = os.path.join(app.config['MUTNMT_FOLDER'], "app/blueprints/data/prepare_opus_corpus.sh")
         TEMP_LOG_FILE = "/opt/mutnmt/data/TMP_FILE.txt"
+
+        print("---------------------------------", flush = True)
+        print(str(path_to_script), flush = True)
+        print(str(url_to_download), flush = True)
+        print(str(opus_workdir), flush = True)
+        print(str(src_lang), flush = True)
+        print(str(trg_lang), flush = True)
+        print(str(corpus_name), flush = True)
+        print(str(TEMP_LOG_FILE), flush = True)
+        print("---------------------------------", flush = True)
 
         subprocess.run("bash {0} {1} {2} {3} {4} {5} {6}".format(path_to_script, url_to_download, opus_workdir, src_lang, trg_lang, corpus_name, TEMP_LOG_FILE), shell=True, stdout=subprocess.PIPE)
 

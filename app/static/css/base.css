@@ -11,10 +11,12 @@ html {
 .hamburger-menu .nav-pills .fas {
   width: 18px;
 }
+
 .user-area {
   display: flex;
   justify-content: space-between;
 }
+
 @media screen and (max-width: 576px) {
   .hamburger-menu {
     position: fixed;
@@ -61,9 +63,14 @@ html {
 .main-container {
   margin: 20px 90px 30px 30px;
 }
+
 .primary-header {
   font-size: 28px;
   font-weight: 600;
   margin-bottom: 32px;
   margin-top: 6px;
+}
+
+.bg-green-gray {
+  background-color: #c1e9ee !important;
 }
