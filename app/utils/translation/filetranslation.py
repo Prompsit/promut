@@ -40,8 +40,6 @@ class FileTranslation:
 
     def line(self, text):
         if text.strip() != "":
-            print(text, flush=True)
-            print("aaaxd")
             # line_tok = self.tokenizer.tokenize(text)
             return self.translator.translate([text])[0]
             # return self.tokenizer.detokenize(translation)
@@ -49,17 +47,23 @@ class FileTranslation:
             return ""
 
     def translate_txt(self, user_id, file_path, as_tmx = False):
-        translated_path = '{}.translated'.format(file_path)
-        with open(file_path, 'r') as source:
-            with open(translated_path, 'w+') as target:
-                for line in source:
-                    print(line, flush=True)
-                    translation = self.line(line)
-                    if as_tmx: self.sentences[str(user_id)].append({ "source": line.strip(), "target": [translation] })
-                    print(translation, file=target)
 
-        os.remove(file_path)
-        shutil.move(translated_path, file_path)
+        try:
+            translated_path = '{}.translated'.format(file_path)
+            
+            # translate the whole freaking file
+            self.translator.translate_file(file_path, translated_path, n_best = False)
+
+            # write source and target lines to tmx if it's wanted
+            with open(file_path, 'r') as source, open(translated_path, 'r') as target:
+                for source_line, target_line in zip(source, target):
+                    if as_tmx: self.sentences[str(user_id)].append({ "source": source_line.strip(), "target": [target_line.strip()] })
+
+            os.remove(file_path)
+            shutil.move(translated_path, file_path)
+
+        except Exception as ex:
+            raise Exception from ex
 
     def translate_xml(self, user_id, xml_path, mode = "xml", as_tmx = False):
         office = (mode == "office")

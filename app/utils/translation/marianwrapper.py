@@ -35,3 +35,24 @@ class MarianWrapper:
         os.remove(input_tmp.name)
         os.remove(output_tmp.name)
         return translations
+
+    def translate_file(self, input_path, output_path, n_best = False):
+        n_best_flag = "--n-best" if n_best else ""
+
+        marian_cmd = (
+            "{0}/build/marian-decoder -c {1} {2} -i {3} -o {4} -w 4000 --mini-batch 16".format(
+                app.config["MARIAN_FOLDER"],
+                self.model,
+                n_best_flag,
+                input_path,
+                output_path,
+            )
+        )
+
+        try:
+            subprocess.run(marian_cmd, shell=True, capture_output=True, check=True)
+        except Exception as e:
+            print(e, flush = True)
+            return False
+
+        return True

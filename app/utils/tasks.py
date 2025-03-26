@@ -626,16 +626,20 @@ def launch_engine(user_id, engine_id):
     with app.app_context():
         user = User.query.filter_by(id=user_id).first()
         engine = Engine.query.filter_by(id=engine_id).first()
+        
         # If this user is already using another engine, we switch
-        user_engine = RunningEngines.query.filter_by(user_id=user_id).delete()
-        if user_engine:
-            db.session.delete(user_engine)
+        user_engines = RunningEngines.query.filter_by(user_id=user_id).all()
+        
+        if user_engines:
+            for user_engine in user_engines:
+                db.session.delete(user_engine)
+                db.session.commit()
 
         user.user_running_engines.append(RunningEngines(engine=engine, user=user))
         db.session.commit()
         translator = MarianWrapper(engine.model_path)
 
-    return translator  # , tokenizer
+    return translator
 
 
 @celery.task(bind=True)

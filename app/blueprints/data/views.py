@@ -98,8 +98,6 @@ def get_opus_corpora_by_langs():
 
     full_url = f"http://opus.nlpl.eu/opusapi/?&source={src_lang}&target={trg_lang}&preprocessing=moses&version=latest"
     data = requests.get(full_url)
-    
-    print(full_url, flush = True)
 
     output = data.json()
     datasets = []
@@ -136,14 +134,6 @@ def download_opus_corpus():
         # Check if corpus has already been downloaded for the given source and target languages
         check = Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).exists()
 
-        print("---------------------------------", flush = True)
-        print(str(source_lang_id), flush = True)
-        print(str(target_lang_id), flush = True)
-        print(str(db.session.query(check).scalar()), flush = True)
-        print(str(url_to_download), flush = True)
-        print(str(corpus_name), flush = True)
-        print("---------------------------------", flush = True)
-
         if db.session.query(check).scalar():
             return jsonify({ "result": -1 })
 
@@ -160,16 +150,6 @@ def download_opus_corpus():
         # delete the unwanted files, and split the shuffled file into two (src and trg)
         path_to_script = os.path.join(app.config['MUTNMT_FOLDER'], "app/blueprints/data/prepare_opus_corpus.sh")
         TEMP_LOG_FILE = "/opt/mutnmt/data/TMP_FILE.txt"
-
-        print("---------------------------------", flush = True)
-        print(str(path_to_script), flush = True)
-        print(str(url_to_download), flush = True)
-        print(str(opus_workdir), flush = True)
-        print(str(src_lang), flush = True)
-        print(str(trg_lang), flush = True)
-        print(str(corpus_name), flush = True)
-        print(str(TEMP_LOG_FILE), flush = True)
-        print("---------------------------------", flush = True)
 
         subprocess.run("bash {0} {1} {2} {3} {4} {5} {6}".format(path_to_script, url_to_download, opus_workdir, src_lang, trg_lang, corpus_name, TEMP_LOG_FILE), shell=True, stdout=subprocess.PIPE)
 
