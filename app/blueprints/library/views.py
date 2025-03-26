@@ -181,7 +181,7 @@ def library_engines_feed():
         # We try to get BLEU score for this engine
         score = None
         try:
-            with open(os.path.join(engine.path, "model/train.log"), 'r') as log_file:
+            with open(os.path.join(engine.model_path, "train.log"), 'r') as log_file:
                 for line in log_file:
                     groups = re.search(training_log.validation_regex, line, flags=training_log.re_flags)
                     if groups:
