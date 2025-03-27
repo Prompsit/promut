@@ -57,11 +57,15 @@
     }
 }
 
-.data-upload-form {
+.data-upload-form,
+.search-opus-corpora-container,
+.corpora-nav-tabs-container {
     overflow: hidden;
 }
 
-.data-upload-form.collapsed {
+.data-upload-form.collapsed,
+.search-opus-corpora-container.collapsed,
+.corpora-nav-tabs-container.collapsed {
     height: 0px;
     padding: 0px;
 }

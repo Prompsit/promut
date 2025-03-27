@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function () {
     let users_table = $(".users-table").DataTable({
         processing: true,
         serverSide: true,
@@ -12,7 +12,7 @@ $(document).ready(function() {
             {
                 targets: 4,
                 className: "notes-row",
-                render: function(data, type, row) {
+                render: function (data, type, row) {
                     const template = document.importNode(document.getElementById('notes-template').content, true);
 
                     if (row[4]) {
@@ -26,13 +26,13 @@ $(document).ready(function() {
                     return ghost.innerHTML;
                 }
             },
-            { 
+            {
                 targets: 5,
                 responsivePriority: 1,
                 className: "actions",
                 searchable: false,
                 sortable: false,
-                render: function(data, type, row) {
+                render: function (data, type, row) {
                     let template = document.importNode(document.querySelector("#users-table-actions-template").content, true);
 
                     $(template).find(".edit-user").attr("href", "user/" + row[0]);
@@ -64,4 +64,29 @@ $(document).ready(function() {
             }
         ]
     });
+
+    users_table.on('click', 'tbody tr td:first-child', function (e) {
+        const row = e.currentTarget.closest("tr");
+        const cells = $(row).find('td:contains("Admin")');
+
+        console.log(cells, cells.length)
+
+        if (!cells.length) {
+            row.classList.toggle('selected');
+        }
+
+        const actionsContainer = $('.multiple-user-actions-container');
+
+        let template = document.importNode(document.querySelector("#multiple-users-actions-template").content, true);
+
+        let ghost = document.createElement('div');
+        ghost.appendChild(template);
+
+        if (users_table.rows('.selected').data().length > 1) {
+            actionsContainer.html(ghost.innerHTML);
+        } else {
+            actionsContainer.html("");
+        }
+    });
+
 });

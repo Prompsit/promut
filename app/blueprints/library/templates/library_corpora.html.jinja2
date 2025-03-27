@@ -5,24 +5,24 @@
 {% if not is_normal() %}
 <div class="d-flex justify-content-between">
   <a href="#" class="text-reset text-decoration-none upload-header">
-    <h2 class="h5 section-title" style="margin-left: 15px;">
-      <span class="mr-2">Upload datasets</span>
-      <i class="fas fa-caret-up header-collapse-icon"></i>
-      <i class="fas fa-caret-down header-collapsed-icon d-none"></i>
+    <h2 class="h5 section-title">
+      <span class="mr-2">Upload your dataset</span>
+      <i class="fas fa-caret-up header-collapse-icon d-none"></i>
+      <i class="fas fa-caret-down header-collapsed-icon"></i>
     </h2>
   </a>
 
   <a href="#your_corpora">
-    <i class="fas fa-folder"></i> Your corpora
+    <i class="fas fa-folder"></i> Your datasets
   </a>
 </div>
 
-<form class="data-upload-form mb-4 " action="{{ url_for('data.data_upload_perform') }}" enctype="multipart/form-data"
-  method="post">
+<form class="data-upload-form mb-4 collapsed" action="{{ url_for('data.data_upload_perform') }}"
+  enctype="multipart/form-data" method="post">
   <fieldset>
     <div class="row">
       <div class="col-12">
-        <div class="p-3">
+        <div>
           <div class="row">
             <div class="form-group col-12 col-sm-6">
               <label for="name">Name</label>
@@ -226,7 +226,7 @@
                 <span class="upload-progress">0</span>%
               </div>
               <div class="h6">
-                We're checking your data! Corpora should be plain text or TMX and have
+                We're checking your data! Datasets should be plain text or TMX and have
                 the same length and one sentence per line. This might take some time...
               </div>
             </div>
@@ -243,156 +243,168 @@
 {% endif %}
 
 {% if is_admin() or is_researcher() %}
-<form class="search-opus-corpora-form mb-4 " action="{{ url_for('data.get_opus_corpora_by_langs') }}"
-  enctype="multipart/form-data" method="post">
-  <h2>Get datasets from OPUS</h2>
-  <div id="sourceSearchLangs">
-    <label for="source_lang_search">Source language</label>
-    <select class="custom-select mb-2 lang_sel source_lang_search" name="source_lang_search">
-      {% for language in languages %}
-      <option value="{{ language.code }}">{{ language.name }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div id="targetSearchLangs">
-    <label for="target_lang_search">Target language</label>
-    <select class="custom-select mb-2 lang_sel target_lang_search" name="target_lang_search">
-      {% for language in languages[1:] %}
-      <option value="{{ language.code }}">{{ language.name }}</option>
-      {% endfor %}
-      <option value="{{ languages[0].code }}">{{ languages[0].name }}</option>
-    </select>
-  </div>
-  <div class="searching-corpora d-none">
-    Searching for datasets in OPUS
-  </div>
-  <div class="col-12 offset-sm-5 col-sm-2 text-right">
-    <input class="btn btn-primary" type="submit" id="submit-dataset-search" value="Search datasets" />
-  </div>
-
-</form>
-<div class="datasets-response-table">
-  <table id="dataTable" class="table table-bordered w-100"></table>
+<div class="opus-search-header mb-4">
+  <h2><span>Download dataset from OPUS collection</span> <i
+      class="fas fa-caret-up header-collapse-icon-opus d-none"></i>
+    <i class="fas fa-caret-down header-collapsed-icon-opus"></i>
+  </h2>
 </div>
+<div class="search-opus-corpora-container collapsed ">
+  <form class="search-opus-corpora-form mb-4 " action="{{ url_for('data.get_opus_corpora_by_langs') }}"
+    enctype="multipart/form-data" method="post">
+    <div style="display: flex;">
+      <div id="sourceSearchLangs">
+        <label for="source_lang_search">Source language</label>
+        <select class="custom-select mb-2 lang_sel_opus source_lang_search" name="source_lang_search">
+          {% for language in languages %}
+          <option value="{{ language.code }}">{{ language.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="targetSearchLangs">
+        <label for="target_lang_search">Target language</label>
+        <select class="custom-select mb-2 lang_sel_opus target_lang_search" name="target_lang_search">
+          {% for language in languages[1:] %}
+          <option value="{{ language.code }}">{{ language.name }}</option>
+          {% endfor %}
+          <option value="{{ languages[0].code }}">{{ languages[0].name }}</option>
+        </select>
+        <input class="btn btn-primary" style="margin-left: auto;margin-right: 0;" type="submit"
+          id="submit-dataset-search" value="Search datasets" />
+      </div>
+    </div>
+    <div class="searching-corpora d-none">
+      Searching for datasets in OPUS
+    </div>
+  </form>
+  <div class="datasets-response-table">
+    <table id="dataTable" class="table table-bordered w-100"></table>
+  </div>
+</div>
+
 {% endif %}
-
-<h2 class="h5 sr-only">Your corpora</h2>
-<ul class="nav nav-tabs corpora-nav-tabs" id="your_corpora">
-  <li class="nav-item">
-    <a class="nav-link active public-nav-tab" data-toggle="tab" href="#public-corpora">Public corpora</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link private-nav-tab" data-toggle="tab" href="#private-corpora">Your corpora</a>
-  </li>
-  {% if is_admin() %}
-  <li class="nav-item">
-    <a class="nav-link used-nav-tab d-flex align-items-center" data-toggle="tab" href="#used-corpora">
-      <span>Used corpora</span>
-      <span class="badge bg-secondary ml-2 text-light">Admin</span>
-    </a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link not-used-nav-tab d-flex align-items-center" data-toggle="tab" href="#not-used-corpora">
-      <span>Not used corpora</span>
-      <span class="badge bg-secondary ml-2 text-light">Admin</span>
-    </a>
-  </li>
-  {% endif %}
-</ul>
-
-<div class="tab-content corpora-tab">
-  <div class="tab-pane fade show active pt-4" id="public-corpora">
-    <div class="table-responsive">
-      <table class="table table-bordered corpora-table w-100" data-public="true">
-        <thead class="d-none">
-          <th></th>
-          <th>File name</th>
-          <th>Language</th>
-          <th>Sentences</th>
-          <th>Words</th>
-          <th>Domain</th>
-          <th>Date</th>
-        </thead>
-      </table>
-    </div>
-  </div>
-  <div class="tab-pane fade pt-4" id="private-corpora">
-    {% if user_library > 0 %}
-    <div class="table-responsive">
-      <table class="table table-bordered corpora-table w-100">
-        <thead>
-          <th></th>
-          <th>File name</th>
-          <th>Language</th>
-          <th>Sentences</th>
-          <th>Words</th>
-          <th>Domain</th>
-          <th>Date</th>
-        </thead>
-      </table>
-    </div>
-    {% else %}
-    <div class="jumbotron p-3 text-center">
-      <p class="h6 m-0">
-        Nothing yet!
-
-        {% if role_with_access %}
-        <a href="{{ url_for('library.library_corpora') }}">Upload a corpus now</a> or grab one
-        {% endif %}
-      </p>
-    </div>
-    {% endif %}
-  </div>
-  {% if is_admin() %}
-  <div class="tab-pane fade pt-4" id="used-corpora">
-    {% if used_library > 0 %}
-    <div class="table-responsive">
-      <table class="table table-bordered corpora-table w-100" data-used="true">
-        <thead>
-          <th></th>
-          <th>File name</th>
-          <th>Language</th>
-          <th>Sentences</th>
-          <th>Words</th>
-          <th>Domain</th>
-          <th>Date</th>
-        </thead>
-      </table>
-    </div>
-    {% else %}
-    <div class="jumbotron p-3 text-center">
-      <p class="h6 m-0">
-        Nothing yet! <a href="{{ url_for('library.library_corpora') }}">Upload a corpus now</a> or grab one
-      </p>
-    </div>
-    {% endif %}
-  </div>
-  <div class="tab-pane fade pt-4" id="not-used-corpora">
-    {% if not_used_library > 0 %}
-    <div class="table-responsive">
-      <table class="table table-bordered corpora-table w-100" data-not-used="true">
-        <thead>
-          <th></th>
-          <th>File name</th>
-          <th>Language</th>
-          <th>Sentences</th>
-          <th>Words</th>
-          <th>Domain</th>
-          <th>Date</th>
-        </thead>
-      </table>
-    </div>
-    {% else %}
-    <div class="jumbotron p-3 text-center">
-      <p class="h6 m-0">
-        Nothing yet! <a href="{{ url_for('library.library_corpora') }}">Upload a corpus now</a> or grab one
-      </p>
-    </div>
-    {% endif %}
-  </div>
-  {% endif %}
+<div class="datasets-header mb-4">
+  <h2><span>Datasets</span> <i class="fas fa-caret-up header-collapse-icon-datasets "></i>
+    <i class="fas fa-caret-down header-collapsed-icon-datasets d-none"></i>
+  </h2>
 </div>
+<div class="corpora-nav-tabs-container">
+  <ul class="nav nav-tabs corpora-nav-tabs" id="your_corpora">
+    <li class="nav-item">
+      <a class="nav-link public-nav-tab" data-toggle="tab" href="#public-corpora">Public datasets</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link active private-nav-tab" data-toggle="tab" href="#private-corpora">Your datasets</a>
+    </li>
+    {% if is_admin() %}
+    <li class="nav-item">
+      <a class="nav-link used-nav-tab d-flex align-items-center" data-toggle="tab" href="#used-corpora">
+        <span>Used datasets</span>
+        <span class="badge bg-secondary ml-2 text-light">Admin</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link not-used-nav-tab d-flex align-items-center" data-toggle="tab" href="#not-used-corpora">
+        <span>Not used datasets</span>
+        <span class="badge bg-secondary ml-2 text-light">Admin</span>
+      </a>
+    </li>
+    {% endif %}
+  </ul>
 
+  <div class="tab-content corpora-tab">
+    <div class="tab-pane fade show active pt-4" id="public-corpora">
+      <div class="table-responsive">
+        <table class="table table-bordered corpora-table w-100" data-public="true">
+          <thead class="d-none">
+            <th></th>
+            <th>File name</th>
+            <th>Language</th>
+            <th>Sentences</th>
+            <th>Words</th>
+            <th>Domain</th>
+            <th>Date</th>
+          </thead>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane fade pt-4" id="private-corpora">
+      {% if user_library > 0 %}
+      <div class="table-responsive">
+        <table class="table table-bordered corpora-table w-100">
+          <thead>
+            <th></th>
+            <th>File name</th>
+            <th>Language</th>
+            <th>Sentences</th>
+            <th>Words</th>
+            <th>Domain</th>
+            <th>Date</th>
+          </thead>
+        </table>
+      </div>
+      {% else %}
+      <div class="jumbotron p-3 text-center">
+        <p class="h6 m-0">
+          Nothing yet!
+
+          {% if role_with_access %}
+          <a href="{{ url_for('library.library_corpora') }}">Upload a dataset now</a> or grab one
+          {% endif %}
+        </p>
+      </div>
+      {% endif %}
+    </div>
+    {% if is_admin() %}
+    <div class="tab-pane fade pt-4" id="used-corpora">
+      {% if used_library > 0 %}
+      <div class="table-responsive">
+        <table class="table table-bordered corpora-table w-100" data-used="true">
+          <thead>
+            <th></th>
+            <th>File name</th>
+            <th>Language</th>
+            <th>Sentences</th>
+            <th>Words</th>
+            <th>Domain</th>
+            <th>Date</th>
+          </thead>
+        </table>
+      </div>
+      {% else %}
+      <div class="jumbotron p-3 text-center">
+        <p class="h6 m-0">
+          Nothing yet! <a href="{{ url_for('library.library_corpora') }}">Upload a dataset now</a> or grab one
+        </p>
+      </div>
+      {% endif %}
+    </div>
+    <div class="tab-pane fade pt-4" id="not-used-corpora">
+      {% if not_used_library > 0 %}
+      <div class="table-responsive">
+        <table class="table table-bordered corpora-table w-100" data-not-used="true">
+          <thead>
+            <th></th>
+            <th>File name</th>
+            <th>Language</th>
+            <th>Sentences</th>
+            <th>Words</th>
+            <th>Domain</th>
+            <th>Date</th>
+          </thead>
+        </table>
+      </div>
+      {% else %}
+      <div class="jumbotron p-3 text-center">
+        <p class="h6 m-0">
+          Nothing yet! <a href="{{ url_for('library.library_corpora') }}">Upload a dataset now</a> or grab one
+        </p>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
 <template id="corpus-header-template">
   <tr class="corpus-header bg-green-gray">
     <th class="corpus_icon">

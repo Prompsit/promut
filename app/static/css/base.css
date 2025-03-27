@@ -85,7 +85,7 @@ html {
 }
 
 .download-btn {
-  background-color: hsl(170, 98.275862069%, 15.2450980392%);
+  background-color: #017360;
   color: white;
   padding: 5px 16px;
   border: none;
@@ -95,7 +95,7 @@ html {
 }
 
 .download-btn:hover {
-  background-color: hsl(170, 85%, 21%);
+  background-color: #108f7a;
 }
 
 .download-btn:disabled {

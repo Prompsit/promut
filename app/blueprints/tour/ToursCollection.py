@@ -1,7 +1,7 @@
 class ToursCollection(object):
     tours = {
         'library/corpora': {
-            'tour_title': 'Welcome to MutNMT. Let\'s get started by grabbing a public corpus or uploading a new one. Corpora will be used to train NMT engines.'
+            'tour_title': 'Welcome to MutNMT. Let\'s get started by grabbing a public dataset or uploading a new one. Datasets will be used to train NMT engines.'
         },
         'library/engines': {
             'tour_title': 'You are in the Engines section now. Here, you can grab public engines or see your own, once you complete a training. Engines in your list will be used in Translate and Inspect sections.'
@@ -17,7 +17,7 @@ class ToursCollection(object):
                 {
                     'element': 'source_lang',
                     'title': 'Source and target languages',
-                    'description': 'Choose the source and target language of your neural engine. Make sure you have corpora available for the selected languages.'
+                    'description': 'Choose the source and target language of your neural engine. Make sure you have datasets available for the selected languages.'
                 },
                 {
                     'element': 'descriptionText',
@@ -57,7 +57,7 @@ class ToursCollection(object):
                 {
                     'element': 'corpus-selector',
                     'title': 'Corpus selector',
-                    'description': 'You almost have it! The last step is to choose the corpora for the training, validation and test processes. You can choose a whole corpus or just a part of it. When you have it clear, click on the plus sign (+)'
+                    'description': 'You almost have it! The last step is to choose the datasets for the training, validation and test processes. You can choose a whole dataset or just a part of it. When you have it clear, click on the plus sign (+)'
                 }
             ]
         },

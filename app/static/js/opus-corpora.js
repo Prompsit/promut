@@ -1,4 +1,25 @@
 $(document).ready(function () {
+
+
+
+    let adjust_languages = (el) => {
+        let other = $('.lang_sel_opus').not(el);
+        let selected_lang = $(el).find('option:selected').val();
+        $(other).find('option').prop('disabled', false)
+        $(other).find(`option[value='${selected_lang}']`).prop('disabled', true);
+
+        if ($(other).find('option:selected').val() == selected_lang) {
+            $(other).find('option:selected').prop('selected', false);
+        }
+    }
+
+    $('.source_lang_search').on('change', function () {
+        adjust_languages(this);
+    });
+
+    adjust_languages($('.source_lang_search'));
+
+
     $('.search-opus-corpora-form').on('submit', function (event) {
         event.preventDefault();
 
@@ -44,7 +65,7 @@ $(document).ready(function () {
         dataTableContainer.html('');
 
         // Create table structure
-        const table = $('<table id="dataTable" class="table table-bordered corpora-table w-100">');
+        const table = $('<table id="dataTable" class="table table-bordered w-100">');
 
         const headers = ["Dataset", "Sentences", "Version", "Src tokens", "Trg tokens", "Download"];
 
@@ -89,7 +110,7 @@ $(document).ready(function () {
 
         $('#dataTable').on('click', '.download-btn', function (e) {
             e.stopPropagation();
-            e.stopImmediatePropagation(); // Prevent row click from triggering
+            e.stopImmediatePropagation();
             e.preventDefault();
 
             var notyf = new Notyf();
@@ -118,6 +139,10 @@ $(document).ready(function () {
                     button.text('Download');
                     button.prop('disabled', false);
                     notyf.success({ message: 'Dataset downloaded and added to your collection!', duration: 3500, position: { x: "middle", y: "top" } });
+
+                    $(".tab-pane.active .dataTable").each(function (i, el) {
+                        $(el).DataTable().ajax.reload();
+                    });
                 },
                 error: function (xhr, status, error) {
                     notyf.error({ message: 'Something went wrong with the download.', duration: 3500, position: { x: "middle", y: "top" } });
