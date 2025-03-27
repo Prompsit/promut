@@ -36,7 +36,7 @@ def library_corpora():
     languages = UserLanguage.query.filter_by(user_id=current_user.id).order_by(UserLanguage.name).all()
     topics = Topic.query.all()
     role_with_access = is_admin() or is_expert()
-    return render_template('library_corpora.html.jinja2', page_name='library_corpora', page_title='Corpora',
+    return render_template('library_corpora.html.jinja2', page_name='library_corpora', page_title='Datasets',
                            user_library=user_library, public_files = public_files, languages=languages, topics=topics,
                            used_library=used_library, not_used_library=not_used_library, role_with_access= role_with_access)
 
@@ -107,16 +107,6 @@ def library_corpora_feed():
             file = file_entry.file
 
             uploaded_date = datetime.fromtimestamp(datetime.timestamp(file.uploaded)).strftime("%d/%m/%Y")
-
-            #print("##################################", flush = True)
-            #print(str(corpus.name), flush = True)
-            #print("---------", flush = True)
-            #print(str(corpus.opus_corpus), flush = True)
-            #print("---------", flush = True)
-            #print(str(corpus.user_source_id), flush = True)
-            #print("---------", flush = True)
-            #print(str(corpus.user_target_id), flush = True)
-
             file_data.append([
                 file.id,
                 file.name,
@@ -133,8 +123,6 @@ def library_corpora_feed():
                     "corpus_description": corpus.description,
                     "corpus_source": corpus.source.name,
                     "corpus_target": corpus.target.name if corpus.target else "",
-                    "opus_corpus": corpus.opus_corpus,
-                    "user_is_admin": user_utils.is_admin(),
                     "corpus_public": corpus.public,
                     "corpus_size": corpus.corpus_files[0].file.lines,
                     "corpus_preview": url_for('library.corpora_preview', id = corpus.id),
@@ -196,8 +184,6 @@ def library_engines_feed():
                             uploaded_date, engine.uploader.username if engine.uploader else "MutNMT", score, "",
                             {
                                 "engine_owner": engine.uploader.id == user_utils.get_uid() if engine.uploader else False,
-                                "engine_opus": engine.opus_engine,
-                                "user_is_admin": user_utils.is_admin(),
                                 "engine_public": engine.public,
                                 "engine_share": url_for('library.library_share_toggle', type = "library_engines", id = engine.id),
                                 "engine_summary": url_for('train.train_console', id = engine.id),
@@ -294,9 +280,8 @@ def library_ungrab(type, id):
 
 @library_blueprint.route('/delete/<type>/<id>')
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
-def library_delete(type, id, user_id = None):
-
-    user_utils.library_delete(type = type, id = id)
+def library_delete(type, id):
+    user_utils.library_delete(type, id)
 
     return redirect(request.referrer)
 
@@ -349,7 +334,7 @@ def library_corpora_export(id):
 
 
 @library_blueprint.route('/download-model', methods=['POST'])
-#@utils.condec(login_required, user_utils.isUserLoginEnabled())      
+@utils.condec(login_required, user_utils.isUserLoginEnabled())      
 def download_model():
     src_lang = request.form.get('source_lang')
     trg_lang = request.form.get('target_lang')
@@ -360,7 +345,7 @@ def download_model():
         r = requests.get(model_link, timeout=100, stream=True)
         z = zipfile.ZipFile(io.BytesIO(r.content))
         z.extractall(os.path.join(model_path, "model"))
-    date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    date = datetime.strptime("2025-05-25 02:35:5", "%Y-%m-%d %H:%M:%S")
 
     source_lang = UserLanguage.query.filter_by(
         code=src_lang, user_id=-1
