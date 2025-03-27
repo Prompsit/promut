@@ -551,67 +551,36 @@ def test_training(self, engine_id):
     with app.app_context():
         try:
             engine = Engine.query.filter_by(id=engine_id).first()
-            test_dec_file = (
-                Corpus_File.query.filter_by(role="target")
-                .filter(
-                    Corpus_File.corpus_id.in_(
-                        db.session.query(Corpus_Engine.corpus_id).filter_by(
-                            engine_id=engine_id, phase="test", is_info=False
-                        )
-                    )
+
+            # get best BLEU model path
+            model_path = os.path.join(engine.model_path, "model.npz.best-bleu.npz.decoder.yml")
+            
+            # get source and target test files, and create temporary file for 
+            test_source = os.path.join(engine.path, "test." + engine.source.code)
+            _, test_source_preds = utils.tmpfile()
+            test_target = os.path.join(engine.path, "test." + engine.target.code)
+
+            # run marian decoder command to get predictions
+            marian_cmd = (
+                "{0}/build/marian-decoder -c {1} -i {2} -o {3} -w 4000".format(
+                    app.config["MARIAN_FOLDER"],
+                    model_path,
+                    test_source,
+                    test_source_preds,
                 )
-                .first()
-                .file.path
             )
+            subprocess.run(marian_cmd, shell=True, capture_output=True, check=True)
 
-            bleu = 0.0
-
-            _, hyps_tmp_file = utils.tmpfile()
-            _, test_crop_file = utils.tmpfile()
-            joey_translate = subprocess.Popen(
-                "cat {} | head -n 2000 | python3 -m joeynmt translate {} > {}".format(
-                    os.path.join(engine.path, "test." + engine.source.code),
-                    os.path.join(engine.path, "config.yaml"),
-                    hyps_tmp_file,
-                ),
-                cwd=app.config["JOEYNMT_FOLDER"],
-                shell=True,
-            )
-            joey_translate.wait()
-
-            decode_hyps = subprocess.Popen(
-                "cat {} | head -n 2000 | spm_decode --model={} --input_format=piece > {}.dec".format(
-                    hyps_tmp_file,
-                    os.path.join(engine.path, "train.model"),
-                    hyps_tmp_file,
-                ),
-                cwd=app.config["MUTNMT_FOLDER"],
-                shell=True,
-            )
-            decode_hyps.wait()
-
-            crop_test = subprocess.Popen(
-                "cat {} | head -n 2000 > {}".format(test_dec_file, test_crop_file),
-                cwd=app.config["MUTNMT_FOLDER"],
-                shell=True,
-            )
-            crop_test.wait()
-
-            sacreBLEU = subprocess.Popen(
-                "cat {}.dec | sacrebleu -b {}".format(hyps_tmp_file, test_crop_file),
-                cwd=app.config["MUTNMT_FOLDER"],
-                shell=True,
-                stdout=subprocess.PIPE,
-            )
-            sacreBLEU.wait()
-
-            score = sacreBLEU.stdout.readline().decode("utf-8")
+            # get BLEU score from predictions and human translation
+            sacre = subprocess.Popen("cat {} | sacrebleu -b {}".format(test_source_preds, test_target), 
+                        cwd=app.config['MUTNMT_FOLDER'], shell=True, stdout=subprocess.PIPE)
+            score = float(sacre.stdout.readline().decode("utf-8"))
 
             engine.test_task_id = None
-            engine.test_score = float(score)
+            engine.test_score = score
             db.session.commit()
 
-            return {"bleu": float(score)}
+            return {"bleu": score}
         except Exception as e:
             db.session.rollback()
             raise e
