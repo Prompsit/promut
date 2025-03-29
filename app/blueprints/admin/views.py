@@ -10,6 +10,7 @@ import shutil
 import psutil
 import pynvml
 import subprocess
+import os
 
 admin_blueprint = Blueprint('admin', __name__, template_folder='templates')
 
@@ -82,6 +83,7 @@ def user_datatables_feed():
 
     user_data = []
     for user in (rows_filtered if search else rows):
+        print(user.id, "********", flush=True)
         user_data.append([user.id, user.username, user.email,
                           user.role.name,
                           user.notes, ''])
@@ -161,12 +163,12 @@ def instances_datatables_feed():
 
     return dt.response(rows, rows_filtered, user_data)
 
-@admin_blueprint.route('/delete_user')
+@admin_blueprint.route('/delete_user', methods=["POST"])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def delete_user():
     if user_utils.is_normal(): return redirect(url_for('index'))
 
-    id = request.args.get('id')
+    id = int(request.form.get('id'))
 
     try:
         assert int(id) != user_utils.get_uid()
@@ -176,14 +178,16 @@ def delete_user():
 
         for engine_entry in user.user_engines:
             user_utils.library_delete("library_engines", engine_entry.engine.id, id)
-
-        shutil.rmtree(user_utils.get_user_folder(user_id=id))
+         
+        if os.path.isdir(user_utils.get_user_folder(user_id=id)):
+            shutil.rmtree(user_utils.get_user_folder(user_id=id))
         db.session.delete(user)
         db.session.commit()
-    except:
-        pass
+        return jsonify({ "result": 200})
+    except Exception as ex:
+        print(ex, flush = True)
+        return jsonify({ "result": -1})
 
-    return redirect(request.referrer)
 
 @admin_blueprint.route('/stop_engine')
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
@@ -199,16 +203,22 @@ def stop_engine():
 
     return redirect(request.referrer)
 
-@admin_blueprint.route('/become/<type>/<id>')
+@admin_blueprint.route('/become', methods=["POST"])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
-def become(type, id):
+def become():
     if user_utils.is_normal(): return redirect(url_for('index'))
 
-    if user_utils.is_admin():
-        user = User.query.filter_by(id = id).first()
-        target_role = Role.query.filter_by(name=type.capitalize()).first()
-        if target_role:
-            user.role = target_role
-            db.session.commit()
-
-    return redirect(request.referrer)
+    type = request.form.get('type')
+    id = int(request.form.get('id'))
+    
+    try:
+        if user_utils.is_admin():
+            user = User.query.filter_by(id = id).first()
+            target_role = Role.query.filter_by(name=type.capitalize()).first()
+            if target_role:
+                user.role = target_role
+                db.session.commit()
+                return jsonify({ "result": 200})
+    except Exception as ex:
+        print(ex, flush = True)
+        return jsonify({ "result": -1})

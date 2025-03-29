@@ -1,4 +1,5 @@
 $(document).ready(function () {
+
   let mt_filenames = [];
   let ht_filenames = [];
 
@@ -242,7 +243,7 @@ $(document).ready(function () {
       );
 
       file_series["comet"] = evaluation.spl[ht_ix].map((m) =>
-        parseFloat(m[5][mt_ix]["comet"])
+        parseFloat(parseFloat(m[5][mt_ix]["comet"]).toFixed(2))
       );
       file_series["chrf"] = evaluation.spl[ht_ix].map((m) =>
         parseFloat(m[5][mt_ix]["chrf3"])
@@ -250,232 +251,403 @@ $(document).ready(function () {
 
       const length = file_series["bleu"].length;
 
+
       const graphCategories = new Array(length).fill(0).map((_, i) => i + 1);
 
-      //TODO NEW GRAPH
+      // function graphOptions(metric, color) {
+      //   const graphArray = file_series[metric].splice(0, 100);
 
-      function graphOptions(metric, color) {
-        const graphArray = file_series[metric].splice(0, 100);
-
-        const metricName = metric.toUpperCase();
-
-        var options = {
-          series: [
-            {
-              name: metric,
-              data: graphArray,
-            },
-          ],
-          chart: {
-            height: 240,
-            type: "bar",
-          },
-          colors: [color],
-          plotOptions: {
-            bar: {
-              borderRadius: 10,
-              dataLabels: {
-                position: "top", // top, center, bottom
-              },
-              color: color,
-            },
-          },
-          dataLabels: {
-            enabled: true,
-            formatter: function (val) {
-              return val;
-            },
-            offsetY: -20,
-            style: {
-              fontSize: "12px",
-              colors: [color],
-            },
-          },
-
-          xaxis: {
-            categories: graphCategories,
-            position: "bottom",
-            axisBorder: {
-              show: true,
-            },
-            axisTicks: {
-              show: true,
-            },
-            labels: {
-              showDuplicates: false,
-            },
-            crosshairs: {
-              fill: {
-                type: "gradient",
-                gradient: {
-                  colorFrom: color,
-                  colorTo: color,
-                  stops: [0, 100],
-                  opacityFrom: 0.4,
-                  opacityTo: 0.5,
-                },
-              },
-            },
-            tooltip: {
-              enabled: true,
-            },
-          },
-          fill: {
-            colors: [color],
-          },
-          yaxis: {
-            axisBorder: {
-              show: true,
-            },
-            axisTicks: {
-              show: true,
-            },
-            labels: {
-              show: true,
-              color: color,
-              formatter: function (val) {
-                return val;
-              },
-            },
-          },
-          toolbar: {
-            show: false,
-          },
-          tooltip: {
-            colors: [color],
-          },
-          legend: {
-            show: true,
-            showForSingleSeries: true,
-            position: "top",
-            horizontalAlign: "left",
-            customLegendItems: [metric],
-            fontSize: "14px",
-
-            formatter: function (val) {
-              return val.toUpperCase();
-            },
-            markers: {
-              colors: [color],
-              size: 10,
-            },
-          },
-        };
-
-        return options;
-      }
-
-      const bleuOptions = graphOptions("bleu", "#0F95E1");
-      const terOptions = graphOptions("ter", "#4CE895");
-      const cometOptions = graphOptions("comet", "#006293");
-      const chrfOptions = graphOptions("chrf", "#259887");
-
-      var bleuChart = new ApexCharts(
-        document.querySelector("#bleu-chart"),
-        bleuOptions
-      );
-      bleuChart.render();
-
-      var terChart = new ApexCharts(
-        document.querySelector("#ter-chart"),
-        terOptions
-      );
-      terChart.render();
-
-      var cometChart = new ApexCharts(
-        document.querySelector("#comet-chart"),
-        cometOptions
-      );
-      cometChart.render();
-
-      var chrfChart = new ApexCharts(
-        document.querySelector("#chrf-chart"),
-        chrfOptions
-      );
-      chrfChart.render();
-
-      //TODO END NEW GRAPH
-
-      //* OLD GRAPH
-
-      // bpl_chart = new ApexCharts(
-      //   document.querySelector(".chart-container div"),
-      //   {
+      //   var options = {
       //     series: [
       //       {
-      //         name: "BLEU",
-      //         data: file_series["bleu"].splice(0, 100),
-      //       },
-      //       {
-      //         name: "TER",
-      //         data: file_series["ter"].splice(0, 100).map((m) => -1 * m),
+      //         name: metric,
+      //         data: graphArray,
       //       },
       //     ],
       //     chart: {
+      //       height: 240,
       //       type: "bar",
-      //       width: "100%",
-      //       height: 500,
-      //       stacked: true,
       //       toolbar: {
-      //         show: true,
+      //         show: false // Hide default toolbar to prevent interference
       //       },
       //       zoom: {
       //         enabled: true,
-      //       },
+      //         type: 'x',
+      //         resetIcon: {
+      //           offsetX: -10,
+      //           offsetY: 0,
+      //           fillColor: '#fff',
+      //           strokeColor: '#37474F'
+      //         },
+      //         selection: {
+      //           background: '#90CAF9',
+      //           border: '#0D47A1'
+      //         }
+      //       }
       //     },
+      //     colors: [color],
       //     plotOptions: {
       //       bar: {
-      //         colors: {
-      //           ranges: [
-      //             {
-      //               from: -100,
-      //               to: 0,
-      //               color: "#ffc107",
-      //             },
-      //             {
-      //               from: 0,
-      //               to: 100,
-      //               color: "rgba(87, 119, 144, 1)",
-      //             },
-      //           ],
+      //         borderRadius: 10,
+      //         horizontal: false,
+      //         columnWidth: '70%',
+      //         barHeight: '70%',
+      //         dataLabels: {
+      //           position: "top", // top, center, bottom
       //         },
+      //         color: color,
       //       },
       //     },
-      //     dataLabels: { enabled: false },
-      //     yaxis: {
-      //       max: 100,
-      //       min: -100,
+      //     dataLabels: {
+      //       enabled: true,
+      //       formatter: function (val) {
+      //         return val;
+      //       },
+      //       offsetY: -20,
+      //       style: {
+      //         fontSize: "12px",
+      //         colors: [color],
+      //       },
+      //     },
+
+      //     xaxis: {
+      //       categories: graphCategories,
+      //       position: "bottom",
+      //       tickPlacement: 'on',
+      //       axisBorder: {
+      //         show: true,
+      //       },
+      //       axisTicks: {
+      //         show: true,
+      //       },
       //       labels: {
-      //         formatter: (val) => {
-      //           if (val % parseInt(val) == 0) return parseInt(val);
-      //           return val.toFixed(2);
+      //         showDuplicates: false,
+      //         labels: {
+      //           rotate: -45,
+      //           rotateAlways: true,
+      //           hideOverlappingLabels: true,
+      //           maxItems: 25 // Show maximum 25 bars at a time
+      //         }
+      //       },
+      //       crosshairs: {
+      //         fill: {
+      //           type: "gradient",
+      //           gradient: {
+      //             colorFrom: color,
+      //             colorTo: color,
+      //             stops: [0, 100],
+      //             opacityFrom: 0.4,
+      //             opacityTo: 0.5,
+      //           },
+      //         },
+      //       },
+      //       tooltip: {
+      //         enabled: true,
+      //       },
+      //     },
+      //     fill: {
+      //       colors: [color],
+      //     },
+      //     yaxis: {
+      //       axisBorder: {
+      //         show: true,
+      //       },
+      //       axisTicks: {
+      //         show: true,
+      //       },
+      //       labels: {
+      //         show: true,
+      //         color: color,
+      //         formatter: function (val) {
+      //           return parseFloat(val.toFixed(2));
       //         },
       //       },
       //     },
-      //     colors: ["rgba(87, 119, 144, 1)", "#ffc107"],
+      //     toolbar: {
+      //       show: false,
+      //     },
       //     tooltip: {
-      //       y: {
-      //         formatter: function (value, { _, seriesIndex }) {
-      //           if (seriesIndex == 1) {
-      //             // Series 1 is TER
-      //             return parseFloat(value * -1).toFixed(2) + "%";
-      //           } else {
-      //             return parseFloat(value).toFixed(2);
-      //           }
-      //         },
+      //       colors: [color],
+      //     },
+      //     legend: {
+      //       show: true,
+      //       showForSingleSeries: true,
+      //       position: "top",
+      //       horizontalAlign: "left",
+      //       customLegendItems: [metric],
+      //       fontSize: "14px",
+
+      //       formatter: function (val) {
+      //         return val.toUpperCase();
+      //       },
+      //       markers: {
+      //         colors: [color],
+      //         size: 10,
       //       },
       //     },
-      //   }
+      //   };
+
+      //   return options;
+      // }
+
+      //! TESTING PAGINATION SOLUTION
+
+      class ChartPaginator {
+        constructor(chartId, options = {}) {
+          // Check if container exists before proceeding
+          const container = document.querySelector(`#${chartId}`);
+          if (!container) {
+            console.error(`Chart container ${chartId} not found`);
+            return null;
+          }
+
+          // Initialize chart with proper options
+          this.chart = new ApexCharts(container, {
+            chart: {
+              type: 'bar',
+              height: 400,
+              width: '100%',
+              parentHeightOffset: 0,
+              toolbar: {
+                show: false
+              }
+            },
+            series: [{
+              name: 'Values',
+              data: []
+            }],
+            xaxis: {
+              type: 'category',
+              labels: {
+                rotate: -45,
+                style: {
+                  fontSize: '12px'
+                }
+              }
+            },
+            yaxis: {
+              title: {
+                text: 'Value'
+              }
+            },
+            responsive: [{
+              breakpoint: 480,
+              options: {
+                chart: {
+                  width: '100%'
+                },
+                legend: {
+                  position: 'bottom'
+                }
+              }
+            }]
+          });
+
+          // Render immediately
+          this.chart.render();
+
+          // Initialize state
+          this.currentPage = 1;
+          this.itemsPerPage = parseInt(document.querySelector(`[data-chart="${chartId}"].itemsPerPage`).value);
+          this.totalItems = 0;
+          this.originalData = [];
+
+          // Store chart ID directly
+          this.chartId = chartId;
+
+          this.setupEventListeners();
+        }
+
+        setupEventListeners() {
+          // Use stored chartId instead of accessing chart.options
+          document.querySelector(`[data-chart="${this.chartId}"].prevBtn`).addEventListener('click', () => this.navigatePage(-1));
+          document.querySelector(`[data-chart="${this.chartId}"].nextBtn`).addEventListener('click', () => this.navigatePage(1));
+          document.querySelector(`[data-chart="${this.chartId}"].itemsPerPage`).addEventListener('change', () => this.handleItemsPerPageChange());
+        }
+
+        handleItemsPerPageChange() {
+          const newItemsPerPage = parseInt(document.querySelector(`[data-chart="${this.chartId}"].itemsPerPage`).value);
+          this.itemsPerPage = newItemsPerPage;
+          this.currentPage = 1;
+          this.updateDisplay();
+          this.refreshChart();
+        }
+
+        updateData(data) {
+          this.totalItems = data.length;
+          this.originalData = data;
+          this.updateDisplay();
+          this.refreshChart();
+        }
+
+        getCurrentPageData() {
+          const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+          const endIndex = Math.min(startIndex + this.itemsPerPage, this.totalItems);
+          return this.originalData.slice(startIndex, endIndex);
+        }
+
+        updateDisplay() {
+          const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+
+          document.querySelector(`[data-chart="${this.chartId}"].pageInfo`).textContent =
+            `${(this.currentPage * this.itemsPerPage - this.itemsPerPage + 1)}-${Math.min(this.currentPage * this.itemsPerPage, this.totalItems)} of ${this.totalItems}`;
+
+          document.querySelector(`[data-chart="${this.chartId}"].prevBtn`).disabled = this.currentPage <= 1;
+          document.querySelector(`[data-chart="${this.chartId}"].nextBtn`).disabled = this.currentPage >= totalPages;
+        }
+
+        navigatePage(direction) {
+          if ((direction === -1 && this.currentPage > 1) ||
+            (direction === 1 && this.currentPage < Math.ceil(this.totalItems / this.itemsPerPage))) {
+            this.currentPage += direction;
+            this.updateDisplay();
+            this.refreshChart();
+          }
+        }
+
+        refreshChart() {
+          const currentPageData = this.getCurrentPageData();
+          if (currentPageData.length === 0) return;
+
+          this.chart.updateOptions({
+            series: [{
+              data: currentPageData.map(item => ({
+                x: item.x,
+                y: item.y
+              }))
+            }],
+            xaxis: {
+              categories: currentPageData.map(item => item.x),
+              labels: {
+                rotate: -45,
+                rotateAlways: true,
+                hideOverlappingLabels: true
+              }
+            }
+          }, false, true);
+        }
+      }
+
+      // Initialize all charts with proper error handling
+      // Sample data for each chart with different values and categories
+      const chartData = {
+        chart1: file_series["bleu"].splice(0, 100).map((el, i) => ({
+          x: `Sentence ${i + 1}`,
+          y: el
+        })),
+        chart2: file_series["chrf"].splice(0, 100).map((el, i) => ({
+          x: `Sentence ${i + 1}`,
+          y: el
+        })),
+        chart3: file_series["ter"].splice(0, 100).map((el, i) => ({
+          x: `Sentence ${i + 1}`,
+          y: el
+        })),
+        chart4: file_series["comet"].splice(0, 100).map((el, i) => ({
+          x: `Sentence ${i + 1}`,
+          y: el
+        }))
+      };
+
+      // Initialize all charts with proper error handling
+      const charts = [
+        new ChartPaginator('chart1', {
+          chart: {
+            type: 'bar',
+            height: 400,
+            width: '100%',
+            parentHeightOffset: 0,
+            toolbar: {
+              show: false
+            }
+          }
+        }),
+        new ChartPaginator('chart2', {
+          chart: {
+            type: 'bar',
+            height: 400,
+            width: '100%',
+            parentHeightOffset: 0,
+            toolbar: {
+              show: false
+            }
+          }
+        }),
+        new ChartPaginator('chart3', {
+          chart: {
+            type: 'bar',
+            height: 400,
+            width: '100%',
+            parentHeightOffset: 0,
+            toolbar: {
+              show: false
+            }
+          }
+        }),
+        new ChartPaginator('chart4', {
+          chart: {
+            type: 'bar',
+            height: 400,
+            width: '100%',
+            parentHeightOffset: 0,
+            toolbar: {
+              show: false
+            }
+          }
+        })
+      ];
+
+      // Filter out null values and initialize only valid charts
+      const validCharts = charts.filter(chart => chart !== null);
+
+      // Add small delay to ensure DOM is ready
+      setTimeout(() => {
+        validCharts.forEach((chart, index) => {
+          const chartId = chart.chartId;
+          // Update chart with its specific data
+          chart.updateData(chartData[chartId]);
+        });
+      }, 100);
+
+      //! END TESTING CODE
+
+      // const bleuOptions = graphOptions("bleu", "#0F95E1");
+      // const terOptions = graphOptions("ter", "#4CE895");
+      // const cometOptions = graphOptions("comet", "#006293");
+      // const chrfOptions = graphOptions("chrf", "#259887");
+
+      // var bleuChart = new ApexCharts(
+      //   document.querySelector("#bleu-chart"),
+      //   bleuOptions
       // );
+      // bleuChart.render();
+
+
+      // var terChart = new ApexCharts(
+      //   document.querySelector("#ter-chart"),
+      //   terOptions
+      // );
+      // terChart.render();
+
+
+      // var cometChart = new ApexCharts(
+      //   document.querySelector("#comet-chart"),
+      //   cometOptions
+      // );
+      // cometChart.render();
+
+
+      // var chrfChart = new ApexCharts(
+      //   document.querySelector("#chrf-chart"),
+      //   chrfOptions
+      // );
+      // chrfChart.render();
+
+
 
       $(".evaluate-status").attr("data-status", "none");
       $(".evaluate-results").removeClass("d-none");
 
-      // bpl_chart.render();
-
-      //*   END OLD GRAPH
-
-      //! TABLE STUFF
 
       $(".page-number").attr("max", evaluation.spl[ht_ix].length);
       bpl_table = $(".bleu-line").DataTable({

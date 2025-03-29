@@ -262,14 +262,10 @@ $(document).ready(function () {
         }]
     });
 
-    $(".tab-pane.active .dataTable").each(function (i, el) {
-        $(el).DataTable().ajax.reload();
-    })
-    $(".nav-tabs a").on('shown.bs.tab', function () {
-        $(".tab-pane.active .dataTable").each(function (i, el) {
-            $(el).DataTable().ajax.reload();
-        })
-    });
+    setTimeout(function () {
+        $('[href="#private-corpora"]').trigger('click');
+        $('[href="#private-engines"]').trigger('click');
+    }, 10);
 
     $('.upload-header').on('click', function (e) {
         e.preventDefault();

@@ -1,12 +1,12 @@
 version: '3.1'
 
 services:
-    mutnmt_tudor:
-        container_name: mutnmt_tudor
-        image: mutnmt_tudor:latest
+    mutnmt_lukas:
+        container_name: mutnmt_lukas
+        image: mutnmt_lukas:latest
         build: .
         ports:
-            - "8087:5007"
+            - "8091:5011"
         environment: 
             DEBUG: 1
             CREDENTIALS_USERNAME: admin
@@ -20,25 +20,8 @@ services:
                 reservations:
                     devices:
                         - driver: nvidia
-                          device_ids: ['0', '1']
+                          device_ids: ['2']
                           capabilities: [gpu, utility, compute]
-
-    opus_db:
-        image: postgres:latest
-        container_name: opus_db
-        ports:
-            - "15432:5432"
-        volumes:
-        - opus_db:/var/lib/postgresql/data
-        environment:
-        - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=pass123
-        - POSTGRES_DB=postgres
-
-volumes:
-  opus_db:
-    name: opus_db
-
 networks:
   default:
     name: mutnmt_tudor

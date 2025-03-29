@@ -65,27 +65,62 @@ $(document).ready(function () {
         ]
     });
 
+    async function processUsers(users, action) {
+        for (const user of users) {
+            let formData = new FormData();
+            formData.append("id", user)
+            if (action != "delete") {
+                formData.append("type", action)
+            }
+            $.ajax({
+                url: `/admin/${action === "delete" ? "delete_user" : "become"}`,
+                method: 'POST',
+                data: formData,
+                contentType: false,
+                cache: false,
+                processData: false,
+                success: function (response) {
+                    return;
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error deleting user", user)
+
+                }
+            });
+        }
+
+    }
+
+    $('.multiple-user-actions').on('click', 'button', async function (event) {
+        const action = $(this).attr('id');
+        var notyf = new Notyf();
+        const selectedUsers = [...$('tr.selected td:first-child')].map(el => el.innerText);
+        try {
+            await processUsers(selectedUsers, action);
+            notyf.success({ message: 'User deletion successful!', duration: 3500, position: { x: "middle", y: "top" } });
+        } catch (error) {
+            notyf.error({ message: 'Something went wrong while deleting users.', duration: 3500, position: { x: "middle", y: "top" } });
+            console.error('Deletion failed:', error);
+            console.error('Failed to process users:', error);
+        }
+
+    });
+
+    $("#multiple-users-btn").on('click', function () {
+        $('.multiple-user-actions').toggle('d-none');
+    })
+
     users_table.on('click', 'tbody tr td:first-child', function (e) {
         const row = e.currentTarget.closest("tr");
         const cells = $(row).find('td:contains("Admin")');
 
-        console.log(cells, cells.length)
-
         if (!cells.length) {
             row.classList.toggle('selected');
         }
-
-        const actionsContainer = $('.multiple-user-actions-container');
-
-        let template = document.importNode(document.querySelector("#multiple-users-actions-template").content, true);
-
-        let ghost = document.createElement('div');
-        ghost.appendChild(template);
-
         if (users_table.rows('.selected').data().length > 1) {
-            actionsContainer.html(ghost.innerHTML);
+            $("#multiple-users-btn").removeClass('d-none');
         } else {
-            actionsContainer.html("");
+            $("#multiple-users-btn").addClass('d-none');
         }
     });
 

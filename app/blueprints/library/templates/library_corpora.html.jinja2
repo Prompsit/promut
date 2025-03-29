@@ -253,7 +253,7 @@
   <form class="search-opus-corpora-form mb-4 " action="{{ url_for('data.get_opus_corpora_by_langs') }}"
     enctype="multipart/form-data" method="post">
     <div style="display: flex;">
-      <div id="sourceSearchLangs">
+      <div id="sourceSearchLangs" class="lang-dropdown-container">
         <label for="source_lang_search">Source language</label>
         <select class="custom-select mb-2 lang_sel_opus source_lang_search" name="source_lang_search">
           {% for language in languages %}
@@ -261,7 +261,7 @@
           {% endfor %}
         </select>
       </div>
-      <div id="targetSearchLangs">
+      <div id="targetSearchLangs" class="lang-dropdown-container">
         <label for="target_lang_search">Target language</label>
         <select class="custom-select mb-2 lang_sel_opus target_lang_search" name="target_lang_search">
           {% for language in languages[1:] %}
@@ -269,9 +269,10 @@
           {% endfor %}
           <option value="{{ languages[0].code }}">{{ languages[0].name }}</option>
         </select>
-        <input class="btn btn-primary" style="margin-left: auto;margin-right: 0;" type="submit"
-          id="submit-dataset-search" value="Search datasets" />
+
       </div>
+      <input class="btn btn-primary mb-2" style="margin: auto auto 0 0;height: 34px;" type="submit"
+        id="submit-dataset-search" value="Search datasets" />
     </div>
     <div class="searching-corpora d-none">
       Searching for datasets in OPUS
@@ -289,12 +290,12 @@
   </h2>
 </div>
 <div class="corpora-nav-tabs-container">
-  <ul class="nav nav-tabs corpora-nav-tabs" id="your_corpora">
+  <ul class="nav nav-tabs active corpora-nav-tabs" id="your_corpora">
     <li class="nav-item">
       <a class="nav-link public-nav-tab" data-toggle="tab" href="#public-corpora">Public datasets</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link active private-nav-tab" data-toggle="tab" href="#private-corpora">Your datasets</a>
+      <a class="nav-link private-nav-tab" data-toggle="tab" href="#private-corpora">Your datasets</a>
     </li>
     {% if is_admin() %}
     <li class="nav-item">
