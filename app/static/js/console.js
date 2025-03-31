@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function () {
     let engine_id = $("#engine_id").val();
     let engine_stopped = undefined;
 
@@ -8,12 +8,13 @@ $(document).ready(function() {
         let timestamp = parseInt($(el).attr("data-started"));
         let begin = moment();
         let end = moment.unix(timestamp).add($(el).attr("data-minutes"), 'minutes');
+        console.log(end, "end")
         let duration = moment.duration(end.diff(begin))
 
         $(el).html(moment.utc(duration.asMilliseconds()).format("mm:ss"))
     }
 
-    $(".time-left").each(function(i, el) {
+    $(".time-left").each(function (i, el) {
         setupTimer(el)
         setInterval(() => {
             setupTimer(el)
@@ -52,7 +53,7 @@ $(document).ready(function() {
                 },
             },
             dataLabels: { enabled: false },
-            yaxis: { 
+            yaxis: {
                 title: { text: chart_data.y },
                 labels: {
                     formatter: (val) => {
@@ -73,7 +74,7 @@ $(document).ready(function() {
                 max: (chart_data.id == "valid_score") ? 60 : undefined
             },
             xaxis: {
-                title: {text : chart_data.x },
+                title: { text: chart_data.x },
                 tickAmount: 10,
                 labels: {
                     formatter: (val) => {
@@ -104,7 +105,7 @@ $(document).ready(function() {
     }
 
     let charts = {}
-    $(".training-chart").each(function(i, e) {
+    $(".training-chart").each(function (i, e) {
         let tag = $(this).attr("data-tag");
         let chart = make_chart(e, chart_metadata[tag])
         charts[tag] = chart;
@@ -118,8 +119,8 @@ $(document).ready(function() {
             tags: Object.keys(chart_metadata),
             id: engine_id
         }
-    }, function(data) {
-        $(".training-chart").each(function(i, e) {
+    }, function (data) {
+        $(".training-chart").each(function (i, e) {
             let tag = $(this).attr("data-tag");
             if (data) {
                 let { stats, stopped } = data
@@ -163,12 +164,12 @@ $(document).ready(function() {
         });
     }
 
-    $('.test-btn').on('click', function() {
+    $('.test-btn').on('click', function () {
         $.ajax({
             url: '../test',
             method: 'POST',
             data: { engine_id: engine_id }
-        }).done(function(task_id) {
+        }).done(function (task_id) {
             monitor_test(task_id);
         })
     });
@@ -214,7 +215,7 @@ $(document).ready(function() {
             url: '../train_stats',
             method: 'post',
             data: { id: engine_id }
-        }).done(function(data) {
+        }).done(function (data) {
             $(".time-container").html(data.data.time_elapsed);
             $(".score-container").html(data.data.score + " BLEU");
             $(".tps-container").html(data.data.tps);
@@ -236,7 +237,7 @@ $(document).ready(function() {
         processing: true,
         serverSide: true,
         responsive: true,
-        order: [[ 0, "desc" ]],
+        order: [[0, "desc"]],
         ajax: {
             url: "../log",
             method: "post",

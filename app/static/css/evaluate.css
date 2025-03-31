@@ -24,32 +24,28 @@
 .evaluate-status[data-status="error"] .evaluate-status-error {
   display: block;
 }
+
 .metric {
   flex: 0 0 25%;
 }
-.chart-container {
-  display: grid;
-  grid-template-columns: repeat(2, 2fr);
-}
-.bleu-chart,
-.ter-chart,
-.comet-chart,
-.chrf-chart {
-  margin-bottom: 15px;
-}
+
 .score-graph {
   width: 50%;
 }
+
 .chart-legend-title {
   margin-left: 5px;
   font-weight: 600;
 }
+
 .metric-hint {
   height: 8px;
 }
+
 .apexcharts-title-text {
   font-weight: 600;
 }
+
 .metric-hint .metric-hint-content {
   width: 100%;
   height: 100%;

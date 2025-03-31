@@ -60,28 +60,20 @@ $(document).ready(function () {
 
 
     function displayDataTable(dataTableContainer, data) {
-
-        // Clear existing data
         dataTableContainer.html('');
 
-        // Create table structure
         const table = $('<table id="dataTable" class="table table-bordered w-100">');
 
         const headers = ["Dataset", "Sentences", "Version", "Src tokens", "Trg tokens", "Download"];
 
-        // Create header row
         const headerRow = $('<tr>');
         headers.forEach(header => {
             headerRow.append(`<th>${header}</th>`);
         });
-
-        // Create table structure
         table.append('<thead><tr></tr></thead><tbody></tbody>');
         table.find('thead').append(headerRow);
 
         const fields = ["corpus", "alignment_pairs", "version", "source_tokens", "target_tokens", "download"]
-
-        // Add data rows
         data.forEach((row, idx) => {
             const rowElement = $('<tr>');
             fields.forEach(header => {
@@ -95,8 +87,6 @@ $(document).ready(function () {
             table.find('tbody').append(rowElement);
         });
 
-        // Add table to container
-
         dataTableContainer.append(table)
         // Initialize DataTable
         const newTable = $('#dataTable').DataTable({
@@ -107,6 +97,13 @@ $(document).ready(function () {
             stateSave: true,
             dom: 'lrtip'
         });
+
+        function reloadTableContent() {
+            $(".tab-pane.active .dataTable").each(function (i, el) {
+                console.log("")
+                $(el).DataTable().ajax.reload();
+            });
+        }
 
         $('#dataTable').on('click', '.download-btn', function (e) {
             e.stopPropagation();
@@ -127,6 +124,7 @@ $(document).ready(function () {
             // Disable button during download
             button.prop('disabled', true);
             button.text('Downloading...');
+            $('.download-btn').prop('disabled', true);
 
             $.ajax({
                 url: '/data/download-opus-corpus',
@@ -138,17 +136,19 @@ $(document).ready(function () {
                 success: function (response) {
                     button.text('Download');
                     button.prop('disabled', false);
+                    $('.download-btn').prop('disabled', false);
                     notyf.success({ message: 'Dataset downloaded and added to your collection!', duration: 3500, position: { x: "middle", y: "top" } });
 
-                    $(".tab-pane.active .dataTable").each(function (i, el) {
-                        $(el).DataTable().ajax.reload();
-                    });
+                    if (response) {
+                        reloadTableContent();
+                    }
                 },
                 error: function (xhr, status, error) {
                     notyf.error({ message: 'Something went wrong with the download.', duration: 3500, position: { x: "middle", y: "top" } });
                     console.error('Download failed:', error);
                     button.text('Error');
                     button.prop('disabled', false);
+                    $('.download-btn').prop('disabled', false);
                     setTimeout(() => {
                         button.text('Download');
                     }, 2000);

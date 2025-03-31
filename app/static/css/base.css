@@ -106,3 +106,74 @@ html {
 .users-table tbody tr td:first-child {
   cursor: pointer;
 }
+
+.lang-dropdown-container {
+  width: 220px;
+  margin-right: 10px;
+}
+
+.chart-title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.chart-container {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.chart-wrapper {
+  width: 100%;
+  min-height: 400px;
+}
+
+.controls {
+  margin-bottom: 10px;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.chart-grid button {
+  padding: 5px 16px;
+  border: none;
+  background: #017360;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.chart-grid button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chart-grid select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.chart-title {
+  margin-bottom: 15px;
+  font-size: 1.2em;
+  font-weight: bold;
+}
