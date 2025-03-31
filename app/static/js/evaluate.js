@@ -393,7 +393,7 @@ $(document).ready(function () {
       //! TESTING PAGINATION SOLUTION
 
       class ChartPaginator {
-        constructor(chartId, options = {}) {
+        constructor(chartId, options = {}, color) {
           // Check if container exists before proceeding
           const container = document.querySelector(`#${chartId}`);
           if (!container) {
@@ -412,6 +412,7 @@ $(document).ready(function () {
                 show: false
               }
             },
+            colors: [color],
             series: [{
               name: 'Values',
               data: []
@@ -561,7 +562,7 @@ $(document).ready(function () {
               show: false
             }
           }
-        }),
+        }, "#0F95E1"),
         new ChartPaginator('chart2', {
           chart: {
             type: 'bar',
@@ -572,7 +573,7 @@ $(document).ready(function () {
               show: false
             }
           }
-        }),
+        }, "#4CE895"),
         new ChartPaginator('chart3', {
           chart: {
             type: 'bar',
@@ -583,7 +584,7 @@ $(document).ready(function () {
               show: false
             }
           }
-        }),
+        }, "#006293"),
         new ChartPaginator('chart4', {
           chart: {
             type: 'bar',
@@ -594,7 +595,7 @@ $(document).ready(function () {
               show: false
             }
           }
-        })
+        }, "#259887")
       ];
 
       // Filter out null values and initialize only valid charts

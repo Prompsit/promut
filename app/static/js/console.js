@@ -11,8 +11,6 @@ $(document).ready(function () {
         console.log(end, "end")
         let duration = moment.duration(end.diff(begin))
 
-        console.log(moment.utc(duration.asMilliseconds()).format("mm:ss"), "HEllo")
-
         $(el).html(moment.utc(duration.asMilliseconds()).format("mm:ss"))
     }
 

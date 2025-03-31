@@ -112,13 +112,16 @@ html {
   margin-right: 10px;
 }
 
-
+.chart-title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
 
 .chart-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
-  padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -135,14 +138,10 @@ html {
 }
 
 .controls {
-  margin-bottom: 20px;
-  padding: 10px;
-  background: white;
-  border-radius: 4px;
+  margin-bottom: 10px;
 }
 
 .pagination-controls {
-  margin-top: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -153,21 +152,21 @@ html {
   gap: 10px;
 }
 
-button {
-  padding: 8px 16px;
+.chart-grid button {
+  padding: 5px 16px;
   border: none;
-  background: #007bff;
+  background: #017360;
   color: white;
   border-radius: 4px;
   cursor: pointer;
 }
 
-button:disabled {
+.chart-grid button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-select {
+.chart-grid select {
   padding: 8px;
   border-radius: 4px;
   border: 1px solid #ddd;

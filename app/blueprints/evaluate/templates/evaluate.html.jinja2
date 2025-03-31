@@ -304,24 +304,19 @@
 
   <div class="my-3 chart-select">
   </div>
-  {#
-  <div class="my-3 chart-container">
-    <div id="bleu-graph"></div>
-    <div id="chrf-graph" class="score-graph"></div>
-    <div id="ter-graph" class="score-graph"></div>
-    <div id="comet-graph" class="score-graph"></div>
-  </div> #}
 
   <div class="chart-grid">
     <!-- Chart 1 -->
     <div class="chart-container">
-      <div class="chart-title">BLEU</div>
-      <div class="controls">
-        <select class="itemsPerPage" data-chart="chart1">
-          <option value="5">Show 5</option>
-          <option value="10">Show 10</option>
-          <option value="20">Show 20</option>
-        </select>
+      <div class="chart-title-container">
+        <div class="chart-title">BLEU</div>
+        <div class="controls">
+          <select class="itemsPerPage" data-chart="chart1">
+            <option value="5">Show 5</option>
+            <option value="10">Show 10</option>
+            <option value="20">Show 20</option>
+          </select>
+        </div>
       </div>
       <div class="chart-wrapper" id="chart1"></div>
       <div class="pagination-controls">
@@ -335,13 +330,15 @@
 
     <!-- Chart 2 -->
     <div class="chart-container">
-      <div class="chart-title">CHRF</div>
-      <div class="controls">
-        <select class="itemsPerPage" data-chart="chart2">
-          <option value="5">Show 5</option>
-          <option value="10">Show 10</option>
-          <option value="20">Show 20</option>
-        </select>
+      <div class="chart-title-container">
+        <div class="chart-title">CHRF</div>
+        <div class="controls">
+          <select class="itemsPerPage" data-chart="chart2">
+            <option value="5">Show 5</option>
+            <option value="10">Show 10</option>
+            <option value="20">Show 20</option>
+          </select>
+        </div>
       </div>
       <div class="chart-wrapper" id="chart2"></div>
       <div class="pagination-controls">
@@ -355,13 +352,15 @@
 
     <!-- Chart 3 -->
     <div class="chart-container">
-      <div class="chart-title">TER</div>
-      <div class="controls">
-        <select class="itemsPerPage" data-chart="chart3">
-          <option value="5">Show 5</option>
-          <option value="10">Show 10</option>
-          <option value="20">Show 20</option>
-        </select>
+      <div class="chart-title-container">
+        <div class="chart-title">TER</div>
+        <div class="controls">
+          <select class="itemsPerPage" data-chart="chart3">
+            <option value="5">Show 5</option>
+            <option value="10">Show 10</option>
+            <option value="20">Show 20</option>
+          </select>
+        </div>
       </div>
       <div class="chart-wrapper" id="chart3"></div>
       <div class="pagination-controls">
@@ -375,13 +374,15 @@
 
     <!-- Chart 4 -->
     <div class="chart-container">
-      <div class="chart-title">COMET</div>
-      <div class="controls">
-        <select class="itemsPerPage" data-chart="chart4">
-          <option value="5">Show 5</option>
-          <option value="10">Show 10</option>
-          <option value="20">Show 20</option>
-        </select>
+      <div class="chart-title-container">
+        <div class="chart-title">COMET</div>
+        <div class="controls">
+          <select class="itemsPerPage" data-chart="chart4">
+            <option value="5">Show 5</option>
+            <option value="10">Show 10</option>
+            <option value="20">Show 20</option>
+          </select>
+        </div>
       </div>
       <div class="chart-wrapper" id="chart4"></div>
       <div class="pagination-controls">

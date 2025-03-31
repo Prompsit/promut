@@ -29,17 +29,6 @@
   flex: 0 0 25%;
 }
 
-/* .chart-container {
-  display: grid;
-  grid-template-columns: repeat(2, 2fr);
-} */
-.bleu-chart,
-.ter-chart,
-.comet-chart,
-.chrf-chart {
-  margin-bottom: 15px;
-}
-
 .score-graph {
   width: 50%;
 }
