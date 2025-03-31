@@ -138,7 +138,7 @@ def download_opus_corpus():
             return jsonify({ "result": -1 })
 
         # if corpus doesn't exist in db, but there are folders/files with it, then delete them
-        opus_workdir = os.path.join(app.config["DATA_FOLDER"], "tmp")
+        opus_workdir = app.config["OPUS_FILES_FOLDER"]
         corpus_dir = os.path.join(opus_workdir, corpus_name)
         if os.path.isdir(corpus_dir):
             shutil.rmtree(corpus_dir)
@@ -149,7 +149,7 @@ def download_opus_corpus():
         # Launch bash scrip to download the corpus, paste the files, shuffle a new one,
         # delete the unwanted files, and split the shuffled file into two (src and trg)
         path_to_script = os.path.join(app.config['MUTNMT_FOLDER'], "app/blueprints/data/prepare_opus_corpus.sh")
-        TEMP_LOG_FILE = "/opt/mutnmt/data/TMP_FILE.txt"
+        TEMP_LOG_FILE = os.path.join(opus_workdir, "TMP_FILE.txt")
 
         subprocess.run("bash {0} {1} {2} {3} {4} {5} {6}".format(path_to_script, url_to_download, opus_workdir, src_lang, trg_lang, corpus_name, TEMP_LOG_FILE), shell=True, stdout=subprocess.PIPE)
 

@@ -86,7 +86,7 @@ with app.app_context():
         new_role = models.Role(name=role)
         db.session.add(new_role)
     db.session.commit()
-folders = ['USERSPACE_FOLDER', 'STORAGE_FOLDER', 'FILES_FOLDER', 'ENGINES_FOLDER', 'USERS_FOLDER']
+folders = ['USERSPACE_FOLDER', 'STORAGE_FOLDER', 'FILES_FOLDER', 'ENGINES_FOLDER', 'USERS_FOLDER', 'OPUS_FILES_FOLDER']
 
 for folder in folders:
     try:

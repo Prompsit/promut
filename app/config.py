@@ -13,6 +13,7 @@ class Config(object):
     USERSPACE_FOLDER = os.path.join(DATA_FOLDER, "userspace")
     STORAGE_FOLDER = os.path.join(USERSPACE_FOLDER, "storage")
     FILES_FOLDER = os.path.join(STORAGE_FOLDER, "files")
+    OPUS_FILES_FOLDER = os.path.join(STORAGE_FOLDER, "opus_files")
     ENGINES_FOLDER = os.path.join(STORAGE_FOLDER, "engines")
     USERS_FOLDER = os.path.join(USERSPACE_FOLDER, "users")
     BASE_CONFIG_FOLDER = os.path.join(basedir, "base")
