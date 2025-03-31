@@ -334,37 +334,48 @@ def library_corpora_export(id):
 
 
 @library_blueprint.route('/download-model', methods=['POST'])
-@utils.condec(login_required, user_utils.isUserLoginEnabled())      
+#@utils.condec(login_required, user_utils.isUserLoginEnabled())      
 def download_model():
-    src_lang = request.form.get('source_lang')
-    trg_lang = request.form.get('target_lang')
-    model_path = os.path.join(app.config["PRELOADED_ENGINES_FOLDER"], f"{src_lang}-{trg_lang}")
-    if not os.path.exists(model_path):
-        os.makedirs(model_path)
-        model_link = get_opus_model_link(src_lang, trg_lang)
-        r = requests.get(model_link, timeout=100, stream=True)
-        z = zipfile.ZipFile(io.BytesIO(r.content))
-        z.extractall(os.path.join(model_path, "model"))
-    date = datetime.strptime("2025-05-25 02:35:5", "%Y-%m-%d %H:%M:%S")
+    try:
+        src_lang = request.form.get('source_lang')
+        trg_lang = request.form.get('target_lang')
+        engine_path = os.path.join(app.config["PRELOADED_ENGINES_FOLDER"], f"{src_lang}-{trg_lang}")
+        model_path = os.path.join(engine_path, "model")
+        if not os.path.exists(engine_path):
+            os.makedirs(engine_path)
+            model_link = get_opus_model_link(src_lang, trg_lang)
+            r = requests.get(model_link, timeout=100, stream=True)
+            z = zipfile.ZipFile(io.BytesIO(r.content))
+            z.extractall(model_path)
 
-    source_lang = UserLanguage.query.filter_by(
-        code=src_lang, user_id=-1
-    ).one()
-    target_lang = UserLanguage.query.filter_by(
-        code=trg_lang, user_id=-1
-    ).one()
+            with open(os.path.join(model_path, "train.log"), 'w') as f: pass
+            
+        date = datetime.strptime("2025-05-25 02:35:5", "%Y-%m-%d %H:%M:%S")
 
-    eng = Engine(
-        name=f"opus-{src_lang}-{trg_lang}",
-        path=model_path,
-        opus_engine=True,
-        description="OPUS model",
-        user_source_id=source_lang.id,
-        user_target_id=target_lang.id,
-        public=True,
-        launched=date,
-        finished=date,
-        status="finished",
-    )
-    db.session.add(eng)
-    db.session.commit()
+        source_lang = UserLanguage.query.filter_by(
+            code=src_lang, user_id=-1
+        ).one()
+        target_lang = UserLanguage.query.filter_by(
+            code=trg_lang, user_id=-1
+        ).one()
+
+        eng = Engine(
+            name=f"opus-{src_lang}-{trg_lang}",
+            path=engine_path,
+            opus_engine=True,
+            description="OPUS model",
+            user_source_id=source_lang.id,
+            user_target_id=target_lang.id,
+            public=True,
+            launched=date,
+            finished=date,
+            status="finished",
+        )
+        db.session.add(eng)
+        db.session.commit()
+
+        return jsonify({ "result": 200})
+    except Exception as ex:
+        print(str(ex), flush = True)
+        return jsonify({ "result": -1})
+    
