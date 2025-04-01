@@ -214,9 +214,13 @@ $(document).ready(function () {
 
                         $(template).find(".export-btn").attr("href", engine_data.engine_export);
                         $(template).find(".export-corpora-btn").attr("href", engine_data.engine_corpora_export);
-
-                        $(template).find(".summary-btn").attr("href", engine_data.engine_summary);
-                        $(template).find(".summary-btn").removeClass("d-none");
+                        
+                        // show the training log only if the engine was trained/is normally created
+                        // if it's fresh from opus, don't show the training log
+                        if (engine_data.engine_status !== "opus") {
+                            $(template).find(".summary-btn").attr("href", engine_data.engine_summary);
+                            $(template).find(".summary-btn").removeClass("d-none");
+                        }
 
                         if (public_mode) {
                             $(template).find(".grab-btn").attr("href", engine_data.engine_grab);

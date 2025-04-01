@@ -185,6 +185,7 @@ def library_engines_feed():
                             {
                                 "engine_owner": engine.uploader.id == user_utils.get_uid() if engine.uploader else False,
                                 "engine_public": engine.public,
+                                "engine_status": engine.status,
                                 "engine_share": url_for('library.library_share_toggle', type = "library_engines", id = engine.id),
                                 "engine_summary": url_for('train.train_console', id = engine.id),
                                 "engine_delete": url_for('library.library_delete', id = engine.id, type = "library_engines"),
@@ -362,6 +363,7 @@ def download_model():
         eng = Engine(
             name=f"opus-{src_lang}-{trg_lang}",
             path=engine_path,
+            model_path=model_path,
             opus_engine=True,
             description="OPUS model",
             user_source_id=source_lang.id,
@@ -369,7 +371,7 @@ def download_model():
             public=True,
             launched=date,
             finished=date,
-            status="finished",
+            status="opus",
         )
         db.session.add(eng)
         db.session.commit()

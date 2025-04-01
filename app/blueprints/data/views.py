@@ -166,9 +166,6 @@ def download_opus_corpus():
                                                     "General",
                                                     opus = True)
 
-        #if os.path.isdir(corpus_dir):
-        #    shutil.rmtree(corpus_dir)
-
         return jsonify({ "result": 200})
     except Exception as ex:
         print(str(ex), flush = True)
