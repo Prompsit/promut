@@ -60,33 +60,33 @@
 
 <template id="users-table-actions-template">
   <div class="text-center">
-    <div class="dropdown">
+    <div class="dropdown user-actions-dropdown">
       <button class="btn btn-link btn-sm" id="dropdownMenuButton" type="button" data-toggle="dropdown"
         aria-haspopup="true" aria-expanded="false">
         <i class="fas fa-ellipsis-v"></i> <span class="sr-only">Options</span>
       </button>
-      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-        <a href="#" class="dropdown-item edit-user">
+      <div class="dropdown-menu dropdown-menu-right actions-container" aria-labelledby="dropdownMenuButton">
+        <button href="#" class="dropdown-item edit-user">
           <i class="fas fa-edit" style="width: 20px;"></i> Edit user notes
-        </a>
+        </button>
 
-        <a href="#" class="dropdown-item text-danger delete-user d-none">
+        <button class="dropdown-item text-danger delete-user d-none" id="delete">
           <i class="fas fa-trash" style="width: 20px;"></i> Delete
-        </a>
+        </button>
 
-        <a href="#" class="dropdown-item become-btn become-admin d-none">
+        <button class="dropdown-item become-btn become-admin d-none" id="admin">
           <i class="fas fa-user-shield" style="width: 20px;"></i> To admin account
-        </a>
+        </button>
 
-        <a href="#" class="dropdown-item become-btn become-expert d-none">
+        <button class="dropdown-item become-btn become-expert d-none" id="expert">
           <i class="fas fa-user-graduate" style="width: 20px;"></i> To expert account
-        </a>
-        <a href="#" class="dropdown-item become-btn become-researcher d-none">
+        </button>
+        <button class="dropdown-item become-btn become-researcher d-none" id="researcher">
           <i class="fas fa-user-graduate" style="width: 20px;"></i> To researcher account
-        </a>
-        <a href="#" class="dropdown-item become-btn become-normal d-none">
+        </button>
+        <button class="dropdown-item become-btn become-normal d-none" id="normal">
           <i class="fas fa-user" style="width: 20px;"></i> To beginner account
-        </a>
+        </button>
       </div>
     </div>
   </div>

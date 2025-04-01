@@ -19,6 +19,26 @@ $(document).ready(function () {
 
     adjust_languages($('.source_lang_search'));
 
+    function removeDownloadInfo() {
+        try {
+            const $target = $('#download-info');
+
+            if ($target.length === 0) {
+                console.error('Element with id "download-info" not found');
+                return;
+            }
+
+            $('html, body').animate({
+                scrollTop: $target.offset().top
+            }, 1000);
+        } catch (error) {
+            console.error('Error scrolling to download info:', error);
+        }
+        setTimeout(() => {
+            $('#download-info').addClass('d-none');
+            $("#private-corpora .dataTable").dataTable().api().ajax.reload();
+        }, 15000);
+    }
 
     $('.search-opus-corpora-form').on('submit', function (event) {
         event.preventDefault();
@@ -42,12 +62,14 @@ $(document).ready(function () {
             beforeSend: () => {
 
                 $('.datasets-response-table').html('<div class="dataset-loader">Loading...</div>');
+
             },
             success: function (response) {
                 $(".dataset-loader").addClass("d-none");
                 $(".searching-corpora").addClass("d-none");
                 const container = $('.datasets-response-table');
                 displayDataTable(container, response.datasets);
+
             },
             error: function (xhr, status, error) {
                 $(".searching-corpora").addClass("d-none");
@@ -61,6 +83,7 @@ $(document).ready(function () {
 
     function displayDataTable(dataTableContainer, data) {
         dataTableContainer.html('');
+
 
         const table = $('<table id="dataTable" class="table table-bordered w-100">');
 
@@ -90,20 +113,26 @@ $(document).ready(function () {
         dataTableContainer.append(table)
         // Initialize DataTable
         const newTable = $('#dataTable').DataTable({
-            searching: true,
+            filter: true,
+            "searching": true,
             ordering: true,
             paging: true,
             autoWidth: true,
             stateSave: true,
-            dom: 'lrtip'
+            dom: 'lfrtip'
         });
 
-        function reloadTableContent() {
-            $(".tab-pane.active .dataTable").each(function (i, el) {
-                console.log("")
-                $(el).DataTable().ajax.reload();
-            });
-        }
+        newTable.page('first')
+        newTable.draw(false)
+
+        // function reloadTableContent() {
+        //     // $("#private-corpora .dataTable").each(function (i, el) {
+        //     //     console.log("")
+        //     //     $(el).DataTable().ajax.reload();
+        //     // });
+
+        //     var table = $("#private-corpora .dataTable").dataTable().api().ajax.reload();
+        // }
 
         $('#dataTable').on('click', '.download-btn', function (e) {
             e.stopPropagation();
@@ -140,7 +169,14 @@ $(document).ready(function () {
                     notyf.success({ message: 'Dataset downloaded and added to your collection!', duration: 3500, position: { x: "middle", y: "top" } });
 
                     if (response) {
-                        reloadTableContent();
+                        try {
+                            $('#download-info').removeClass('d-none');
+                            removeDownloadInfo();
+                            $("#private-corpora .dataTable").dataTable().api().ajax.reload();
+                        } catch (error) {
+                            console.log("Error, the code above doesnt execute")
+                        }
+
                     }
                 },
                 error: function (xhr, status, error) {
