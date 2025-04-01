@@ -38,13 +38,8 @@ $(document).ready(function () {
                     $(template).find(".edit-user").attr("href", "user/" + row[0]);
 
                     if ($("#current_user").val() != row[0]) {
-                        $(template).find(".delete-user").attr("href", `delete_user?id=${row[0]}`);
                         $(template).find(".delete-user").removeClass("d-none");
 
-                        $(template).find(".become-admin").attr("href", "become/admin/" + row[0]);
-                        $(template).find(".become-expert").attr("href", "become/expert/" + row[0]);
-                        $(template).find(".become-normal").attr("href", "become/beginner/" + row[0]);
-                        $(template).find(".become-researcher").attr("href", "become/researcher/" + row[0]);
                         $(template).find('.become-btn').removeClass('d-none');
                         if (row[6]) { // is admin
                             $(template).find(".become-admin").addClass("d-none");
@@ -66,46 +61,65 @@ $(document).ready(function () {
     });
 
     async function processUsers(users, action) {
-        for (const user of users) {
-            let formData = new FormData();
-            formData.append("id", user)
-            if (action != "delete") {
-                formData.append("type", action)
-            }
-            $.ajax({
-                url: `/admin/${action === "delete" ? "delete_user" : "become"}`,
-                method: 'POST',
-                data: formData,
-                contentType: false,
-                cache: false,
-                processData: false,
-                success: function (response) {
-                    return;
-                },
-                error: function (xhr, status, error) {
-                    console.error("Error deleting user", user)
-
-                }
-            });
-        }
-
-    }
-
-    $('.multiple-user-actions').on('click', 'button', async function (event) {
-        const action = $(this).attr('id');
         var notyf = new Notyf();
-        const selectedUsers = [...$('tr.selected td:first-child')].map(el => el.innerText);
+
+        const notifications = { delete: "Deletion successful", admin: "Changed role to admin successfully", expert: "Changed role to expert successfully", normal: "Changed role to normal successfully", researcher: "Changed role to reasearcher successfully" }
+
+        const errors = { delete: "error while deleting.", admin: "Could not change role to admin. Please thy again.", expert: "Could not change role to expert. Please thy again.", normal: "Could not change role to normal. Please thy again.", researcher: "Could not change role to researcher. Please thy again." }
+
         try {
-            await processUsers(selectedUsers, action);
-            notyf.success({ message: 'User deletion successful!', duration: 3500, position: { x: "middle", y: "top" } });
+            for (const user of users) {
+                let formData = new FormData();
+                formData.append("id", user)
+                if (action != "delete") {
+                    formData.append("type", action)
+                }
+                $.ajax({
+                    url: `/admin/${action === "delete" ? "delete_user" : "become"}`,
+                    method: 'POST',
+                    data: formData,
+                    contentType: false,
+                    cache: false,
+                    processData: false,
+                    success: function (response) {
+                        users_table.ajax.reload();
+                        return;
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error deleting user", user)
+
+                    }
+                });
+            }
+            notyf.success({ message: notifications[`${action}`], duration: 3500, position: { x: "middle", y: "top" } });
+
         } catch (error) {
-            notyf.error({ message: 'Something went wrong while deleting users.', duration: 3500, position: { x: "middle", y: "top" } });
+            notyf.error({ message: errors[`${action}`], duration: 3500, position: { x: "middle", y: "top" } });
             console.error('Deletion failed:', error);
             console.error('Failed to process users:', error);
         }
 
+
+    }
+
+    $('.multiple-user-actions').on('click', 'button', async function () {
+        const action = $(this).attr('id');
+        const selectedUsers = [...$('tr.selected td:first-child')].map(el => el.innerText);
+        await processUsers(selectedUsers, action);
     });
 
+    $(document).on('click', '.user-actions-dropdown .actions-container button', async function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const action = $(this).attr('id');
+        const user = $(this).closest("tr").find("td:first-child")[0].innerText;
+
+        try {
+            await processUsers([user], action);
+        } catch (error) {
+            console.error('Error processing users:', error);
+        }
+    });
     $("#multiple-users-btn").on('click', function () {
         $('.multiple-user-actions').toggle('d-none');
     })

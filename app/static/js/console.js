@@ -1,26 +1,33 @@
 $(document).ready(function () {
     let engine_id = $("#engine_id").val();
     let engine_stopped = undefined;
-
     const interval = 1000;
 
     let setupTimer = (el) => {
         let timestamp = parseInt($(el).attr("data-started"));
         let begin = moment();
-        let end = moment.unix(timestamp).add($(el).attr("data-minutes"), 'minutes');
+        let end = moment.unix(timestamp).add(parseInt($(el).attr("data-minutes")), 'minutes');
         console.log(end, "end")
-        let duration = moment.duration(end.diff(begin))
 
-        $(el).html(moment.utc(duration.asMilliseconds()).format("mm:ss"))
+        // Calculate total hours and remaining minutes
+        let totalMinutes = parseInt($(el).attr("data-minutes"));
+        let hours = Math.floor(totalMinutes / 60);
+        let remainingMinutes = totalMinutes % 60;
+
+        // Calculate seconds from current time difference
+        let duration = moment.duration(end.diff(begin));
+        let seconds = Math.floor(duration.seconds());
+
+        // Format as HH:MM:SS (hours:minutes:seconds)
+        $(el).html(`${hours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
     }
 
     $(".time-left").each(function (i, el) {
-        setupTimer(el)
+        setupTimer(el);
         setInterval(() => {
-            setupTimer(el)
+            setupTimer(el);
         }, interval);
     });
-
     let make_chart = (element, chart_data) => {
         let chart = new ApexCharts(element, {
             series: [{

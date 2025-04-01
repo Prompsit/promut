@@ -14,7 +14,7 @@ html {
 
 .user-area {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
 }
 
 @media screen and (max-width: 576px) {
@@ -176,4 +176,16 @@ html {
   margin-bottom: 15px;
   font-size: 1.2em;
   font-weight: bold;
+}
+
+.multiple-users-actions-container {
+  width: fit-content;
+  margin: 0 0 20px auto;
+}
+
+.multiple-user-actions {
+  position: absolute;
+  background: white;
+  z-index: 100;
+  border: 1px solid #dedede;
 }

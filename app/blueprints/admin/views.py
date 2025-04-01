@@ -83,7 +83,6 @@ def user_datatables_feed():
 
     user_data = []
     for user in (rows_filtered if search else rows):
-        print(user.id, "********", flush=True)
         user_data.append([user.id, user.username, user.email,
                           user.role.name,
                           user.notes, ''])
