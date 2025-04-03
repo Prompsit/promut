@@ -54,7 +54,7 @@ echo "- shuffled corpus: $SHUFFLED_CORPUS" >> $TMP_LOG_FILE
 echo "---------" >> $TMP_LOG_FILE
 
 paste $SOURCE_FILE $TARGET_FILE > $PASTED_CORPUS
-shuf -n 2000000 $PASTED_CORPUS > $SHUFFLED_CORPUS
+shuf -n 2500000 $PASTED_CORPUS > $SHUFFLED_CORPUS
 
 # Split the source and target columns from the shuffled corpus into the prepared corpus folder
 # And delete all of the remaining files from the corpus work folder
@@ -69,4 +69,4 @@ mkdir -p $PREPARED_CORPUS_DIR
 
 cut -f 1 $SHUFFLED_CORPUS > $FINAL_SOURCE_FILE
 cut -f 2 $SHUFFLED_CORPUS > $FINAL_TARGET_FILE
-#rm -f *
+rm -f *
