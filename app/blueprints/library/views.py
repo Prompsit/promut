@@ -58,6 +58,8 @@ def library_corpora_feed():
     used = request.form.get('used') == "true"
     not_used = request.form.get('not_used') == "true"
 
+    print("BEING CALLED OVER HERE*************")
+
     if public:
         library_objects = user_utils.get_user_corpora(public=True).all()
     elif used:

@@ -1,7 +1,7 @@
-$(document).ready(function() {
+$(document).ready(function () {
     let file_as_tmx = false;
 
-    $(".file-dnd-label").on('mouseenter', function() {
+    $(".file-dnd-label").on('mouseenter', function () {
         if (!$(this).closest(".custom-textarea").hasClass("filled")) {
             $('.source-placeholder').addClass("d-none");
             $('.custom-textarea-file-upload').css({ display: 'block' });
@@ -11,36 +11,36 @@ $(document).ready(function() {
         $('.btn-as-tmx').addClass("d-none")
     });
 
-    $(".file-dnd-label").on('mouseleave', function() {
+    $(".file-dnd-label").on('mouseleave', function () {
         if (!$(this).closest(".custom-textarea").hasClass("filled")) {
-            $('.custom-textarea-file-upload').animate({ opacity: 0 }, 250, function() {
+            $('.custom-textarea-file-upload').animate({ opacity: 0 }, 250, function () {
                 $('.custom-textarea-file-upload').css({ display: 'none' });
                 if ($(".live-translate-source").val() == "") {
                     $('.source-placeholder').removeClass("d-none");
                 }
             });
         }
-        
+
         $('.btn-as-tmx').removeClass("d-none")
     });
 
-    $(".translate-file-tmx-btn").on('click', function() {
+    $(".translate-file-tmx-btn").on('click', function () {
         file_as_tmx = true;
     })
 
-    $(".chain-btn").on('click', function() {
+    $(".chain-btn").on('click', function () {
         $("#chain").val("true");
         $(".chain-row").removeClass("d-none");
         $(this).addClass("d-none");
     });
 
-    $(".chain-remove-btn").on('click', function() {
+    $(".chain-remove-btn").on('click', function () {
         $("#chain").val("false");
         $(".chain-row").addClass("d-none");
         $(".chain-btn").removeClass("d-none");
     });
 
-    $(".btn-as-tmx").on("click", function(e) {
+    $(".btn-as-tmx").on("click", function (e) {
         e.preventDefault();
 
         let text = [];
@@ -51,12 +51,12 @@ $(document).ready(function() {
         $.ajax({
             url: 'as_tmx',
             method: 'POST',
-            data: { 
+            data: {
                 engine_id: $('.engine-select option:selected').val(),
                 text: text,
                 chain_engine_id: ($("#chain").val() == "true") ? $('.engine-select-chain option:selected').val() : "false"
             }
-        }).done(function(task_data) {
+        }).done(function (task_data) {
             longpoll(2000, {
                 url: 'get_tmx',
                 method: 'POST',
@@ -102,7 +102,7 @@ $(document).ready(function() {
                     engine_id: engine_id,
                     text: text
                 }
-            }).done(function(task_data) {
+            }).done(function (task_data) {
                 // We fill target text depending on the result from the server
                 $('.live-translate-target').html("");
 
@@ -157,7 +157,7 @@ $(document).ready(function() {
     }
 
     // When we change the selected engine, we automatically translate
-    $('.engine-select').on('change', function() {
+    $('.engine-select').on('change', function () {
         $('.live-translate-form').attr('data-status', 'false');
         $('.live-translate-target').html("");
 
@@ -166,7 +166,7 @@ $(document).ready(function() {
         }
     });
 
-    $('.live-translate-source').on('keyup', function() {
+    $('.live-translate-source').on('keyup', function () {
         // Trick to make it shrink
         $(".live-translate-source, .live-translate-target").css({
             height: 'auto'
@@ -177,23 +177,23 @@ $(document).ready(function() {
         })
     });
 
-    $('.translate-btn').on('click', function(e) {
+    $('.translate-btn').on('click', function (e) {
         e.preventDefault();
         translate();
     })
 
     // Some functionality for links and textareas
-    $('.engine-relaunch-btn').on('click', function(e) {
+    $('.engine-relaunch-btn').on('click', function (e) {
         e.preventDefault();
         translate();
     })
 
-    $('.custom-textarea textarea').on('focus', function() {
+    $('.custom-textarea textarea').on('focus', function () {
         $(this).closest(".custom-textarea").addClass("focus");
         $(this).closest(".custom-textarea").find(".custom-textarea-placeholder").addClass("d-none");
     });
 
-    $('.custom-textarea textarea').on('blur', function() {
+    $('.custom-textarea textarea').on('blur', function () {
         $(this).closest(".custom-textarea").removeClass("focus");
         $(this).closest(".custom-textarea").find(".custom-textarea-placeholder").removeClass("d-none");
     });
@@ -218,7 +218,7 @@ $(document).ready(function() {
             contentType: false,
             cache: false,
             processData: false,
-            success: function(task_data) {
+            success: function (task_data) {
                 file_as_tmx = false;
                 $('.btn-as-tmx').removeClass("d-none");
                 $('.live-translate-source').prop('disabled', false);
@@ -239,17 +239,25 @@ $(document).ready(function() {
             }
         });
     }
+    var notyf = new Notyf();
 
-    FileDnD(".file-dnd", function(file) {
+    FileDnD(".file-dnd", function (file) {
         $(".live-translate-target").html("");
         $(".file-label-text").css({ display: 'none' })
         $(".file-label-name").html(file.name);
 
+        const acceptedExtensions = ["docx", "odt", "pptx", "odp", "xlsx", "ods", "pdf", "txt", "html", "tmx"];
+
         let re = /(?:\.([^.]+))?$/;
         let extension = re.exec(file.name)[1];
+
+        console.log(extension, "EXTENSION")
+        if (!acceptedExtensions.includes(extension)) {
+            notyf.error({ message: 'This file extension is not allowed!', duration: 3500, position: { x: "middle", y: "top" } });
+        }
         if (extension == "tmx") {
             $('.live-translate-form').attr('data-status', 'tmx-dialog');
-            $('.btn-confirm-tmx').on('click', function() {
+            $('.btn-confirm-tmx').on('click', function () {
                 translate_file(file);
             })
         } else {
@@ -257,8 +265,8 @@ $(document).ready(function() {
             translate_file(file);
         }
     }, true);
-    
-    $(".live-translate-form").on('submit', function() {
+
+    $(".live-translate-form").on('submit', function () {
         if ($(".live-translate-source").val() == "") {
             return false;
         }
@@ -266,7 +274,7 @@ $(document).ready(function() {
 });
 
 // We let the server know we quit this window, to close the translator
-$(window).on('unload', function() {
+$(window).on('unload', function () {
     if (navigator.sendBeacon) {
         navigator.sendBeacon('leave');
     } else {
