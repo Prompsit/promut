@@ -296,20 +296,24 @@ def launch_training(self, user_id, engine_path, params):
             link_files(test_corpus, "test")
 
             # call marian-vocab to create vocabulary files
-            data_utils.marian_vocab(
+            src_vocab_path, trg_vocab_path = data_utils.marian_vocab(
                 engine,
                 params["source_lang"],
                 params["target_lang"],
                 params["vocabularySize"],
             )
+            
+            # use these paths if only sentencepiece model is wanted
+            #src_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
+            #trg_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
 
-            # set vocabulary paths and dimensions, setting paths to .spm
+            # set vocabulary paths and dimensions, setting paths
             # so marian can automatically train a sentencepiece tokenizer
             src_vocab = os.path.join(
-                engine.path, f"vocab.{params['source_lang']}{params['target_lang']}.spm"
+                engine.path, src_vocab_path
             )
             trg_vocab = os.path.join(
-                engine.path, f"vocab.{params['source_lang']}{params['target_lang']}.spm"
+                engine.path, trg_vocab_path
             )
             config["vocabs"] = [src_vocab, trg_vocab]
             config["dim-vocabs"] = [params["vocabularySize"], params["vocabularySize"]]
@@ -479,12 +483,12 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
                 start = datetime.datetime.now()
                 difference = 0
                 max_time = (
-                    36000
+                    36000 # 10 hours
                     if (
                         user_role == EnumRoles.RESEARCHER
                         or user_role == EnumRoles.ADMIN
                     )
-                    else 3600
+                    else 7200 # 2 hours
                 )
                 while difference < max_time:
                     time.sleep(10)
