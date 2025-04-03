@@ -474,48 +474,51 @@ def train_finish(id):
 @train_blueprint.route('/resume/<engine_id>')
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def train_resume(engine_id):
-    if user_utils.is_normal(): return redirect(url_for('index'))
+    try:
+        if user_utils.is_normal(): return redirect(url_for('index'))
 
-    engine = Engine.query.filter_by(id=engine_id).first()
+        engine = Engine.query.filter_by(id=engine_id).first()
 
-    if current_user.id == engine.engine_users[0].user.id or current_user.role == EnumRoles.ADMIN:
-        # create new separate path for the next model with some random id in the path
-        new_model_path = os.path.join(engine.path, 'model-{}'.format(utils.randomfilename(length=8)))
-        while os.path.exists(new_model_path):
-            # if random path already exists, try it again until it doesn't
+        if current_user.id == engine.engine_users[0].user.id or user_utils.is_admin():
+            # create new separate path for the next model with some random id in the path
             new_model_path = os.path.join(engine.path, 'model-{}'.format(utils.randomfilename(length=8)))
-        
-        os.makedirs(new_model_path)
+            while os.path.exists(new_model_path):
+                # if random path already exists, try it again until it doesn't
+                new_model_path = os.path.join(engine.path, 'model-{}'.format(utils.randomfilename(length=8)))
+            
+            os.makedirs(new_model_path)
 
-        # create file to actual model npz file
-        model_file_path = os.path.join(new_model_path, "model")
+            # create file to actual model npz file
+            model_file_path = os.path.join(new_model_path, "model")
 
-        # load configuration yaml file and change the model's path with the new one
-        config_file_path = os.path.join(engine.path, 'config.yaml')
-        config = None
-        with open(config_file_path, 'r') as config_file:
-            config = yaml.load(config_file, Loader=yaml.FullLoader)
-            current_model = config["model"]
-            config["model"] = os.path.join(new_model_path, "model.npz")
-            config["log"] = os.path.join(new_model_path, "train.log")
+            # load configuration yaml file and change the model's path with the new one
+            config_file_path = os.path.join(engine.path, 'config.yaml')
+            config = None
+            with open(config_file_path, 'r') as config_file:
+                config = yaml.load(config_file, Loader=yaml.FullLoader)
+                current_model = config["model"]
+                config["model"] = os.path.join(new_model_path, "model.npz")
+                config["log"] = os.path.join(new_model_path, "train.log")
 
-        with open(config_file_path, 'w') as config_file:
-            yaml.dump(config, config_file)
+            with open(config_file_path, 'w') as config_file:
+                yaml.dump(config, config_file)
 
-        # update the model with the new information
-        engine.model_path = new_model_path
-        engine.launched = datetime.datetime.utcnow().replace(tzinfo=None)
-        engine.finished = None
-        db.session.commit()
+            # update the model with the new information
+            engine.model_path = new_model_path
+            engine.launched = datetime.datetime.utcnow().replace(tzinfo=None)
+            engine.finished = None
+            db.session.commit()
 
-        task_id, _ = Trainer.launch(engine_id, user_utils.is_admin(), retrain_path = current_model)
-        i = 0
-        while engine.has_stopped() and i < 100:
-            db.session.refresh(engine)
-            i += 1
+            task_id, _ = Trainer.launch(engine_id, user_utils.get_user_role(), retrain_path = current_model)
+            i = 0
+            while engine.has_stopped() and i < 100:
+                db.session.refresh(engine)
+                i += 1
 
-        return redirect(url_for('train.train_console', id=engine_id))
-        
+            return redirect(url_for('train.train_console', id=engine_id))
+    except Exception as ex:
+        print(str(ex), flush = True)
+        return -1
 
 @train_blueprint.route('/test', methods=["POST"])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())

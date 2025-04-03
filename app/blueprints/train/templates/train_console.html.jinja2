@@ -142,7 +142,7 @@
         <i class="far fa-stop-circle"></i> Stop
       </button>
       {% endif %}
-      {% elif current_user.id == engine.engine_users[0].user.id or current_user.role=="Admin" %}
+      {% elif current_user.id == engine.engine_users[0].user.id or current_user.role.name=="Admin" %}
       <a href="{{ url_for('train.train_resume', engine_id=engine.id) }}" class="btn btn-success">
         <i class="far fa-play-circle"></i> Resume
       </a>
