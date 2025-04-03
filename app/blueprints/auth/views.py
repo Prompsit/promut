@@ -162,6 +162,11 @@ def provisional_login():
         db.session.add(new_user)
         db.session.commit()
 
+        # increment the id by 1 if it's 0, a user id of 0 makes the app fail spectacularly...
+        if new_user.id == 0:
+            new_user.id = new_user.id + 1
+            db.session.commit()
+
         # Add languages to user
         with open(
             os.path.join(app.config["MUTNMT_FOLDER"], "scripts/langs.txt")
