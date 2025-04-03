@@ -26,6 +26,8 @@ import requests
 import zipfile
 from app.utils.opus_db import get_opus_model_link
 import io
+import yaml
+
 @library_blueprint.route('/corpora')
 def library_corpora():
     user_library = user_utils.get_user_corpora().count()
@@ -119,6 +121,8 @@ def library_corpora_feed():
                     "corpus_owner": file.uploader.id == user_utils.get_uid() if file.uploader else False,
                     "corpus_uploader": file.uploader.username if file.uploader else "MutNMT",
                     "corpus_id": corpus.id,
+                    "user_is_admin": user_utils.is_admin(),
+                    "opus_corpus": corpus.opus_corpus,
                     "corpus_name": corpus.name,
                     "corpus_description": corpus.description,
                     "corpus_source": corpus.source.name,
@@ -181,10 +185,12 @@ def library_engines_feed():
 
         uploaded_date = datetime.fromtimestamp(datetime.timestamp(engine.uploaded)).strftime("%d/%m/%Y")
         engine_data.append([engine.id, engine.name, engine.description, "{} — {}".format(engine.source.name, engine.target.name),
-                            uploaded_date, engine.uploader.username if engine.uploader else "MutNMT", score, "",
+                            uploaded_date, engine.uploader.username if engine.uploader else "OPUS" if engine.opus_engine else "MutNMT", score, "",
                             {
                                 "engine_owner": engine.uploader.id == user_utils.get_uid() if engine.uploader else False,
                                 "engine_public": engine.public,
+                                "opus_engine": engine.opus_engine,
+                                "user_is_admin": user_utils.is_admin(),
                                 "engine_status": engine.status,
                                 "engine_share": url_for('library.library_share_toggle', type = "library_engines", id = engine.id),
                                 "engine_summary": url_for('train.train_console', id = engine.id),
@@ -360,24 +366,40 @@ def download_model():
             code=trg_lang, user_id=-1
         ).one()
 
-        eng = Engine(
+        engine = Engine(
             name=f"opus-{src_lang}-{trg_lang}",
             path=engine_path,
             model_path=model_path,
             opus_engine=True,
-            description="OPUS model",
+            description="Model downloaded from the OPUS repository.",
             user_source_id=source_lang.id,
             user_target_id=target_lang.id,
             public=True,
             launched=date,
             finished=date,
-            status="opus",
+            status="opus"
         )
-        db.session.add(eng)
+        db.session.add(engine)
         db.session.commit()
+
+        # open the decoder yaml file, get the vocabulary name/path
+        # and change the file's name/path to source and target equivalents
+        with open(os.path.join(engine.model_path, "decoder.yml"), "r") as f:
+            decoder_config = yaml.safe_load(f)
+        
+        src_vocab_path = os.path.join(engine.model_path, decoder_config["vocabs"][0])
+        trg_vocab_path = os.path.join(engine.model_path, decoder_config["vocabs"][1])
+
+        shutil.move(src_vocab_path, os.path.join(engine.model_path, f"vocab.{src_lang}.yml"))
+
+        if src_vocab_path != trg_vocab_path:
+            shutil.move(trg_vocab_path, os.path.join(engine.model_path, f"vocab.{trg_lang}.yml"))
+        else:
+            shutil.copy2(os.path.join(engine.model_path, f"vocab.{src_lang}.yml"), 
+                            os.path.join(engine.model_path, f"vocab.{trg_lang}.yml"))
 
         return jsonify({ "result": 200})
     except Exception as ex:
-        print(str(ex), flush = True)
+        print(ex, flush = True)
         return jsonify({ "result": -1})
     
