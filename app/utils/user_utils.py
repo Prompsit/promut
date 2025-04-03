@@ -1,6 +1,6 @@
 from flask_login import current_user
 from app import app, db
-from app.models import Corpus, LibraryEngine, LibraryCorpora, Corpus_Engine, User, UserLanguage
+from app.models import Corpus, LibraryEngine, LibraryCorpora, Corpus_Engine, User, UserLanguage, Engine
 from sqlalchemy import and_
 import os, shutil
 from app.utils.roles import EnumRoles
@@ -57,13 +57,7 @@ def library_delete(type, id, user_id = None):
     user_id = get_uid() if not user_id else user_id
 
     if type == "library_corpora":
-        # idk why he did this relationship when you could have just called for Corpus instead of this waste, but okay
         corpus = Corpus.query.filter_by(id = id).first()
-
-        #print("##################################", flush = True)
-        #print(str(corpus.name), flush = True)
-        #print("Is opus: " + str(corpus.opus_corpus), flush = True)
-        #print("Users: " + str(corpus.owner_id) + " - " + str(user_id), flush = True)
 
         # check if corpus is from opus
         if corpus.opus_corpus:
@@ -82,12 +76,6 @@ def library_delete(type, id, user_id = None):
         else:
             library = LibraryCorpora.query.filter_by(corpus_id = id, user_id = corpus.owner_id).first()
 
-        #print("---------", flush = True)
-        #print(library, flush = True)
-        #print("---------", flush = True)
-        #print(str(LibraryCorpora.query.filter_by(corpus_id = id).filter(LibraryCorpora.user_id != user_id).count()), flush = True)
-        #print("---------", flush = True)
-
         if library == None:
             return False
         if LibraryCorpora.query.filter_by(corpus_id = id).filter(LibraryCorpora.user_id != user_id).count() == 0:
@@ -100,14 +88,23 @@ def library_delete(type, id, user_id = None):
         db.session.delete(library)
         db.session.commit()
     else:
-        library = LibraryEngine.query.filter_by(engine_id = id, user_id = user_id).first()
+        engine = Engine.query.filter_by(id = id).first()
 
-        if LibraryEngine.query.filter_by(engine_id = id).filter(LibraryEngine.user_id != user_id).count() == 0:
-            shutil.rmtree(library.engine.path)
-            db.session.delete(library.engine)
+        if engine.opus_engine:
+            shutil.rmtree(engine.path)
+            
+            db.session.delete(engine)
+            db.session.commit()
+        else:
 
-        db.session.delete(library)
-        db.session.commit()
+            library = LibraryEngine.query.filter_by(engine_id = id, user_id = user_id).first()
+
+            if LibraryEngine.query.filter_by(engine_id = id).filter(LibraryEngine.user_id != user_id).count() == 0:
+                shutil.rmtree(library.engine.path)
+                db.session.delete(library.engine)
+
+            db.session.delete(library)
+            db.session.commit()
 
     return True
 
