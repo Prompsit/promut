@@ -8,7 +8,11 @@ $(document).ready(function () {
             method: "post"
         },
         columnDefs: [
-            { targets: 0, responsivePriority: 1 },
+            {
+                targets: 0, responsivePriority: 1, render: function (data, type, row) {
+                    return `<td><div style="display: flex;">${row[0]}${row[3] === "Admin" ? "" : '<input type="checkbox" class="multiselect-checkbox" style="margin-left: auto;display: block;"/>'}</div></td>`;
+                }
+            },
             {
                 targets: 4,
                 className: "notes-row",
@@ -105,6 +109,7 @@ $(document).ready(function () {
     $('.multiple-user-actions').on('click', 'button', async function () {
         const action = $(this).attr('id');
         const selectedUsers = [...$('tr.selected td:first-child')].map(el => el.innerText);
+        $('.multiple-user-actions').toggle("d-none");
         await processUsers(selectedUsers, action);
     });
 
@@ -124,7 +129,7 @@ $(document).ready(function () {
         $('.multiple-user-actions').toggle('d-none');
     })
 
-    users_table.on('click', 'tbody tr td:first-child', function (e) {
+    users_table.on('click', 'tbody tr td:first-child .multiselect-checkbox', function (e) {
         const row = e.currentTarget.closest("tr");
         const cells = $(row).find('td:contains("Admin")');
 

@@ -239,7 +239,7 @@ $(document).ready(function () {
             }
         });
     }
-    var notyf = new Notyf();
+
 
     FileDnD(".file-dnd", function (file) {
         $(".live-translate-target").html("");
@@ -251,10 +251,10 @@ $(document).ready(function () {
         let re = /(?:\.([^.]+))?$/;
         let extension = re.exec(file.name)[1];
 
-        console.log(extension, "EXTENSION")
-        if (!acceptedExtensions.includes(extension)) {
-            notyf.error({ message: 'This file extension is not allowed!', duration: 3500, position: { x: "middle", y: "top" } });
-        }
+        // if (!acceptedExtensions.includes(extension)) {
+        //     $(".file-dnd").value = "";
+        //     notyf.error({ message: 'This file extension is not allowed!', duration: 3500, position: { x: "middle", y: "top" } });
+        // }
         if (extension == "tmx") {
             $('.live-translate-form').attr('data-status', 'tmx-dialog');
             $('.btn-confirm-tmx').on('click', function () {

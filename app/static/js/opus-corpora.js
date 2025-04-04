@@ -187,6 +187,7 @@ $(document).ready(function () {
             button.prop('disabled', true);
             button.text('Downloading...');
             $('.download-btn').prop('disabled', true);
+            $('.overlay').removeClass('d-none');
 
             $.ajax({
                 url: '/data/download-opus-corpus',
@@ -200,6 +201,7 @@ $(document).ready(function () {
                     button.prop('disabled', false);
                     $('.download-btn').prop('disabled', false);
                     $('.already-in-library').prop('disabled', true);
+                    $('.overlay').addClass("d-none");
                     notyf.success({ message: 'Dataset downloaded and added to your collection!', duration: 3500, position: { x: "middle", y: "top" } });
 
                     if (response) {
@@ -219,6 +221,7 @@ $(document).ready(function () {
                     console.error('Download failed:', error);
                     button.text('Error');
                     button.prop('disabled', false);
+                    $('.overlay').addClass("d-none");
                     $('.download-btn').prop('disabled', false);
                     setTimeout(() => {
                         button.text('Download');
