@@ -198,3 +198,28 @@ def check_downloading():
     except Exception as ex:
         print(ex, flush = True)
         return jsonify({ "result": -1})
+
+from flask import session
+
+@data_blueprint.route('/set-session-data', methods=['POST'])
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def set_session_data():
+    try:
+        task_id = request.form.get('task_id')
+
+        # Store data in session
+        session["pending_download"] = task_id
+        
+        return jsonify({ "result": 200})
+    except Exception as e:
+        print(ex, flush = True)
+        return jsonify({ "result": -1})
+
+@data_blueprint.route('/get-session-data', methods=['GET'])
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def get_session_data():
+    try:
+        return jsonify({ "result": 200, "pending_download": session["pending_download"]})
+    except Exception as ex:
+        print(ex, flush = True)
+        return jsonify({ "result": -1})
