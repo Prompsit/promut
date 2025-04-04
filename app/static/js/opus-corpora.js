@@ -65,8 +65,7 @@ $(document).ready(function () {
 
             },
             success: function (response) {
-                $(".dataset-loader").addClass("d-none");
-                $(".searching-corpora").addClass("d-none");
+               
                 const container = $('.datasets-response-table');
                 displayDataTable(container, response.datasets);
 
@@ -80,10 +79,25 @@ $(document).ready(function () {
         });
     });
 
+    function checkIfExists(name, src, trg) {
+        const formData = new FormData();
+        formData.append("corpus_name", name);
+        formData.append("source_lang", src);
+        formData.append("target_lang", trg);
 
-    function displayDataTable(dataTableContainer, data) {
+        return $.ajax({
+            url: '/data/check-opus-corpus',
+            method: 'POST',
+            data: formData,
+            contentType: false,
+            cache: false,
+            processData: false
+        }).promise();
+    }
+
+
+    async function displayDataTable(dataTableContainer, data) {
         dataTableContainer.html('');
-
 
         const table = $('<table id="dataTable" class="table table-bordered w-100">');
 
@@ -96,19 +110,37 @@ $(document).ready(function () {
         table.append('<thead><tr></tr></thead><tbody></tbody>');
         table.find('thead').append(headerRow);
 
-        const fields = ["corpus", "alignment_pairs", "version", "source_tokens", "target_tokens", "download"]
-        data.forEach((row, idx) => {
-            const rowElement = $('<tr>');
-            fields.forEach(header => {
-                if (header === "download") {
-                    rowElement.append(`<td><button class="download-btn" data-id="${idx}" >Download</button></td>`)
-                } else {
-                    rowElement.append(`<td>${row[header]}</td>`);
+        table.addClass('loading');
+        table.removeClass('loading');
 
-                }
-            });
-            table.find('tbody').append(rowElement);
-        });
+        table.find('tbody').empty().append('<tr><td colspan="100%" class="loading-cell">Loading data...</td></tr>');
+
+        const fields = ["corpus", "alignment_pairs", "version", "source_tokens", "target_tokens", "download"]
+        const rows = await Promise.all(
+            data.map(async (row, idx) => {
+                const exists = await checkIfExists(row.corpus, row.source, row.target);
+
+                console.log(exists, "WHAP")
+                const rowElement = $('<tr>');
+
+                fields.forEach(header => {
+                    if (header === "download") {
+                        rowElement.append(exists.result === -1 ?
+                            `<td><button class="download-btn already-in-library" data-id="${idx}" disabled>Already in library</button></td>` :
+                            `<td><button class="download-btn" data-id="${idx}" >Download</button></td>`
+                        );
+                    } else {
+                        rowElement.append(`<td>${row[header]}</td>`);
+                    }
+                });
+
+                return rowElement;
+            })
+        );
+        table.find('tbody').empty().append(rows);
+
+        $(".dataset-loader").addClass("d-none");
+        $(".searching-corpora").addClass("d-none");
 
         dataTableContainer.append(table)
         // Initialize DataTable
@@ -125,14 +157,15 @@ $(document).ready(function () {
         newTable.page('first')
         newTable.draw(false)
 
-        // function reloadTableContent() {
-        //     // $("#private-corpora .dataTable").each(function (i, el) {
-        //     //     console.log("")
-        //     //     $(el).DataTable().ajax.reload();
-        //     // });
-
-        //     var table = $("#private-corpora .dataTable").dataTable().api().ajax.reload();
-        // }
+        function reloadTableData(round = 1) {
+            if (round >= 5) {
+                return;
+            }
+            setTimeout(() => {
+                $(".corpora-table").dataTable().api().ajax.reload();
+                reloadTableData(round + 1)
+            }, 10000);
+        }
 
         $('#dataTable').on('click', '.download-btn', function (e) {
             e.stopPropagation();
@@ -154,6 +187,7 @@ $(document).ready(function () {
             button.prop('disabled', true);
             button.text('Downloading...');
             $('.download-btn').prop('disabled', true);
+            $('.overlay').removeClass('d-none');
 
             $.ajax({
                 url: '/data/download-opus-corpus',
@@ -166,13 +200,16 @@ $(document).ready(function () {
                     button.text('Download');
                     button.prop('disabled', false);
                     $('.download-btn').prop('disabled', false);
+                    $('.already-in-library').prop('disabled', true);
+                    $('.overlay').addClass("d-none");
                     notyf.success({ message: 'Dataset downloaded and added to your collection!', duration: 3500, position: { x: "middle", y: "top" } });
 
                     if (response) {
                         try {
                             $('#download-info').removeClass('d-none');
                             removeDownloadInfo();
-                            $("#private-corpora .dataTable").dataTable().api().ajax.reload();
+                            $(".corpora-table").dataTable().api().ajax.reload();
+                            reloadTableData();
                         } catch (error) {
                             console.log("Error, the code above doesnt execute")
                         }
@@ -184,6 +221,7 @@ $(document).ready(function () {
                     console.error('Download failed:', error);
                     button.text('Error');
                     button.prop('disabled', false);
+                    $('.overlay').addClass("d-none");
                     $('.download-btn').prop('disabled', false);
                     setTimeout(() => {
                         button.text('Download');
@@ -196,3 +234,42 @@ $(document).ready(function () {
     }
 
 })
+
+// async function buildTable(data) {
+//     // Show loading state
+//     table.addClass('loading');
+//     table.find('tbody').empty().append('<tr><td colspan="100%" class="loading-cell">Loading data...</td></tr>');
+    
+//     try {
+//         const rows = await Promise.all(
+//             data.map(async (row, idx) => {
+//                 const exists = await checkIfExists(row.name, row.source, row.target);
+//                 const rowElement = $('<tr>');
+                
+//                 fields.forEach(header => {
+//                     if (header === "download") {
+//                         rowElement.append(exists ? 
+//                             `<td><button class="download-btn" data-id="${idx}" disabled>Already in library</button></td>` :
+//                             `<td><button class="download-btn" data-id="${idx}" >Download</button></td>`
+//                         );
+//                     } else {
+//                         rowElement.append(`<td>${row[header]}</td>`);
+//                     }
+//                 });
+                
+//                 return rowElement;
+//             })
+//         );
+        
+//         // Hide loading state and update table
+//         table.removeClass('loading');
+//         table.find('tbody').empty().append(rows);
+//     } catch (error) {
+//         // Handle errors gracefully
+//         table.removeClass('loading');
+//         table.find('tbody').empty().append(
+//             `<tr><td colspan="100%" class="error-cell">Failed to load data: ${error.message}</td></tr>`
+//         );
+//         console.error('Error building table:', error);
+//     }
+// }

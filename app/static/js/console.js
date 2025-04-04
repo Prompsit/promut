@@ -3,31 +3,27 @@ $(document).ready(function () {
     let engine_stopped = undefined;
     const interval = 1000;
 
+    var sec = -1;
+
+
     let setupTimer = (el) => {
-        let timestamp = parseInt($(el).attr("data-started"));
-        let begin = moment();
-        let end = moment.unix(timestamp).add(parseInt($(el).attr("data-minutes")), 'minutes');
-        console.log(end, "end")
+        let trainingStart = parseInt($(el).attr("data-started")) * 1000;
 
-        // Calculate total hours and remaining minutes
-        let totalMinutes = parseInt($(el).attr("data-minutes"));
-        let hours = Math.floor(totalMinutes / 60);
-        let remainingMinutes = totalMinutes % 60;
+        let trainingTimeAllocated = parseInt($(el).attr("data-minutes")) * 60;
 
-        // Calculate seconds from current time difference
-        let duration = moment.duration(end.diff(begin));
-        let seconds = Math.floor(duration.seconds());
+        function pad(val) { return val > 9 ? val : "0" + val; }
 
-        // Format as HH:MM:SS (hours:minutes:seconds)
-        $(el).html(`${hours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        $(el).html(`${pad(parseInt(sec / 3600, 10))}:${pad(parseInt(sec / 60, 10) % 60)}:${pad(++sec % 60)}`)
+
+        if (trainingStart + sec >= trainingStart + trainingTimeAllocated) {
+            window.clearInterval(intervalID)
+        }
     }
 
-    $(".time-left").each(function (i, el) {
-        setupTimer(el);
-        setInterval(() => {
-            setupTimer(el);
-        }, interval);
-    });
+
+    const intervalID = self.setInterval(() => setupTimer($(".time-left")), interval);
+
+
     let make_chart = (element, chart_data) => {
         let chart = new ApexCharts(element, {
             series: [{

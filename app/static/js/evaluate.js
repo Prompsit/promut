@@ -390,19 +390,19 @@ $(document).ready(function () {
       // Sample data for each chart with different values and categories
       const chartData = {
         chart1: file_series["bleu"].splice(0, 100).map((el, i) => ({
-          x: `Sentence ${i + 1}`,
+          x: `Sent ${i + 1}`,
           y: el
         })),
         chart2: file_series["chrf"].splice(0, 100).map((el, i) => ({
-          x: `Sentence ${i + 1}`,
+          x: `Sent ${i + 1}`,
           y: el
         })),
         chart3: file_series["ter"].splice(0, 100).map((el, i) => ({
-          x: `Sentence ${i + 1}`,
+          x: `Sent ${i + 1}`,
           y: el
         })),
         chart4: file_series["comet"].splice(0, 100).map((el, i) => ({
-          x: `Sentence ${i + 1}`,
+          x: `Sent ${i + 1}`,
           y: el
         }))
       };

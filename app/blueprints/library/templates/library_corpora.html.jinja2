@@ -5,8 +5,8 @@
 {% if not is_normal() %}
 <div class="d-flex justify-content-between">
   <a href="#" class="text-reset text-decoration-none upload-header">
-    <h2 class="h5 section-title">
-      <span class="mr-2">Upload your dataset</span>
+    <h2 class="text-reset">
+      <span>Upload your dataset</span>
       <i class="fas fa-caret-up header-collapse-icon d-none"></i>
       <i class="fas fa-caret-down header-collapsed-icon"></i>
     </h2>
@@ -282,6 +282,19 @@
     <table id="dataTable" class="table table-bordered w-100"></table>
   </div>
 </div>
+<div class="overlay d-none">
+  <div class="download-spinner d-flex align-items-center justify-content-center w-100 h-100">
+    <div class="h1 spinner mr-3">
+      <i class="fas fa-cog"></i>
+    </div>
+    <div>
+      <p class="h1 mb-0">Downloading dataset...</p>
+      <p class="mb-0 h3">
+        Don't close or leave this page.
+      </p>
+    </div>
+  </div>
+</div>
 
 {% endif %}
 <div class="datasets-header mb-4">
@@ -289,9 +302,8 @@
     <i class="fas fa-caret-down header-collapsed-icon-datasets d-none"></i>
   </h2>
 </div>
-<div class="alert alert-info d-none h3" role="alert" id="download-info">
-  Your dataset is being downloaded and prepared for use, this may take a few minutes depending on its size. You might
-  need to refresh the page after the download has completed to see it listed.
+<div class="alert alert-info d-none h4" role="alert" id="download-info">
+  Downloading and adding to library... Please wait...
 </div>
 <div class="corpora-nav-tabs-container">
   <ul class="nav nav-tabs active corpora-nav-tabs" id="your_corpora">
