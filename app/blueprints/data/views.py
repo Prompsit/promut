@@ -90,30 +90,6 @@ def data_upload_status():
         return jsonify({ "result": 200 })
     else:
         return jsonify({ "result": -1 })
-    
-
-@data_blueprint.route('/check-opus-corpus', methods=['POST'])
-@utils.condec(login_required, user_utils.isUserLoginEnabled())
-def check_opus_corpus():
-    try:
-        src_lang = request.form.get('source_lang')
-        trg_lang = request.form.get('target_lang')
-        corpus_name = request.form.get('corpus_name')
-
-        USER_ID = user_utils.get_uid()
-        source_lang_id = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).one().id
-        target_lang_id = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).one().id
-
-        # Check if corpus has already been downloaded for the given source and target languages
-        check = Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).exists()
-
-        if db.session.query(check).scalar():
-            return jsonify({ "result": -1 })
-
-        return jsonify({ "result": 200})
-    except Exception as ex:
-        print(ex, flush = True)
-        return jsonify({ "result": -2})    
 
 @data_blueprint.route('/get-opus-corpora', methods=['POST'])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
