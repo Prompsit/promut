@@ -5,6 +5,7 @@ from app.flash import Flash
 from flask import Blueprint, render_template, request, jsonify, flash, url_for, redirect
 from flask_login import login_required, current_user
 from sqlalchemy import desc, select, exists
+from celery.result import AsyncResult
 
 import os
 import requests
@@ -162,34 +163,38 @@ def download_opus_corpus():
 
         # if corpus doesn't exist in db, but there are folders/files with it, then delete them
         opus_workdir = app.config["OPUS_FILES_FOLDER"]
-        corpus_dir = os.path.join(opus_workdir, corpus_name)
+        aux_dir = f"{corpus_name}_{src_lang}-{trg_lang}"
+        corpus_dir = os.path.join(opus_workdir, aux_dir)
         if os.path.isdir(corpus_dir):
             shutil.rmtree(corpus_dir)
 
-        source_file = os.path.join(opus_workdir, corpus_name, f"prepared_corpus/{corpus_name}.{src_lang}-{trg_lang}.{src_lang}")
-        target_file = os.path.join(opus_workdir, corpus_name, f"prepared_corpus/{corpus_name}.{src_lang}-{trg_lang}.{trg_lang}")
+        source_file = os.path.join(opus_workdir, aux_dir, f"prepared_corpus/{corpus_name}.{src_lang}-{trg_lang}.{src_lang}")
+        target_file = os.path.join(opus_workdir, aux_dir, f"prepared_corpus/{corpus_name}.{src_lang}-{trg_lang}.{trg_lang}")
 
         # Launch bash scrip to download the corpus, paste the files, shuffle a new one,
         # delete the unwanted files, and split the shuffled file into two (src and trg)
         path_to_script = os.path.join(app.config['MUTNMT_FOLDER'], "app/blueprints/data/prepare_opus_corpus.sh")
         TEMP_LOG_FILE = os.path.join(opus_workdir, "TMP_FILE.txt")
 
-        subprocess.run("bash {0} {1} {2} {3} {4} {5} {6}".format(path_to_script, url_to_download, opus_workdir, src_lang, trg_lang, corpus_name, TEMP_LOG_FILE), shell=True, stdout=subprocess.PIPE)
+        # Call asynchronous function to download and prepare the corpus
+        task = tasks.download_opus_dataset.apply_async(args=[path_to_script, url_to_download, opus_workdir, src_lang, trg_lang, corpus_name, TEMP_LOG_FILE,
+                                                                USER_ID, source_file, target_file, source_lang_id, target_lang_id, corpus_dir])
 
-        # Call data_utils.process_upload_request or something similar and simulate all the needed parameters
-        # however, instantly set the corpus as public and as visible
-        task_id = data_utils.process_upload_request(USER_ID, 
-                                                    None,
-                                                    source_file,
-                                                    target_file,
-                                                    source_lang_id,
-                                                    target_lang_id,
-                                                    corpus_name,
-                                                    f"{corpus_name} dataset, downloaded from the OPUS collection",
-                                                    "General",
-                                                    opus = True)
-
-        return jsonify({ "result": 200})
+        return jsonify({ "result": 200, "task_id": task.id})
     except Exception as ex:
         print(ex, flush = True)
         return jsonify({ "result": -2})
+
+@data_blueprint.route('/check-downloading', methods=['POST'])
+#@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def check_downloading():
+    try:
+        task_id = request.form.get('task_id')
+
+        res = AsyncResult(str(task_id), app=tasks.celery)
+        finished = res.ready()
+
+        return jsonify({ "result": 200, "finished": finished})
+    except Exception as ex:
+        print(ex, flush = True)
+        return jsonify({ "result": -1})

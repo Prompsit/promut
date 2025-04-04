@@ -13,7 +13,7 @@ import datetime
 import shutil
 import logging
 
-def process_upload_request(user_id, bitext_file, src_file, trg_file, src_lang, trg_lang, corpus_name, corpus_desc, corpus_topic, opus = False):
+def process_upload_request(user_id, bitext_file, src_file, trg_file, src_lang, trg_lang, corpus_name, corpus_desc, corpus_topic, opus = False, asynchr = True):
     type = "bitext" if bitext_file else "bilingual"
 
     bitext_path = None
@@ -34,15 +34,22 @@ def process_upload_request(user_id, bitext_file, src_file, trg_file, src_lang, t
                 # if downloaded through opus, the file parameters should already be paths to the files
                 # so just move the final shuffled files to the temporary paths and carry on with how
                 # promut already uploads corpora
-                src_path = utils.tmpfile(filename=src_file)
-                os.replace(src_file, src_path)
-                trg_path = utils.tmpfile(filename=trg_file)
-                os.replace(trg_file, trg_path)
+                #src_path = utils.tmpfile(filename=src_file)
+                #os.replace(src_file, src_path)
+                #trg_path = utils.tmpfile(filename=trg_file)
+                #os.replace(trg_file, trg_path)
+                src_path = src_file
+                trg_path = trg_file
 
-    task = tasks.process_upload_request.apply_async(args=[user_id, bitext_path, src_path, 
-            trg_path, src_lang, trg_lang, corpus_name, corpus_desc, corpus_topic, opus])
+    if asynchr:
+        task = tasks.process_upload_request.apply_async(args=[user_id, bitext_path, src_path, 
+                                                                trg_path, src_lang, trg_lang, corpus_name, 
+                                                                corpus_desc, corpus_topic, opus])
 
-    return task.id
+        return task.id
+    else:
+        task = tasks.process_upload_request(user_id, bitext_path, src_path, trg_path, 
+                                            src_lang, trg_lang, corpus_name, corpus_desc, corpus_topic, opus)
 
 def upload_file(file, language, format="text", selected_size=None, offset=None, user_id=None):
     user_id = user_id if user_id else user_utils.get_uid()

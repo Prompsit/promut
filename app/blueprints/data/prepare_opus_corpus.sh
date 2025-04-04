@@ -6,6 +6,7 @@ SRC_LANG=$3
 TRG_LANG=$4
 CORPUS_NAME=$5
 TMP_LOG_FILE=$6
+CORPUS_AUX_DIR=$7
 
 echo "- corpus url: $CORPUS_URL" > $TMP_LOG_FILE
 echo "- opus workdir: $OPUS_WORKDIR" >> $TMP_LOG_FILE
@@ -15,7 +16,7 @@ echo "- corpus name: $CORPUS_NAME" >> $TMP_LOG_FILE
 echo "---------" >> $TMP_LOG_FILE
 
 ZIP_PATH="$SRC_LANG-$TRG_LANG.txt.zip"
-CORPUS_AUX_DIR="$OPUS_WORKDIR/$CORPUS_NAME"
+#CORPUS_AUX_DIR="$OPUS_WORKDIR/$CORPUS_NAME"
 PREPARED_CORPUS_DIR="prepared_corpus"
 
 echo "- zip path: $ZIP_PATH" >> $TMP_LOG_FILE
