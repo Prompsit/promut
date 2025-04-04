@@ -48,7 +48,7 @@ from app.utils.translation.filetranslation import FileTranslation
 from app.utils.translation.marianwrapper import MarianWrapper
 from app.utils.translation.utils import TranslationUtils
 
-celery = Celery(app.name, broker=app.config["CELERY_BROKER_URL"])
+celery = Celery(app.name, broker = app.config["CELERY_BROKER_URL"], backend = app.config["CELERY_RESULT_BACKEND"])
 celery.conf.update(app.config)
 
 from celery.utils.log import get_task_logger
@@ -1042,16 +1042,7 @@ def process_upload_request(
             if opus:
                 public = True
                 opus_corpus = True
-
-            print("@@@@@@@@@@@@@@@@@@@@@@@@@", flush = True)
-            print(str(public), flush = True)
-            print("---------", flush = True)
-            print(str(visible), flush = True)
-            print("---------", flush = True)
-            print(str(opus_corpus), flush = True)
-            print("---------", flush = True)
-            print("@@@@@@@@@@@@@@@@@@@@@@@@@", flush = True)
-
+            
             corpus = Corpus(
                 name=corpus_name,
                 type="bilingual" if type == "bitext" else type,
@@ -1072,6 +1063,7 @@ def process_upload_request(
 
                     source_db_file = process_file(src_file, src_lang, corpus, "source")
                     target_db_file = process_file(trg_file, trg_lang, corpus, "target")
+
             else:
                 with open(src_path, "rb") as fsrctext:
                     src_file = FileStorage(
@@ -1087,6 +1079,10 @@ def process_upload_request(
                         target_db_file = process_file(
                             trg_file, trg_lang, corpus, "target"
                         )
+                    
+                    if opus:
+                        os.remove(src_path)
+                        os.remove(trg_path)
 
             db.session.add(corpus)
 
@@ -1110,6 +1106,26 @@ def process_upload_request(
 
     return True
 
+@celery.task(bind=True)
+def download_opus_dataset(self, path_to_script, url_to_download, 
+                            opus_workdir, src_lang, trg_lang, corpus_name, TEMP_LOG_FILE, USER_ID, 
+                            source_file, target_file, source_lang_id, target_lang_id, corpus_dir):
+        
+    subprocess.run("bash {0} {1} {2} {3} {4} {5} {6} {7}".format(path_to_script, url_to_download, opus_workdir, src_lang, trg_lang, corpus_name, TEMP_LOG_FILE, corpus_dir), shell=True, stdout=subprocess.PIPE)
+
+    # Call data_utils.process_upload_request or something similar and simulate all the needed parameters
+    # however, instantly set the corpus as public and as visible
+    task_id = data_utils.process_upload_request(USER_ID, 
+                                                None,
+                                                source_file,
+                                                target_file,
+                                                source_lang_id,
+                                                target_lang_id,
+                                                corpus_name,
+                                                f"{corpus_name} dataset, downloaded from the OPUS collection",
+                                                "General",
+                                                opus = True,
+                                                asynchr = False)
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 # Pre- post- tasks to allocate GPUs for translation
