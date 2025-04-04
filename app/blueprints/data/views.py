@@ -186,7 +186,7 @@ def download_opus_corpus():
         return jsonify({ "result": -2})
 
 @data_blueprint.route('/check-downloading', methods=['POST'])
-#@utils.condec(login_required, user_utils.isUserLoginEnabled())
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
 def check_downloading():
     try:
         task_id = request.form.get('task_id')
