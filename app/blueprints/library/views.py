@@ -200,7 +200,8 @@ def library_engines_feed():
                                 "engine_grab": url_for('library.library_grab', id = engine.id, type = "library_engines"),
                                 "engine_ungrab": url_for('library.library_ungrab', id = engine.id, type = "library_engines"),
                                 "engine_export": url_for('library.library_export', id = engine.id, type = "library_engines"),
-                                "engine_corpora_export": url_for('library.library_corpora_export', id = engine.id)
+                                "engine_corpora_export": url_for('library.library_corpora_export', id = engine.id),
+                                "engine_test_score": -1 if engine.test_score is None else engine.test_score
                             }])
 
         order = int(request.form.get('order[0][column]'))
