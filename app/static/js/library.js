@@ -163,7 +163,7 @@ $(document).ready(function () {
             ajax: {
                 url: "engines_feed",
                 method: "post",
-                data: { public: public_mode }
+                data: { public: public_mode },
             },
             columnDefs: [
                 {
@@ -199,7 +199,7 @@ $(document).ready(function () {
                 {
                     targets: 6,
                     render: function (data, type, row) {
-                        return data !== null ? data : "—"
+                        return data !== null ? `<div class="bleu-container"><div class="val-bleu">${data.toFixed(2)}<span>VAL.</span></div> ${row[8]["engine_test_score"] ? `<p class="separator">|</p> <div class="test-bleu">${row[8]["engine_test_score"]}<span>TEST</span></div>` : ""}</div>` : "—"
                     }
                 },
                 {

@@ -70,3 +70,24 @@
     height: 0px;
     padding: 0px;
 }
+
+.bleu-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.separator {
+    margin: 0 5px;
+    font-weight: bolder;
+}
+
+.bleu-container span {
+    background-color: rgb(142, 211, 188);
+    border-radius: 4px;
+    font-size: 10px;
+    padding: 3px 5px;
+    color: rgb(38, 49, 78);
+    font-weight: bold;
+    margin-left: 2px;
+}
