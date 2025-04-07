@@ -163,9 +163,7 @@ $(document).ready(function () {
             ajax: {
                 url: "engines_feed",
                 method: "post",
-                data: { public: public_mode },
-                success: function (response) {
-                }
+                data: { public: public_mode }
             },
             columnDefs: [
                 {
