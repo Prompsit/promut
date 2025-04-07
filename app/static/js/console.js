@@ -3,7 +3,7 @@ $(document).ready(function () {
     let engine_stopped = undefined;
     const interval = 1000;
 
-    var sec = -1;
+    var sec = 0;
 
 
     let setupTimer = (el) => {
@@ -13,7 +13,8 @@ $(document).ready(function () {
 
         function pad(val) { return val > 9 ? val : "0" + val; }
 
-        $(el).html(`${pad(parseInt(sec / 3600, 10))}:${pad(parseInt(sec / 60, 10) % 60)}:${pad(++sec % 60)}`)
+        $(el).html(`${pad(parseInt(sec / 3600, 10))}:${pad(parseInt(sec / 60, 10) % 60)}:${pad(+sec % 60)}`)
+
 
         if (trainingStart + sec >= trainingStart + trainingTimeAllocated) {
             window.clearInterval(intervalID)
@@ -21,7 +22,11 @@ $(document).ready(function () {
     }
 
 
-    const intervalID = self.setInterval(() => setupTimer($(".time-left")), interval);
+    const intervalID = self.setInterval(() => {
+        sec += 1;
+        setupTimer($(".time-left"))
+    }
+        , interval);
 
 
     let make_chart = (element, chart_data) => {

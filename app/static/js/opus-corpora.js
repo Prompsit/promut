@@ -1,6 +1,23 @@
 $(document).ready(function () {
 
+    $.ajax({
+        url: '/data/get-session-data',
+        method: 'GET',
+        contentType: false,
+        cache: false,
+        processData: false,
+        success: function (response) {
+            if (response.pending_download) {
 
+                const id = response.pending_download;
+                const dataset = response.dataset;
+                checkDownloadStatus(id, dataset);
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("Task id not saved")
+        }
+    });
 
     let adjust_languages = (el) => {
         let other = $('.lang_sel_opus').not(el);
@@ -19,6 +36,69 @@ $(document).ready(function () {
 
     adjust_languages($('.source_lang_search'));
 
+    function checkDownloadStatus(id, dataset) {
+
+        const formData = new FormData();
+        formData.append("task_id", id)
+        $.ajax({
+            url: '/data/check-downloading',
+            method: 'POST',
+            data: formData,
+            contentType: false,
+            cache: false,
+            processData: false,
+            success: function (response) {
+
+                if (response.finished) {
+                    const formData = new FormData();
+                    formData.append("task_id", "");
+                    formData.append("dataset", "");
+
+
+                    $('.selected-dataset-download').text('Download');
+                    $('.selected-dataset-download').prop('disabled', false);
+                    $('#download-info').addClass('d-none');
+                    $('.download-btn').prop('disabled', false);
+                    $(".already-in-library").prop('disabled', true);
+
+                    console.log("Finished downloading")
+
+                    $.ajax({
+                        url: '/data/set-session-data',
+                        method: 'POST',
+                        data: formData,
+                        contentType: false,
+                        cache: false,
+                        processData: false,
+                        success: function (response) {
+
+                            $('#submit-dataset-search').click();
+                            reloadTableData();
+
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Task id not saved")
+                        }
+                    });
+                } else {
+                    $('.selected-dataset-download').prop('disabled', true);
+                    $('.selected-dataset-download').text('Downloading...');
+                    $('.download-btn').prop('disabled', true);
+                    $('.download-text').text(`Downloading ${dataset} and adding it to library. Please wait`);
+                    $('#download-info').removeClass('d-none');
+
+
+                    setTimeout(() => {
+                        checkDownloadStatus(id, dataset);
+                    }, 3000);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Task id not saved")
+            }
+        });
+    }
+
     function removeDownloadInfo() {
         try {
             const $target = $('#download-info');
@@ -35,7 +115,6 @@ $(document).ready(function () {
             console.error('Error scrolling to download info:', error);
         }
         setTimeout(() => {
-            $('#download-info').addClass('d-none');
             $("#private-corpora .dataTable").dataTable().api().ajax.reload();
         }, 15000);
     }
@@ -65,7 +144,7 @@ $(document).ready(function () {
 
             },
             success: function (response) {
-               
+
                 const container = $('.datasets-response-table');
                 displayDataTable(container, response.datasets);
 
@@ -120,7 +199,6 @@ $(document).ready(function () {
             data.map(async (row, idx) => {
                 const exists = await checkIfExists(row.corpus, row.source, row.target);
 
-                console.log(exists, "WHAP")
                 const rowElement = $('<tr>');
 
                 fields.forEach(header => {
@@ -158,6 +236,7 @@ $(document).ready(function () {
         newTable.draw(false)
 
         function reloadTableData(round = 1) {
+            console.log("RELOAD FUNCTION BEING CALLED")
             if (round >= 5) {
                 return;
             }
@@ -166,6 +245,8 @@ $(document).ready(function () {
                 reloadTableData(round + 1)
             }, 10000);
         }
+
+
 
         $('#dataTable').on('click', '.download-btn', function (e) {
             e.stopPropagation();
@@ -186,8 +267,8 @@ $(document).ready(function () {
             // Disable button during download
             button.prop('disabled', true);
             button.text('Downloading...');
+            button.addClass('selected-dataset-download')
             $('.download-btn').prop('disabled', true);
-            $('.overlay').removeClass('d-none');
 
             $.ajax({
                 url: '/data/download-opus-corpus',
@@ -197,19 +278,31 @@ $(document).ready(function () {
                 cache: false,
                 processData: false,
                 success: function (response) {
-                    button.text('Download');
-                    button.prop('disabled', false);
-                    $('.download-btn').prop('disabled', false);
-                    $('.already-in-library').prop('disabled', true);
-                    $('.overlay').addClass("d-none");
-                    notyf.success({ message: 'Dataset downloaded and added to your collection!', duration: 3500, position: { x: "middle", y: "top" } });
 
+                    $('.already-in-library').prop('disabled', true);
+                    notyf.success({ message: 'Dataset downloaded and added to your collection!', duration: 3500, position: { x: "middle", y: "top" } });
                     if (response) {
                         try {
+                            const formData = new FormData();
+                            formData.append('task_id', response.task_id);
+                            formData.append("dataset", rowData[0]);
+                            $.ajax({
+                                url: '/data/set-session-data',
+                                method: 'POST',
+                                data: formData,
+                                contentType: false,
+                                cache: false,
+                                processData: false,
+                                success: function (res) {
+                                    checkDownloadStatus(response.task_id, rowData[0]);
+                                },
+                                error: function (xhr, status, error) {
+                                    console.error("Task id not saved")
+                                }
+                            });
                             $('#download-info').removeClass('d-none');
                             removeDownloadInfo();
                             $(".corpora-table").dataTable().api().ajax.reload();
-                            reloadTableData();
                         } catch (error) {
                             console.log("Error, the code above doesnt execute")
                         }
@@ -221,7 +314,6 @@ $(document).ready(function () {
                     console.error('Download failed:', error);
                     button.text('Error');
                     button.prop('disabled', false);
-                    $('.overlay').addClass("d-none");
                     $('.download-btn').prop('disabled', false);
                     setTimeout(() => {
                         button.text('Download');
@@ -234,42 +326,3 @@ $(document).ready(function () {
     }
 
 })
-
-// async function buildTable(data) {
-//     // Show loading state
-//     table.addClass('loading');
-//     table.find('tbody').empty().append('<tr><td colspan="100%" class="loading-cell">Loading data...</td></tr>');
-    
-//     try {
-//         const rows = await Promise.all(
-//             data.map(async (row, idx) => {
-//                 const exists = await checkIfExists(row.name, row.source, row.target);
-//                 const rowElement = $('<tr>');
-                
-//                 fields.forEach(header => {
-//                     if (header === "download") {
-//                         rowElement.append(exists ? 
-//                             `<td><button class="download-btn" data-id="${idx}" disabled>Already in library</button></td>` :
-//                             `<td><button class="download-btn" data-id="${idx}" >Download</button></td>`
-//                         );
-//                     } else {
-//                         rowElement.append(`<td>${row[header]}</td>`);
-//                     }
-//                 });
-                
-//                 return rowElement;
-//             })
-//         );
-        
-//         // Hide loading state and update table
-//         table.removeClass('loading');
-//         table.find('tbody').empty().append(rows);
-//     } catch (error) {
-//         // Handle errors gracefully
-//         table.removeClass('loading');
-//         table.find('tbody').empty().append(
-//             `<tr><td colspan="100%" class="error-cell">Failed to load data: ${error.message}</td></tr>`
-//         );
-//         console.error('Error building table:', error);
-//     }
-// }

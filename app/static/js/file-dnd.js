@@ -5,9 +5,11 @@ let FileDnD = (selector, on_file_dragged, body_drag = false) => {
     const notyf = new Notyf();
 
     let on_drop = function (dropped, el) {
+        const className = $(el).attr('class');
+
         let re = /(?:\.([^.]+))?$/;
         let extension = re.exec(dropped.name)[1];
-        if (!acceptedExtensions.includes(extension)) {
+        if (!acceptedExtensions.includes(extension) && className.includes("custom-textarea")) {
             dropped.value = "";
             notyf.error({ message: 'This file extension is not allowed!', duration: 3500, position: { x: "middle", y: "top" } });
             return;

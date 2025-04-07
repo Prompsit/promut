@@ -274,27 +274,18 @@
       <input class="btn btn-primary mb-2" style="margin: auto auto 0 0;height: 34px;" type="submit"
         id="submit-dataset-search" value="Search datasets" />
     </div>
-    <div class="searching-corpora d-none">
-      Searching for datasets in OPUS
+    <div class="searching-corpora d-none text-center mt-4 mb-4">
+      <div class="h1 spinner mr-3">
+        <i class="fas fa-cog"></i>
+      </div>
+      <p class="h4">Searching for datasets in OPUS</p>
     </div>
   </form>
   <div class="datasets-response-table">
     <table id="dataTable" class="table table-bordered w-100"></table>
   </div>
 </div>
-<div class="overlay d-none">
-  <div class="download-spinner d-flex align-items-center justify-content-center w-100 h-100">
-    <div class="h1 spinner mr-3">
-      <i class="fas fa-cog"></i>
-    </div>
-    <div>
-      <p class="h1 mb-0">Downloading dataset...</p>
-      <p class="mb-0 h3">
-        Don't close or leave this page.
-      </p>
-    </div>
-  </div>
-</div>
+
 
 {% endif %}
 <div class="datasets-header mb-4">
@@ -302,8 +293,18 @@
     <i class="fas fa-caret-down header-collapsed-icon-datasets d-none"></i>
   </h2>
 </div>
-<div class="alert alert-info d-none h4" role="alert" id="download-info">
-  Downloading and adding to library... Please wait...
+<div class="alert alert-info d-none" role="alert" id="download-info">
+  <div class="download-spinner d-flex align-items-center justify-content-center w-100 h-100">
+    <div class="h1 spinner mr-3">
+      <i class="fas fa-cog"></i>
+    </div>
+    <div>
+      <p class="h4 mb-0 download-text"></p>
+      <p class="mb-0 h3">
+
+      </p>
+    </div>
+  </div>
 </div>
 <div class="corpora-nav-tabs-container">
   <ul class="nav nav-tabs active corpora-nav-tabs" id="your_corpora">
