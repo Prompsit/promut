@@ -25,8 +25,8 @@ let draw_stacks = (stacks) => {
     $(".btn-start-training").prop(
       "disabled",
       stacks.training.sentences == 0 ||
-        stacks.dev.sentences == 0 ||
-        stacks.test.sentences == 0
+      stacks.dev.sentences == 0 ||
+      stacks.test.sentences == 0
     );
   }
 };
@@ -39,8 +39,8 @@ let sentences_amount = (amount) => {
   return amount < 1000
     ? amount
     : amount < 1000000
-    ? round(amount / 1000) + "k"
-    : round(amount / 1000000) + "m";
+      ? round(amount / 1000) + "k"
+      : round(amount / 1000000) + "m";
 };
 
 let draw_stack = (stacks, tag, container) => {

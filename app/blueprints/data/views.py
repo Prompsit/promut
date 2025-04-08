@@ -206,9 +206,11 @@ from flask import session
 def set_session_data():
     try:
         task_id = request.form.get('task_id')
+        dataset = request.form.get('dataset')
 
         # Store data in session
         session["pending_download"] = task_id
+        session["dataset"] = dataset
         
         return jsonify({ "result": 200})
     except Exception as e:
@@ -219,7 +221,7 @@ def set_session_data():
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def get_session_data():
     try:
-        return jsonify({ "result": 200, "pending_download": session["pending_download"]})
+        return jsonify({ "result": 200, "pending_download": session["pending_download"], "dataset": session["dataset"]})
     except Exception as ex:
         print(ex, flush = True)
         return jsonify({ "result": -1})
