@@ -235,9 +235,8 @@ def train_tokenizer(engine, corpus_id, vocabularySize=32000):
             cat_proc = subprocess.Popen("cat {} | shuf | head -n 10000000 > {}".format(files, random_sample_path), shell=True)
             cat_proc.wait()
 
-            train_proc = subprocess.Popen("spm_train --input={} --model_prefix=mut.{} --vocab_size={} --hard_vocab_limit=false" \
-                            .format(random_sample_path, corpus.id, vocabularySize),
-                            cwd=utils.filepath('TMP_FOLDER'), shell=True)
+            train_proc = subprocess.Popen("{0}/build/spm_train --input={1} --model_prefix=mut.{2} --vocab_size={3} --hard_vocab_limit=false".format(random_sample_path, corpus.id, vocabularySize),
+                                            cwd=utils.filepath('TMP_FOLDER'), shell=True)
             train_proc.wait()
 
             shutil.move(utils.filepath('TMP_FOLDER', "mut.{}.model".format(corpus.id)), model_path)
@@ -250,6 +249,7 @@ def train_tokenizer(engine, corpus_id, vocabularySize=32000):
             os.remove(vocab_path)
             shutil.move("{}.purged".format(vocab_path), vocab_path)
         except Exception as ex:
+            print(ex, flush = True)
             logging.exception("An exception was thrown in TRAIN_TOKENIZER")
 
     return model_path, vocab_path
