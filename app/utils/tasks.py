@@ -189,7 +189,7 @@ def launch_training(self, user_id, engine_path, params):
             # We train a SentencePiece model using the training corpus and we tokenize
             # everything with that. We save the model in the engine folder to tokenize
             # translation input later
-            # data_utils.train_tokenizer(engine, train_corpus_id, params['vocabularySize'])
+            data_utils.train_tokenizer(engine, train_corpus_id, params['vocabularySize'])
             # data_utils.tokenize(train_corpus_id, engine)
             # data_utils.tokenize(dev_corpus_id, engine)
             # data_utils.tokenize(test_corpus_id, engine)
@@ -201,17 +201,6 @@ def launch_training(self, user_id, engine_path, params):
             # set engine model path and create the folder so Marian can use it
             engine.model_path = os.path.join(engine.path, "model")
             os.mkdir(engine.model_path)
-
-            print("########################################", flush=True)
-            print("########################################", flush=True)
-            print("########################################", flush=True)
-
-            print("-- ENGINE PATH: " + engine.path, flush=True)
-            print("-- ENGINE MODEL PATH: " + engine.model_path, flush=True)
-
-            print("########################################", flush=True)
-            print("########################################", flush=True)
-            print("########################################", flush=True)
 
             source_lang = UserLanguage.query.filter_by(
                 code=params["source_lang"], user_id=user_id
@@ -842,8 +831,21 @@ def spl(mt_path, ht_path, source_path):
     if source_path != "":
         src_path = "-s {0}".format(source_path)
 
-    comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl".format(mt_path, src_path, ht_path, mt_path),
-                            shell=True, stdout=subprocess.PIPE)
+    with app.app_context():
+        # for commet calculation, check first if there is an available GPU
+        # if not, then use CPU to calculate it, though it will take a lot longer
+        gpu_id = GPUManager.get_available_device()
+        if gpu_id is not None:
+            device_command = f"-d {gpu_id}"
+
+            comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl {4}".format(mt_path, src_path, ht_path, mt_path, device_command),
+                                    shell=True, stdout=subprocess.PIPE)
+
+            GPUManager.free_device(gpu_id)
+            db.session.commit()
+        else:
+            comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl -c 8".format(mt_path, src_path, ht_path, mt_path),
+                                    shell=True, stdout=subprocess.PIPE)
 
     # Bleu rows
     with open("{}.bpl".format(mt_path), "r") as bl_file:

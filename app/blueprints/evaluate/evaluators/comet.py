@@ -1,5 +1,7 @@
-from app import app
+from app import app, db
 from app.blueprints.evaluate.evaluator import Evaluator
+from app.utils.GPUManager import GPUManager
+from app.utils import user_utils
 
 import subprocess
 
@@ -12,8 +14,20 @@ class Comet(Evaluator):
         if source_path != "":
             src_path = "-s {0}".format(source_path)
         
-        comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} --average only".format(mt_path, src_path, ht_path), 
-                         shell=True, stdout=subprocess.PIPE)
+        with app.app_context():
+            # for commet calculation, check first if there is an available GPU
+            # if not, then use CPU to calculate it, though it will take a lot longer
+            gpu_id = GPUManager.get_available_device()
+            if gpu_id is not None:
+                device_command = f"-d {gpu_id}"
+
+                comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} --average only {3}".format(mt_path, src_path, ht_path, device_command), 
+                                        shell=True, stdout=subprocess.PIPE)
+                GPUManager.free_device(gpu_id)
+                db.session.commit()
+            else:
+                comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} --average only -c 8".format(mt_path, src_path, ht_path), 
+                                        shell=True, stdout=subprocess.PIPE)
         
         score = comet.stdout.decode("utf-8").strip()
 
