@@ -1,5 +1,5 @@
 #!/bin/bash
-PORT=5011
+PORT=5007
 ROOT=/opt/mutnmt
 
 mkdir -p /opt/mutnmt/data
