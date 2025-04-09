@@ -255,3 +255,7 @@ table .error-cell {
 .first-td-users {
   display: flex;
 }
+
+table.dataTable {
+  max-width: 100% !important;
+}

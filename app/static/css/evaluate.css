@@ -97,3 +97,8 @@
   position: absolute;
   top: -4px;
 }
+
+.disabled-link {
+  color: rgb(100, 100, 100);
+  cursor: not-allowed;
+}

@@ -1,5 +1,11 @@
 $(document).ready(function () {
 
+  $(".evaluate-status").attr("data-status", "error");
+  $(".evaluate-form").find("input").prop('disabled', false);
+  $(".evaluate-form").find("input").removeClass("disabled-link");
+  $(".evaluate-form").find("a").on('click');
+  $(".evaluate-form").find("a").removeClass("disabled-link");
+
   let mt_filenames = [];
   let ht_filenames = [];
 
@@ -481,6 +487,8 @@ $(document).ready(function () {
         dom: "tp",
         pageLength: 1,
         responsive: true,
+        autoWidth: false,
+        scrollX: true,
         pagingType: "full",
         drawCallback: function (settings) {
           let api = this.api();
@@ -580,6 +588,14 @@ $(document).ready(function () {
       contentType: false,
       cache: false,
       processData: false,
+      beforeSend: function () {
+        $(".evaluate-form").find("input").prop('disabled', true);
+
+        $(".evaluate-form").find("input").addClass("disabled-link");
+        $(".evaluate-form").find("a").off('click');
+        $(".evaluate-form").find("a").addClass("disabled-link");
+
+      },
       success: function (data) {
         if (data.result == 200) {
           longpoll(
@@ -629,6 +645,10 @@ $(document).ready(function () {
           );
         } else {
           $(".evaluate-status").attr("data-status", "error");
+          $(".evaluate-form").find("input").prop('disabled', false);
+          $(".evaluate-form").find("input").removeClass("disabled-link");
+          $(".evaluate-form").find("a").on('click');
+          $(".evaluate-form").find("a").removeClass("disabled-link");
         }
       },
     });
