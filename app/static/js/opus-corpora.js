@@ -8,7 +8,6 @@ $(document).ready(function () {
         processData: false,
         success: function (response) {
             if (response.pending_download) {
-
                 const id = response.pending_download;
                 const dataset = response.dataset;
                 checkDownloadStatus(id, dataset);
@@ -18,6 +17,26 @@ $(document).ready(function () {
             console.error("Task id not saved")
         }
     });
+
+    // const formData = new FormData();
+    // formData.append("task_id", "");
+    // formData.append("dataset", "");
+
+    // $.ajax({
+    //     url: '/data/set-session-data',
+    //     method: 'POST',
+    //     data: formData,
+    //     contentType: false,
+    //     cache: false,
+    //     processData: false,
+    //     success: function (response) {
+
+
+    //     },
+    //     error: function (xhr, status, error) {
+    //         console.error("Task id not saved")
+    //     }
+    // });
 
     let adjust_languages = (el) => {
         let other = $('.lang_sel_opus').not(el);
@@ -40,6 +59,7 @@ $(document).ready(function () {
 
         const formData = new FormData();
         formData.append("task_id", id)
+        formData.append("dataset", dataset)
         $.ajax({
             url: '/data/check-downloading',
             method: 'POST',
@@ -48,20 +68,16 @@ $(document).ready(function () {
             cache: false,
             processData: false,
             success: function (response) {
-
-                if (response.finished) {
+                if (response.finished === true || response.finished === "True") {
                     const formData = new FormData();
                     formData.append("task_id", "");
                     formData.append("dataset", "");
-
-
                     $('.selected-dataset-download').text('Download');
                     $('.selected-dataset-download').prop('disabled', false);
+                    $('.download-text').text("")
                     $('#download-info').addClass('d-none');
                     $('.download-btn').prop('disabled', false);
                     $(".already-in-library").prop('disabled', true);
-
-                    console.log("Finished downloading")
 
                     $.ajax({
                         url: '/data/set-session-data',
@@ -71,10 +87,7 @@ $(document).ready(function () {
                         cache: false,
                         processData: false,
                         success: function (response) {
-
-                            $('#submit-dataset-search').click();
                             reloadTableData();
-
                         },
                         error: function (xhr, status, error) {
                             console.error("Task id not saved")
@@ -86,8 +99,6 @@ $(document).ready(function () {
                     $('.download-btn').prop('disabled', true);
                     $('.download-text').text(`Downloading ${dataset} and adding it to library. Please wait`);
                     $('#download-info').removeClass('d-none');
-
-
                     setTimeout(() => {
                         checkDownloadStatus(id, dataset);
                     }, 3000);
@@ -173,6 +184,16 @@ $(document).ready(function () {
             processData: false
         }).promise();
     }
+    function reloadTableData(round = 1) {
+        if (round >= 5) {
+            $('#submit-dataset-search').click();
+            return;
+        }
+        setTimeout(() => {
+            $(".corpora-table").dataTable().api().ajax.reload();
+            reloadTableData(round + 1)
+        }, 10000);
+    }
 
 
     async function displayDataTable(dataTableContainer, data) {
@@ -235,19 +256,7 @@ $(document).ready(function () {
         newTable.page('first')
         newTable.draw(false)
 
-        function reloadTableData(round = 1) {
-            console.log("RELOAD FUNCTION BEING CALLED")
-            if (round >= 5) {
-                return;
-            }
-            setTimeout(() => {
-                $(".corpora-table").dataTable().api().ajax.reload();
-                reloadTableData(round + 1)
-            }, 10000);
-        }
-
-
-
+        // Dataset download on btn click
         $('#dataTable').on('click', '.download-btn', function (e) {
             e.stopPropagation();
             e.stopImmediatePropagation();
@@ -259,11 +268,14 @@ $(document).ready(function () {
             const row = button.closest('tr');
             const rowData = newTable.row(row).data();
 
+            const sourceLang = $('.source_lang_search').find('option:selected').text();
+
+            const targetLang = $('.target_lang_search').find('option:selected').text();
+
             let formData = new FormData();
             formData.append("corpus", rowData[0])
             formData.append("source_lang", $(".source_lang_search option:selected").val());
             formData.append("target_lang", $(".target_lang_search option:selected").val());
-
             // Disable button during download
             button.prop('disabled', true);
             button.text('Downloading...');
@@ -285,7 +297,7 @@ $(document).ready(function () {
                         try {
                             const formData = new FormData();
                             formData.append('task_id', response.task_id);
-                            formData.append("dataset", rowData[0]);
+                            formData.append("dataset", `${rowData[0]} ${sourceLang}-${targetLang}`);
                             $.ajax({
                                 url: '/data/set-session-data',
                                 method: 'POST',
@@ -294,7 +306,7 @@ $(document).ready(function () {
                                 cache: false,
                                 processData: false,
                                 success: function (res) {
-                                    checkDownloadStatus(response.task_id, rowData[0]);
+                                    checkDownloadStatus(response.task_id, `${rowData[0]} ${sourceLang}-${targetLang}`);
                                 },
                                 error: function (xhr, status, error) {
                                     console.error("Task id not saved")

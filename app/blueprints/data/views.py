@@ -184,6 +184,9 @@ def download_opus_corpus():
     except Exception as ex:
         print(ex, flush = True)
         return jsonify({ "result": -2})
+    
+
+from celery import Celery
 
 @data_blueprint.route('/check-downloading', methods=['POST'])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
@@ -192,11 +195,40 @@ def check_downloading():
         task_id = request.form.get('task_id')
 
         res = AsyncResult(str(task_id), app=tasks.celery)
+        state = res.state
+        
+        # Check if task exists
+        if state is None:
+            return jsonify({"result": 404})
+
+        # Create celery instance for inspection
+        celery = Celery(app.name, broker=app.config["CELERY_BROKER_URL"], 
+                       backend=app.config["CELERY_RESULT_BACKEND"])
+        
+        # Get active workers and their tasks
+        inspection = celery.control.inspect()
+        active_workers = inspection.active()
+
+        # Check if task is pending but not in active workers
+        if state == 'PENDING':
+            task_in_workers = False
+            for worker_tasks in active_workers.values():
+                for task in worker_tasks:
+                    if task['id'] == task_id:
+                        task_in_workers = True
+                        break
+                if task_in_workers:
+                    break
+            
+            if not task_in_workers:
+                return jsonify({"result": 200, "finished": True})
+
+        # Check if task is finished
         finished = res.ready()
 
         return jsonify({ "result": 200, "finished": finished})
     except Exception as ex:
-        print(ex, flush = True)
+        print(ex, flush=True)
         return jsonify({ "result": -1})
 
 from flask import session
