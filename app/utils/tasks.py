@@ -125,13 +125,13 @@ def launch_training(self, user_id, engine_path, params):
                 db.session.rollback()
                 raise Exception
 
-                # We put the contents of the several files in a new single one, and we shuffle the sentences
-                try:
-                    data_utils.join_corpus_files(corpus, shuffle=True, user_id=user_id)
-                except:
-                    db.session.delete(corpus)
-                    db.session.commit()
-                    raise Exception
+            # We put the contents of the several files in a new single one, and we shuffle the sentences
+            try:
+                data_utils.join_corpus_files(corpus, shuffle=True, user_id=user_id)
+            except:
+                db.session.delete(corpus)
+                db.session.commit()
+                raise Exception
 
             return corpus.id
 
@@ -178,9 +178,7 @@ def launch_training(self, user_id, engine_path, params):
                 engine_id=engine.id,
             )
 
-            train_corpus = (
-                db.session.query(Corpus).filter_by(id=train_corpus_id).first()
-            )
+            train_corpus = db.session.query(Corpus).filter_by(id=train_corpus_id).first()
             dev_corpus = db.session.query(Corpus).filter_by(id=dev_corpus_id).first()
             test_corpus = db.session.query(Corpus).filter_by(id=test_corpus_id).first()
 
@@ -189,7 +187,9 @@ def launch_training(self, user_id, engine_path, params):
             # We train a SentencePiece model using the training corpus and we tokenize
             # everything with that. We save the model in the engine folder to tokenize
             # translation input later
-            data_utils.train_tokenizer(engine, train_corpus_id, params['vocabularySize'])
+
+            #########################data_utils.train_tokenizer(engine, train_corpus_id, params['vocabularySize'])
+
             # data_utils.tokenize(train_corpus_id, engine)
             # data_utils.tokenize(dev_corpus_id, engine)
             # data_utils.tokenize(test_corpus_id, engine)
@@ -277,7 +277,7 @@ def launch_training(self, user_id, engine_path, params):
                         config[set_name] = sets_arr
 
                 except Exception as ex:
-                    logging.exception("An exception was thrown in LINK_FILES")
+                    logging.exception("An exception was thrown in LINK FILES")
 
             # link set files and insert in config file
             link_files(train_corpus, "train")
