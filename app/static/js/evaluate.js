@@ -1,13 +1,10 @@
 $(document).ready(function () {
 
-  $(".evaluate-status").attr("data-status", "error");
-  $(".evaluate-form").find("input").prop('disabled', false);
-  $(".evaluate-form").find("input").removeClass("disabled-link");
-  $(".evaluate-form").find("a").on('click');
-  $(".evaluate-form").find("a").removeClass("disabled-link");
+
 
   let mt_filenames = [];
   let ht_filenames = [];
+
 
   $(".add-mt-btn").on("click", function () {
     let index = $(".mt_file").length + 1;
