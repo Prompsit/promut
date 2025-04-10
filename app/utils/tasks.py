@@ -293,8 +293,8 @@ def launch_training(self, user_id, engine_path, params):
             )
             
             # use these paths if only sentencepiece model is wanted
-            #src_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
-            #trg_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
+            src_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
+            trg_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
 
             # set vocabulary paths and dimensions, setting paths
             # so marian can automatically train a sentencepiece tokenizer
