@@ -14,6 +14,9 @@
 
 {% block content %}
 
+
+
+{% if not is_admin() and not is_researcher()%}
 <div class="alert alert-warning alert-dismissible fade show" role="alert">
   <strong>Beginner users cannot train engines</strong>
   <br />
@@ -24,6 +27,7 @@
     <span aria-hidden="true">&times;</span>
   </button>
 </div>
+{%endif%}
 
 <h2 class="h5">Train a neural engine</h2>
 

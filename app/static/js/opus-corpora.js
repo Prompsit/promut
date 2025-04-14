@@ -87,7 +87,8 @@ $(document).ready(function () {
                         cache: false,
                         processData: false,
                         success: function (response) {
-                            reloadTableData();
+                            // reloadTableData();
+                            location.reload();
                         },
                         error: function (xhr, status, error) {
                             console.error("Task id not saved")
@@ -184,16 +185,16 @@ $(document).ready(function () {
             processData: false
         }).promise();
     }
-    function reloadTableData(round = 1) {
-        if (round >= 5) {
-            $('#submit-dataset-search').click();
-            return;
-        }
-        setTimeout(() => {
-            $(".corpora-table").dataTable().api().ajax.reload();
-            reloadTableData(round + 1)
-        }, 10000);
-    }
+    // function reloadTableData(round = 1) {
+    //     if (round >= 5) {
+    //         $('#submit-dataset-search').click();
+    //         return;
+    //     }
+    //     setTimeout(() => {
+    //         $(".corpora-table").dataTable().api().ajax.reload();
+    //         reloadTableData(round + 1)
+    //     }, 10000);
+    // }
 
 
     async function displayDataTable(dataTableContainer, data) {

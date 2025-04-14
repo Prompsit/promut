@@ -1,66 +1,16 @@
 $(document).ready(function () {
     let engine_id = $("#engine_id").val();
     let engine_stopped = undefined;
-    // const interval = 1000;
-
-    // var sec = 0;
-
-    // let setupTimer = (el) => {
-    //     let trainingStart = parseInt($(el).attr("data-started")) * 1000;
-
-    //     let trainingTimeAllocated = parseInt($(el).attr("data-minutes")) * 60;
-
-    //     const now = Date.now()
-
-    //     let currentTime = (trainingStart - now) + sec;
-
-    //     console.log(currentTime)
-
-
-    //     function pad(val) { return val > 9 ? val : "0" + val; }
-
-    //     $(el).html(`${pad(parseInt(currentTime / 3600, 10))}:${pad(parseInt(currentTime / 60, 10) % 60)}:${pad(+currentTime % 60)}`)
-
-
-    //     if (trainingStart + sec >= trainingStart + trainingTimeAllocated) {
-    //         window.clearInterval(intervalID)
-    //     }
-    // }
-
-
-    // const intervalID = self.setInterval(() => {
-    //     sec += 1;
-    //     setupTimer($(".time-left"))
-    // }
-    //     , interval);
-
-    // const interval = 1000;
-
-    // let setupTimer = (el) => {
-    //     let timestamp = parseInt($(el).attr("data-started"));
-    //     let begin = moment();
-    //     let end = moment.unix(timestamp).add($(el).attr("data-minutes"), 'minutes');
-    //     let duration = moment.duration(begin.diff(end))
-
-    //     $(el).html(moment.utc(duration.asMilliseconds()).format("hh:mm:ss"))
-    // }
-
-    // $(".time-left").each(function (i, el) {
-    //     setupTimer(el)
-    //     setInterval(() => {
-    //         setupTimer(el)
-    //     }, interval);
-    // });
-
     const interval = 1000;
 
     let setupTimer = (el) => {
         let timestamp = parseInt($(el).attr("data-started"));
-        let begin = moment.utc();  // Use UTC time
-        let end = moment.unix(timestamp).utc();  // Keep in UTC
-        let duration = moment.duration(begin.diff(end));
+        let begin = moment.unix(timestamp);
+        let now = moment();
 
-        $(el).html(moment.utc(duration.asMilliseconds()).format("hh:mm:ss"))
+        let duration = moment.duration(now.diff(begin))
+
+        $(el).html(moment.utc(duration.asMilliseconds()).format("HH:mm:ss"))
     }
 
     $(".time-left").each(function (i, el) {
