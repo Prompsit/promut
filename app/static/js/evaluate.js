@@ -1,7 +1,10 @@
 $(document).ready(function () {
 
+
+
   let mt_filenames = [];
   let ht_filenames = [];
+
 
   $(".add-mt-btn").on("click", function () {
     let index = $(".mt_file").length + 1;

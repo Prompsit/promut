@@ -96,6 +96,8 @@ def launch_status():
             return jsonify({ "result": -2 })
     else:
         return jsonify({ "result": -1 })
+    
+import pytz    
 
 @train_blueprint.route('/launch', methods=['POST'])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
@@ -120,7 +122,7 @@ def train_console(id):
     except:
         pass
 
-    launched = datetime.datetime.timestamp(engine.launched)
+    launched = engine.launched.astimezone(pytz.UTC).timestamp()
     finished = datetime.datetime.timestamp(engine.finished) if engine.finished else None
 
     corpora_raw = Corpus_Engine.query.filter_by(engine_id = engine.id, is_info = True).all()
