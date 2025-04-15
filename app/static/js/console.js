@@ -7,7 +7,7 @@ $(document).ready(function () {
     let setupTimer = (el) => {
         let elapsed = parseInt($(el).attr("data-elapsed"))
 
-        let time = elapsed + sec;
+        let time = elapsed ? elapsed + sec : sec;
 
         function pad(val) { return val > 9 ? val : "0" + val; }
 
@@ -17,8 +17,6 @@ $(document).ready(function () {
 
         $(el).html(`${hours}:${min}:${seconds}`)
         sec++;
-
-
 
     }
     $(".time-left").each(function (i, el) {
