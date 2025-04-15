@@ -235,7 +235,7 @@ def train_tokenizer(engine, corpus_id, vocabularySize=32000):
             cat_proc = subprocess.Popen("cat {} | shuf | head -n 10000000 > {}".format(files, random_sample_path), shell=True)
             cat_proc.wait()
 
-            train_proc = subprocess.Popen("{0}/build/spm_train --input={1} --model_prefix=mut.{2} --vocab_size={3} --hard_vocab_limit=false".format(random_sample_path, corpus.id, vocabularySize),
+            train_proc = subprocess.Popen("{0}/build/spm_train --input={1} --model_prefix=mut.{2} --vocab_size={3} --hard_vocab_limit=false".format(app.config["MARIAN_FOLDER"], random_sample_path, corpus.id, vocabularySize),
                                             cwd=utils.filepath('TMP_FOLDER'), shell=True)
             train_proc.wait()
 

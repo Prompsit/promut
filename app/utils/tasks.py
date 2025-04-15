@@ -188,7 +188,7 @@ def launch_training(self, user_id, engine_path, params):
             # everything with that. We save the model in the engine folder to tokenize
             # translation input later
 
-            #########################data_utils.train_tokenizer(engine, train_corpus_id, params['vocabularySize'])
+            #data_utils.train_tokenizer(engine, train_corpus_id, params['vocabularySize'])
 
             # data_utils.tokenize(train_corpus_id, engine)
             # data_utils.tokenize(dev_corpus_id, engine)
