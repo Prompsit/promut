@@ -159,7 +159,7 @@
       {% else %}
       <div class="h2 mt-3 mb-0">
         <span class="time-left" data-started="{{ launched }}" data-minutes="{{600 if is_admin() or is_researcher() else
-          120 }}"></span>
+          120 }}" data-elapsed='{{ elapsed }}'></span>
       </div>
       {% endif %}
 

@@ -381,6 +381,8 @@ def train_stats():
         "data": data
     })
 
+    
+
 @train_blueprint.route('/log', methods=["POST"])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def train_log():
