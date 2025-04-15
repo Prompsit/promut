@@ -1,24 +1,35 @@
 $(document).ready(function () {
     let engine_id = $("#engine_id").val();
     let engine_stopped = undefined;
+    let sec = 0;
+
     const interval = 1000;
-
     let setupTimer = (el) => {
-        let timestamp = parseInt($(el).attr("data-started"));
-        let begin = moment.unix(timestamp);
-        let now = moment();
+        let elapsed = parseInt($(el).attr("data-elapsed"))
 
-        let duration = moment.duration(now.diff(begin))
+        let time = elapsed + sec;
 
-        $(el).html(moment.utc(duration.asMilliseconds()).format("HH:mm:ss"))
+        function pad(val) { return val > 9 ? val : "0" + val; }
+
+        let seconds = pad(parseInt(time % 60));
+        let min = pad(parseInt(time / 60, 10) % 60);
+        let hours = pad(parseInt(time / 3600, 10));
+
+        $(el).html(`${hours}:${min}:${seconds}`)
+        sec++;
+
+
+
     }
-
     $(".time-left").each(function (i, el) {
         setupTimer(el)
         setInterval(() => {
+
             setupTimer(el)
         }, interval);
     });
+
+
 
 
     let make_chart = (element, chart_data) => {
