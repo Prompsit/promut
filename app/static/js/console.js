@@ -3,49 +3,49 @@ $(document).ready(function () {
     let engine_stopped = undefined;
     let sec = 0;
 
-    // const interval = 1000;
-    // let setupTimer = (el) => {
-    //     let elapsed = parseInt($(el).attr("data-elapsed"))
-
-    //     let time = elapsed ? elapsed + sec : sec;
-
-    //     function pad(val) { return val > 9 ? val : "0" + val; }
-
-    //     let seconds = pad(parseInt(time % 60));
-    //     let min = pad(parseInt(time / 60, 10) % 60);
-    //     let hours = pad(parseInt(time / 3600, 10));
-
-    //     $(el).html(`${hours}:${min}:${seconds}`)
-    //     sec++;
-
-    // }
-    // $(".time-left").each(function (i, el) {
-    //     setupTimer(el)
-    //     setInterval(() => {
-
-    //         setupTimer(el)
-    //     }, interval);
-    // });
-
-
     const interval = 1000;
-
     let setupTimer = (el) => {
-        let timestamp = parseInt($(el).attr("data-started"));
-        let begin = moment();
-        let end = moment.unix(timestamp);
-        end = end.add(2, 'hours');
-        let duration = moment.duration(begin.diff(end))
+        let elapsed = parseInt($(el).attr("data-elapsed"))
 
-        $(el).html(moment.utc(duration.asMilliseconds()).format("HH:mm:ss"))
+        let time = elapsed ? elapsed + sec : sec;
+
+        function pad(val) { return val > 9 ? val : "0" + val; }
+
+        let seconds = pad(parseInt(time % 60));
+        let min = pad(parseInt(time / 60, 10) % 60);
+        let hours = pad(parseInt(time / 3600, 10));
+
+        $(el).html(`${hours}:${min}:${seconds}`)
+        sec++;
+
     }
-
     $(".time-left").each(function (i, el) {
         setupTimer(el)
         setInterval(() => {
+
             setupTimer(el)
         }, interval);
     });
+
+
+    // const interval = 1000;
+
+    // let setupTimer = (el) => {
+    //     let timestamp = parseInt($(el).attr("data-started"));
+    //     let begin = moment();
+    //     let end = moment.unix(timestamp);
+    //     end = end.add(2, 'hours');
+    //     let duration = moment.duration(begin.diff(end))
+
+    //     $(el).html(moment.utc(duration.asMilliseconds()).format("HH:mm:ss"))
+    // }
+
+    // $(".time-left").each(function (i, el) {
+    //     setupTimer(el)
+    //     setInterval(() => {
+    //         setupTimer(el)
+    //     }, interval);
+    // });
 
 
 
