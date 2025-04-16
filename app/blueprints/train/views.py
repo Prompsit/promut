@@ -353,10 +353,6 @@ def train_stats():
     else:
         time_elapsed_format = "—"
 
-    print("---------------------------------------", flush = True)
-    print(f"- VIEWS ELAPSED: {time_elapsed_format}", flush = True)
-    print("---------------------------------------", flush = True)
-
     data = {
         "time_elapsed": time_elapsed_format,
         "tps": tps_value,
