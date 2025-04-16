@@ -198,7 +198,7 @@ $(document).ready(function () {
             (100 * (value > max ? max : value < min ? min : value)) /
             proportion;
 
-          $(template).find(".metric-name").html(_eval.name);
+          $(template).find(".metric-name").html(_eval.name.toUpperCase());
           $(template).find(".metric-value").html(value);
           $(template)
             .find(".metric-indicator")
