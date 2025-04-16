@@ -486,14 +486,15 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
                         # training process finished (or died) before timeout
                         db.session.refresh(engine)
                         if (engine.status != "stopped" and engine.status != "stopped_admin"):
-                            Trainer.stop(engine_id)
+                            Trainer.stop(engine_id, calculate_elapsed = True)
+
                         GPUManager.free_device(gpu_id)
                         refresh_full_graph_log(engine.path)
                         return
 
                 if marian_process.poll() is None:
                     refresh_full_graph_log(engine.path)
-                    Trainer.stop(engine_id)
+                    Trainer.stop(engine_id, calculate_elapsed = True)
 
             except Exception as ex:
                 logging.exception("An exception was thrown in TRAIN_ENGINE!")

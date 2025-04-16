@@ -47,7 +47,7 @@ class Trainer(object):
         db.session.commit()
 
     @staticmethod
-    def stop(id, user_stop=False, admin_stop=False):
+    def stop(id, user_stop=False, admin_stop=False, calculate_elapsed = False):
         engine = Engine.query.filter_by(id = id).first()
 
         Trainer.finish(engine)
@@ -56,9 +56,10 @@ class Trainer(object):
         engine.finished = datetime.datetime.utcnow().replace(tzinfo=None)
         
         # Save engine runtime
-        launched = datetime.datetime.timestamp(engine.launched)
-        finished = datetime.datetime.timestamp(engine.finished) if engine.finished else None
-        elapsed = (finished - launched) + (engine.runtime if engine.runtime else 0)
-        engine.runtime = elapsed
+        if calculate_elapsed:
+            launched = datetime.datetime.timestamp(engine.launched)
+            finished = datetime.datetime.timestamp(engine.finished) if engine.finished else None
+            elapsed = (finished - launched) + (engine.runtime if engine.runtime else 0)
+            engine.runtime = elapsed
 
         db.session.commit()

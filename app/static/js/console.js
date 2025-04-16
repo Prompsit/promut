@@ -5,19 +5,15 @@ $(document).ready(function () {
 
     const interval = 1000;
     let setupTimer = (el) => {
-        let elapsed = parseInt($(el).attr("data-elapsed"))
+        let elapsed = parseInt($(el).attr("data-elapsed"));
+        let timestamp = parseInt($(el).attr("data-started"));
+        let now = moment();
+        let start = moment.unix(timestamp);
+        start = start.add(2, 'hours');
+        let duration = moment.duration(now.diff(start)).add(elapsed, "seconds")
 
-        let time = elapsed ? elapsed + sec : sec;
 
-        function pad(val) { return val > 9 ? val : "0" + val; }
-
-        let seconds = pad(parseInt(time % 60));
-        let min = pad(parseInt(time / 60, 10) % 60);
-        let hours = pad(parseInt(time / 3600, 10));
-
-        $(el).html(`${hours}:${min}:${seconds}`)
-        sec++;
-
+        $(el).html(moment.utc(duration.asMilliseconds()).format("HH:mm:ss"))
     }
     $(".time-left").each(function (i, el) {
         setupTimer(el)
