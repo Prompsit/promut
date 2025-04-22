@@ -1,8 +1,8 @@
 #!/bin/bash
 FLAGS=
 MODE=$1
-PORT="${2:-5007}"
-IMAGE="${3:-mutnmt_tudor:latest}"
+PORT="${2:-5010}"
+IMAGE="${3:-mutnmt_demo:latest}"
 
 if [ $MODE = "cuda" ]
 then
@@ -14,8 +14,8 @@ echo "Running MutNMT (mode: $MODE) with FLAGS=$FLAGS and IMAGE=$IMAGE on port $P
 docker run \
 $FLAGS \
 -d \
---name mutnmt_tudor \
--p $PORT:5007 \
+--name mutnmt_demo \
+-p $PORT:5010 \
 -e DEBUG=1 \
 -v $(pwd)/app:/opt/mutnmt/app \
 -v $(pwd)/data:/opt/mutnmt/data \
