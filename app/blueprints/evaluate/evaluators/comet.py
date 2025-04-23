@@ -21,7 +21,7 @@ class Comet(Evaluator):
             if gpu_id is not None:
                 device_command = f"-d {gpu_id}"
 
-                comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} --average only {3}".format(mt_path, src_path, ht_path, device_command), 
+                comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} --average only {3} --workspace 6000".format(mt_path, src_path, ht_path, device_command), 
                                         shell=True, stdout=subprocess.PIPE)
                 GPUManager.free_device(gpu_id)
                 db.session.commit()

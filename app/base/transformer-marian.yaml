@@ -9,19 +9,19 @@ after: 4e
 early-stopping: 5
 
 seed: 42
-workspace: 8000
+workspace: 6000
 shuffle-in-ram: true # speed up shuffling, may eat all the ram when using very big training files
 
 quiet-translation: true
 overwrite: True
 keep-best: True
- 
-mini-batch: 32
+
+mini-batch: 16
 mini-batch-fit: True
 max-length: 128
 
 valid-freq: 1000
-valid-mini-batch: 32
+valid-mini-batch: 16
 valid-max-length: 128
 
 save-freq: 1000
