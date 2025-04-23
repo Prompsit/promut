@@ -173,8 +173,8 @@ $(document).ready(function () {
     function checkIfExists(name, src, trg) {
         const formData = new FormData();
         formData.append("corpus_name", name);
-        formData.append("source_lang", src);
-        formData.append("target_lang", trg);
+        formData.append("source_lang", $(".source_lang_search option:selected").val());
+        formData.append("target_lang", $(".target_lang_search option:selected").val());
 
         return $.ajax({
             url: '/data/check-opus-corpus',
