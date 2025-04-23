@@ -1,7 +1,7 @@
 class ToursCollection(object):
     tours = {
         'library/corpora': {
-            'tour_title': 'Welcome to MutNMT. Let\'s get started by grabbing a public dataset or uploading a new one. Datasets will be used to train NMT engines.'
+            'tour_title': 'Welcome to Promut. Let\'s get started by grabbing a public dataset or uploading a new one. Datasets will be used to train NMT engines.'
         },
         'library/engines': {
             'tour_title': 'You are in the Engines section now. Here, you can grab public engines or see your own, once you complete a training. Engines in your list will be used in Translate and Inspect sections.'
@@ -27,32 +27,32 @@ class ToursCollection(object):
                 {
                     'element': 'epochsText',
                     'title': 'Duration',
-                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 7 and 10 epochs in MutNMT.'
+                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 7 and 10 epochs in Promut.'
                 },
                 {
                     'element': 'patienceGroup',
                     'title': 'Stopping condition',
-                    'description': 'Your engine will stop if it does not improve after a set amount of validations. Our tip for MutNMT is to set it between 3 and 5. You can also stop the engine manually at any time.'
+                    'description': 'Your engine will stop if it does not improve after a set amount of validations. Our tip for Promut is to set it between 3 and 5. You can also stop the engine manually at any time.'
                 },
                 {
                     'element': 'validationFreq',
                     'title': 'Validation frequency',
-                    'description': 'The amount of steps included before an evaluation of the status of the training takes place. Validation cycles happen many times inside an epoch. A validation every 3000 and 9000 steps is what we recommend for MutNMT.'
+                    'description': 'The amount of steps included before an evaluation of the status of the training takes place. Validation cycles happen many times inside an epoch. A validation every 3000 and 9000 steps is what we recommend for Promut.'
                 },
                 {
                     'element': 'vocabularySizeGroup',
                     'title': 'Vocabulary size',
-                    'description': 'The amount of words in the vocabulary is known as the vocabulary size. Set it between 16000 and 32000 (sub-)words in MutNMT.'
+                    'description': 'The amount of words in the vocabulary is known as the vocabulary size. Set it between 16000 and 32000 (sub-)words in Promut.'
                 },
                 {
                     'element': 'batchSizeTxt',
                     'title': 'Batch size',
-                    'description': 'The amount of tokens processed in each step is known as the batch size. This is needed because it is not possible to give the full amount of data in the training set to the neural network at once. Try with batch sizes between 6000 and 9000 tokens with MutNMT.'
+                    'description': 'The amount of tokens processed in each step is known as the batch size. This is needed because it is not possible to give the full amount of data in the training set to the neural network at once. Try with batch sizes between 6000 and 9000 tokens with Promut.'
                 },
                 {
                     'element': 'beamSizeTxt',
                     'title': 'Beam size',
-                    'description': 'Number of translation hypothesis taken into account when translating a word. Set it between 6 to 8 in MutNMT.'
+                    'description': 'Number of translation hypothesis taken into account when translating a word. Set it between 6 to 8 in Promut.'
                 },
                 {
                     'element': 'corpus-selector',
