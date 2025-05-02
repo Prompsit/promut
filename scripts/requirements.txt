@@ -31,3 +31,5 @@ pymarian
 chardet
 numpy==1.26.4
 pytz
+iso639-lang==2.6.0 
+
