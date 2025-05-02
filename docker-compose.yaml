@@ -1,12 +1,12 @@
 version: '3.1'
 
 services:
-    mutnmt_demo:
-        container_name: mutnmt_demo
-        image: mutnmt_demo:latest
+    mutnmt_tudor:
+        container_name: mutnmt_tudor
+        image: mutnmt_tudor:latest
         build: .
         ports:
-            - "8090:5010"
+            - "8087:5007"
         environment: 
             DEBUG: 1
             CREDENTIALS_USERNAME: admin
@@ -20,9 +20,9 @@ services:
                 reservations:
                     devices:
                         - driver: nvidia
-                          count: all
+                          device_ids: ['0']
                           capabilities: [gpu, utility, compute]
 
 networks:
   default:
-    name: mutnmt_demo
+    name: mutnmt_tudor
