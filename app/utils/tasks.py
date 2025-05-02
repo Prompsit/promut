@@ -188,7 +188,7 @@ def launch_training(self, user_id, engine_path, params):
             # everything with that. We save the model in the engine folder to tokenize
             # translation input later
 
-            #data_utils.train_tokenizer(engine, train_corpus_id, params['vocabularySize'])
+            data_utils.train_tokenizer(engine, train_corpus_id, params['vocabularySize'])
 
             # data_utils.tokenize(train_corpus_id, engine)
             # data_utils.tokenize(dev_corpus_id, engine)
@@ -284,6 +284,7 @@ def launch_training(self, user_id, engine_path, params):
             link_files(dev_corpus, "valid")
             link_files(test_corpus, "test")
 
+            ######################################################################################################
             # call marian-vocab to create vocabulary files
             src_vocab_path, trg_vocab_path = data_utils.marian_vocab(
                 engine,
@@ -295,6 +296,7 @@ def launch_training(self, user_id, engine_path, params):
             # use these paths if only sentencepiece model is wanted
             src_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
             trg_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
+            ######################################################################################################
 
             # set vocabulary paths and dimensions, setting paths
             # so marian can automatically train a sentencepiece tokenizer
