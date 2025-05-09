@@ -531,6 +531,7 @@ def _validate_and_convert_langs(src_lang, trg_lang):
         raise ValueError("Languages are not valid")
     
 @library_blueprint.route("/get-model", methods=["POST"])
+@utils.condec(login_required, user_utils.isUserLoginEnabled()) 
 def get_model():
     """Get info and download link for an OPUS model given a source and target language."""
     src_lang = request.form.get("source_lang")
@@ -543,6 +544,7 @@ def get_model():
         return jsonify({"result": -1, "info": str(e)})
 
 @library_blueprint.route("/download-model", methods=["POST"])
+@utils.condec(login_required, user_utils.isUserLoginEnabled()) 
 def download_model():
     """Download an OPUS model given a source and target language.
     
