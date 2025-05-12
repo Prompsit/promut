@@ -13,7 +13,7 @@ import glob
 import subprocess
 
 class FileTranslation:
-    def __init__(self, translator):
+    def __init__(self, translator, engine_path = None):
         self.format_mappings = {
             ".pptx": r'.*(slide(s*))$',
             ".docx": r'.*(document.xml)$',
@@ -29,6 +29,7 @@ class FileTranslation:
         self.sentences = {}
 
         self.translator = translator
+        self.engine_path = engine_path
 
     def norm_extension(self, extension):
         if extension in [".ppt", ".doc", ".xls"]:
@@ -41,7 +42,8 @@ class FileTranslation:
     def line(self, text):
         if text.strip() != "":
             # line_tok = self.tokenizer.tokenize(text)
-            return self.translator.translate([text])[0]
+            line = self.translator.translate([text], engine_path = self.engine_path, use_opus_way = True)
+            return line[0]
             # return self.tokenizer.detokenize(translation)
         else:
             return ""
@@ -52,7 +54,7 @@ class FileTranslation:
             translated_path = '{}.translated'.format(file_path)
             
             # translate the whole freaking file
-            self.translator.translate_file(file_path, translated_path, n_best = False)
+            self.translator.translate_file(file_path, translated_path, n_best = False, engine_path = self.engine_path, use_opus_way = True)
 
             # write source and target lines to tmx if it's wanted
             with open(file_path, 'r') as source, open(translated_path, 'r') as target:

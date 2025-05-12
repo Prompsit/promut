@@ -189,7 +189,7 @@ def join_corpus_files(corpus, shuffle=False, user_id=None):
 
     return corpus
 
-def marian_vocab(engine, src_lang, trg_lang, vocabularySize=32000):
+def marian_vocab(engine, src_lang, trg_lang, vocabularySize = 32000, use_opus_way = False):
     vocab_src_path = os.path.join(engine.path, f'vocab.{src_lang}.yml')
     vocab_trg_path = os.path.join(engine.path, f'vocab.{trg_lang}.yml')
 
@@ -198,31 +198,43 @@ def marian_vocab(engine, src_lang, trg_lang, vocabularySize=32000):
         os.stat(vocab_trg_path)
     except:
         try:
-    
             train_src_path = os.path.join(engine.path, f'train.{src_lang}')
             train_trg_path = os.path.join(engine.path, f'train.{trg_lang}')
 
-            # call Marian command for creating vocabularies from train splits
-            # src
-            marian_cmd = "{0}/build/marian-vocab < {1} > {2}".format(app.config["MARIAN_FOLDER"], train_src_path, vocab_src_path)
-            vocab_src = subprocess.run(marian_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            
-            # trg
-            marian_cmd = "{0}/build/marian-vocab < {1} > {2}".format(app.config["MARIAN_FOLDER"], train_trg_path, vocab_trg_path)
-            vocab_trg = subprocess.run(marian_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if use_opus_way:
+                # call Marian command for creating vocabularies from train splits - the opus way
+                # this is: by concatenating the training splits, and obtaining a single vocab file from them
+                # there shouldn't be a need to 'shuf' the concatenated data, as marian-vocab takes the most used tokens
+
+                marian_cmd = "cat {0} {1} | {2}/build/marian-vocab -m {3} > {4}".format(train_src_path, train_trg_path, app.config["MARIAN_FOLDER"], vocabularySize, vocab_src_path)
+                vocab_src = subprocess.run(marian_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                vocab_trg_path = vocab_src_path
+
+            else:
+                # call Marian command for creating vocabularies from train splits
+                # src
+                marian_cmd = "{0}/build/marian-vocab -m {1} < {2} > {3}".format(app.config["MARIAN_FOLDER"], vocabularySize, train_src_path, vocab_src_path)
+                vocab_src = subprocess.run(marian_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                
+                # trg
+                marian_cmd = "{0}/build/marian-vocab -m {1} < {2} > {3}".format(app.config["MARIAN_FOLDER"], vocabularySize, train_trg_path, vocab_trg_path)
+                vocab_trg = subprocess.run(marian_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             
         except Exception as ex:
             logging.exception("An exception was thrown in MARIAN_VOCAB")
 
     return vocab_src_path, vocab_trg_path
 
-def train_tokenizer(engine, corpus_id, vocabularySize=32000):
-    model_path = os.path.join(engine.path, 'train.model')
-    vocab_path = os.path.join(engine.path, 'train.vocab')
+def train_tokenizer(engine, corpus_id, src_lang, trg_lang, vocabularySize=32000):
+    src_spm_model_path = os.path.join(engine.path, 'source.spm')
+    trg_spm_model_path = os.path.join(engine.path, 'target.spm')
+
+    src_vocab_path = os.path.join(engine.path, f'vocab_SPM_UNUSED.{src_lang}.yaml')
 
     try:
-        os.stat(model_path)
-        os.stat(vocab_path)
+        os.stat(src_spm_model_path)
+        os.stat(trg_spm_model_path)
+        os.stat(src_vocab_path)
     except:
         try:
             corpus = db.session.query(Corpus).filter_by(id=corpus_id).first()
@@ -243,24 +255,23 @@ def train_tokenizer(engine, corpus_id, vocabularySize=32000):
                 print(spm_proc.stderr, flush = True)
                 print("--------", flush = True)
 
-            shutil.move(utils.filepath('TMP_FOLDER', "mut.{}.model".format(corpus.id)), model_path)
-            shutil.move(utils.filepath('TMP_FOLDER', "mut.{}.vocab".format(corpus.id)), vocab_path)
+            shutil.move(utils.filepath('TMP_FOLDER', "mut.{}.model".format(corpus.id)), src_spm_model_path)
+            shutil.copy(src_spm_model_path, trg_spm_model_path)
+            shutil.move(utils.filepath('TMP_FOLDER', "mut.{}.vocab".format(corpus.id)), src_vocab_path)
             os.remove(random_sample_path)
             
-            purge_vocab = subprocess.Popen("cat {} | awk -F '\\t' '{{ print $1 }}' > {}.purged".format(vocab_path, vocab_path), shell=True)
+            purge_vocab = subprocess.Popen("cat {} | awk -F '\\t' '{{ print $1 }}' > {}.purged".format(src_vocab_path, src_vocab_path), shell=True)
             purge_vocab.wait()
 
-            os.remove(vocab_path)
-            shutil.move("{}.purged".format(vocab_path), vocab_path)
+            os.remove(src_vocab_path)
+            shutil.move("{}.purged".format(src_vocab_path), src_vocab_path)
         except Exception as ex:
             print(ex, flush = True)
             logging.exception("An exception was thrown in TRAIN_TOKENIZER")
 
-    return model_path, vocab_path
+    return src_spm_model_path, trg_spm_model_path, src_vocab_path
 
-def tokenize(corpus_id, engine):
-    model_path, vocab_path = os.path.join(engine.path, 'train.model'), os.path.join(engine.path, 'train.vocab')
-
+def tokenize(corpus_id, engine, use_opus_way = False):
     corpus = db.session.query(Corpus).filter_by(id=corpus_id).first()
 
     for entry_file in corpus.corpus_files:
@@ -269,13 +280,33 @@ def tokenize(corpus_id, engine):
         try:
             os.stat(file_tok_path)
         except:
-            sp = spm.SentencePieceProcessor()
-            sp.Load(model_path)
-            with open(file_tok_path, 'w+') as file_tok:
-                with open(entry_file.file.path) as file:
-                    for line in file:
-                        line_encoded = sp.EncodeAsPieces(line)
-                        print(" ".join(line_encoded), file=file_tok)
+            if use_opus_way:
+                # preprocess.sh spmodel cmake_dir < input > output
+                preprocess_script_path = os.path.join(app.config["BASE_CONFIG_FOLDER"], "opus_preprocess.sh")
+                spm_model_path = os.path.join(engine.path, 'source.spm')
+                spm_script_path = os.path.join(app.config["MARIAN_FOLDER"], "build/spm_encode")
+                
+                preprocess_cmd = "{0} {1} {2} < {3} > {4}".format(preprocess_script_path, spm_model_path, spm_script_path, entry_file.file.path, file_tok_path)
+                preprocessing_proc = subprocess.run(preprocess_cmd, cwd=utils.filepath('TMP_FOLDER'), shell=True, capture_output=True)
+
+                if preprocessing_proc.returncode != 0:
+                    print("- SPM TOKENIZATION ERROR:", flush = True)
+                    print(preprocessing_proc.stderr, flush = True)
+                    print("--------", flush = True)
+                    raise Exception
+                
+                #vocab_src = subprocess.run(marian_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                #vocab_trg_path = vocab_src_path
+            else:
+                model_path, vocab_path = os.path.join(engine.path, 'train.model'), os.path.join(engine.path, 'train.vocab')
+
+                sp = spm.SentencePieceProcessor()
+                sp.Load(model_path)
+                with open(file_tok_path, 'w+') as file_tok:
+                    with open(entry_file.file.path) as file:
+                        for line in file:
+                            line_encoded = sp.EncodeAsPieces(line)
+                            print(" ".join(line_encoded), file=file_tok)
 
 
 def convert_file_to_utf8(path):

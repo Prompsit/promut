@@ -182,18 +182,9 @@ def launch_training(self, user_id, engine_path, params):
             dev_corpus = db.session.query(Corpus).filter_by(id=dev_corpus_id).first()
             test_corpus = db.session.query(Corpus).filter_by(id=test_corpus_id).first()
 
-            #######
-            # this whole section is unneeded for Marian - commented for now - delete later
-            # We train a SentencePiece model using the training corpus and we tokenize
-            # everything with that. We save the model in the engine folder to tokenize
-            # translation input later
-
-            data_utils.train_tokenizer(engine, train_corpus_id, params['vocabularySize'])
-
-            # data_utils.tokenize(train_corpus_id, engine)
-            # data_utils.tokenize(dev_corpus_id, engine)
-            # data_utils.tokenize(test_corpus_id, engine)
-            #######
+            # We train a SentencePiece model to be used when OPUS handling way is wanted
+            if app.config['USE_OPUS_HANDLING']:
+                _, _, tokenizer_src_path = data_utils.train_tokenizer(engine, train_corpus_id, params["source_lang"], params["target_lang"], params['vocabularySize'])
 
             engine.name = params["nameText"]
             engine.description = params["descriptionText"]
@@ -263,13 +254,18 @@ def launch_training(self, user_id, engine_path, params):
                                 else params["target_lang"]
                             ),
                         )
-                        split_path = str(os.path.join(engine.path, split_name))
 
-                        # link corpus path to split path
-                        corpus_path = file_entry.file.path
-                        os.link(corpus_path, split_path)
+                        # link raw corpus path to raw split path
+                        corpus_path_raw = file_entry.file.path
+                        split_path_raw = str(os.path.join(engine.path, split_name)) + ".raw"
+                        os.link(corpus_path_raw, split_path_raw)
 
-                        sets_arr.append(split_path)
+                        # link preprocessed corpus path to preprocessed split path
+                        corpus_path_pre = file_entry.file.path + ".mut.spe"
+                        split_path_pre = str(os.path.join(engine.path, split_name))
+                        os.link(corpus_path_pre, split_path_pre)
+
+                        sets_arr.append(split_path_pre)
 
                     # insert it to configs in Marian style for train and valid sets, e.g. "train-sets" array
                     if phase != "test":
@@ -279,23 +275,30 @@ def launch_training(self, user_id, engine_path, params):
                 except Exception as ex:
                     logging.exception("An exception was thrown in LINK FILES")
 
+            data_utils.tokenize(train_corpus_id, engine, use_opus_way = app.config['USE_OPUS_HANDLING'])
+            data_utils.tokenize(dev_corpus_id, engine, use_opus_way = app.config['USE_OPUS_HANDLING'])
+            data_utils.tokenize(test_corpus_id, engine, use_opus_way = app.config['USE_OPUS_HANDLING'])
+
             # link set files and insert in config file
             link_files(train_corpus, "train")
             link_files(dev_corpus, "valid")
             link_files(test_corpus, "test")
 
             ######################################################################################################
+            # use these paths if normal vocabulary files is wanted, no tokenization 
             # call marian-vocab to create vocabulary files
             src_vocab_path, trg_vocab_path = data_utils.marian_vocab(
                 engine,
                 params["source_lang"],
                 params["target_lang"],
                 params["vocabularySize"],
+                use_opus_way = app.config['USE_OPUS_HANDLING']
             )
             
-            # use these paths if only sentencepiece model is wanted
-            src_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
-            trg_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
+            # use these paths if only sentencepiece model is wanted and OPUS handling is set to False
+            if not app.config['USE_OPUS_HANDLING']:
+                src_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
+                trg_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
             ######################################################################################################
 
             # set vocabulary paths and dimensions, setting paths
@@ -335,7 +338,7 @@ def launch_training(self, user_id, engine_path, params):
             db.session.commit()
 
             # Flash.issue("The engine could not be configured", Flash.ERROR)
-            logging.exception("An exception was thrown!")
+            logging.exception("An exception was thrown in LAUNCH_TRAINING function!")
             return -1
 
 def add_graph_log(engine_model_path, engine_path):
@@ -551,7 +554,7 @@ def test_training(self, engine_id):
             # get best BLEU model path
             model_path = os.path.join(engine.model_path, "model.npz.best-bleu.npz.decoder.yml")
             
-            # get source and target test files, and create temporary file for 
+            # get source and target test files, and create temporary file for
             test_source = os.path.join(engine.path, "test." + engine.source.code)
             _, test_source_preds = utils.tmpfile()
             test_target = os.path.join(engine.path, "test." + engine.target.code)
@@ -609,43 +612,52 @@ def launch_engine(user_id, engine_id):
 
 @celery.task(bind=True)
 def translate_text(self, user_id, engine_id, lines):
-    translator = launch_engine(user_id, engine_id)
-    translations = translator.translate(lines)
-
+    translations = []
     with app.app_context():
         try:
+            engine = Engine.query.filter_by(id=engine_id).first()
+            translator = launch_engine(user_id, engine_id)
+
+            translations = translator.translate(lines, engine_path = engine.path, use_opus_way = app.config['USE_OPUS_HANDLING'])
+
             db.session.delete(RunningEngines.query.filter_by(user_id=user_id).first())
             db.session.commit()
-        except:
+        except Exception as ex:
+            print("Fails in translate_text", flush = True)
+            print(ex, flush = True)
             db.session.rollback()
     return translations
 
 
 @celery.task(bind=True)
 def translate_file(self, user_id, engine_id, user_file_path, as_tmx, tmx_mode):
-    translator = launch_engine(user_id, engine_id)
-    file_translation = FileTranslation(translator)
-    return file_translation.translate_file(user_id, user_file_path, as_tmx, tmx_mode)
+    with app.app_context():
+        translator = launch_engine(user_id, engine_id)
+        engine = Engine.query.filter_by(id=engine_id).first()
+        file_translation = FileTranslation(translator, engine_path = engine.path)
+        return file_translation.translate_file(user_id, user_file_path, as_tmx, tmx_mode)
 
 
 @celery.task(bind=True)
 def generate_tmx(self, user_id, engine_id, chain_engine_id, text):
-    translator = launch_engine(user_id, engine_id)
-    file_translation = FileTranslation(translator)
+    with app.app_context():
+        engine = Engine.query.filter_by(id=engine_id).first()
+        translator = launch_engine(user_id, engine_id)
+        file_translation = FileTranslation(translator, engine_path = engine.path)
 
-    if chain_engine_id:
-        translations = []
-        for line in text:
-            if line.strip() != "":
-                for sentence in sent_tokenize(line):
-                    translation = translator.translate(sentence)
-                    translations.append(translation)
-            else:
-                translations.append("")
+        if chain_engine_id:
+            translations = []
+            for line in text:
+                if line.strip() != "":
+                    for sentence in sent_tokenize(line):
+                        translation = translator.translate(sentence, engine_path = engine.path, use_opus_way = app.config['USE_OPUS_HANDLING'])
+                        translations.append(translation)
+                else:
+                    translations.append("")
 
-        text = translations
+            text = translations
 
-    return file_translation.text_as_tmx(user_id, text)
+        return file_translation.text_as_tmx(user_id, text)
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -659,25 +671,51 @@ def inspect_details(self, user_id, engine_id, line):
     with app.app_context():
         engine = Engine.query.filter_by(id=engine_id).first()
         tokenizer = Tokenizer(engine)
-        tokenizer.load()
         inspect_details = None
         if line.strip() != "":
-            line_tok = tokenizer.tokenize(line)
-            n_best = translator.translate([line], n_best=True)
-            sentences = []
-            for sent in n_best:
-                sentences.append(sent.split("|||")[1])
-            del translator  # Free GPU slot
+            use_opus_way = app.config['USE_OPUS_HANDLING']
 
-            inspect_details = {
-                "source": engine.source.code,
-                "target": engine.target.code,
-                "preproc_input": line_tok,
-                "preproc_output": tokenizer.tokenize(sentences[0]),
-                "nbest": sentences,
-                "alignments": [],
-                "postproc_output": sentences[0],
-            }
+            if use_opus_way:
+                print("------", flush = True)
+                print("USE OPUS WAY OF INSPECT ---", flush = True)
+
+                line_tok = tokenizer.tokenize(line, use_opus_way = use_opus_way)
+
+                n_best = translator.translate([line], n_best=True, engine_path = engine.path, use_opus_way = use_opus_way)
+
+                sentences = []
+                for sent in n_best:
+                    sentences.append(sent.split("|||")[1])
+                del translator  # Free GPU slot
+
+                inspect_details = {
+                    "source": engine.source.code,
+                    "target": engine.target.code,
+                    "preproc_input": line_tok,
+                    "preproc_output": tokenizer.tokenize(sentences[0], use_opus_way = use_opus_way),
+                    "nbest": sentences,
+                    "alignments": [],
+                    "postproc_output": sentences[0],
+                }
+
+            else:
+                tokenizer.load()
+                line_tok = tokenizer.tokenize(line)
+                n_best = translator.translate([line], n_best=True)
+                sentences = []
+                for sent in n_best:
+                    sentences.append(sent.split("|||")[1])
+                del translator  # Free GPU slot
+
+                inspect_details = {
+                    "source": engine.source.code,
+                    "target": engine.target.code,
+                    "preproc_input": line_tok,
+                    "preproc_output": tokenizer.tokenize(sentences[0]),
+                    "nbest": sentences,
+                    "alignments": [],
+                    "postproc_output": sentences[0],
+                }
 
     return inspect_details
 
