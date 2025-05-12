@@ -534,22 +534,23 @@ def _validate_and_convert_langs(src_lang, trg_lang):
 @utils.condec(login_required, user_utils.isUserLoginEnabled()) 
 def check_model():
     """Check OPUS model existence in DB given a source and target language."""
-    USER_ID = user_utils.get_uid()
+    try:
+        USER_ID = user_utils.get_uid()
 
-    src_lang = request.form.get("source_lang")
-    trg_lang = request.form.get("target_lang")
+        src_lang = request.form.get("source_lang")
+        trg_lang = request.form.get("target_lang")
 
-    source_lang_db = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).first()
-    target_lang_db = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).first()
+        source_lang_db = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).first()
+        target_lang_db = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).first()
 
-    if source_lang_db and target_lang_db:
-        model_exists = Engine.query.filter_by(user_source_id=source_lang_db.id, 
-                                        user_target_id=target_lang_db.id,
-                                        opus_engine=True).first()
-        if model_exists:
-            return jsonify({"result": -1, "info": "Model already exists"})
+        if source_lang_db and target_lang_db:
+            model_exists = Engine.query.filter_by(user_source_id=source_lang_db.id, 
+                                            user_target_id=target_lang_db.id,
+                                            opus_engine=True).first()
+            if model_exists:
+                return jsonify({"result": -1, "info": "Model already exists"})
 
-        return jsonify({"result": 200, "info": "Model not in DB"})
+            return jsonify({"result": 200, "info": "Model not in DB"})
 
     except Exception as e:
         return jsonify({"result": -1, "info": str(e)})
