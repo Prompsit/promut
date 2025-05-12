@@ -530,6 +530,30 @@ def _validate_and_convert_langs(src_lang, trg_lang):
     except iso639.exceptions.InvalidLanguageValue:
         raise ValueError("Languages are not valid")
     
+@library_blueprint.route("/check-model", methods=["POST"])
+@utils.condec(login_required, user_utils.isUserLoginEnabled()) 
+def check_model():
+    """Check OPUS model existence in DB given a source and target language."""
+    USER_ID = user_utils.get_uid()
+
+    src_lang = request.form.get("source_lang")
+    trg_lang = request.form.get("target_lang")
+
+    source_lang_db = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).first()
+    target_lang_db = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).first()
+
+    if source_lang_db and target_lang_db:
+        model_exists = Engine.query.filter_by(user_source_id=source_lang_db.id, 
+                                        user_target_id=target_lang_db.id,
+                                        opus_engine=True).first()
+        if model_exists:
+            return jsonify({"result": -1, "info": "Model already exists"})
+
+        return jsonify({"result": 200, "info": "Model not in DB"})
+
+    except Exception as e:
+        return jsonify({"result": -1, "info": str(e)})
+    
 @library_blueprint.route("/get-model", methods=["POST"])
 @utils.condec(login_required, user_utils.isUserLoginEnabled()) 
 def get_model():
@@ -550,17 +574,23 @@ def download_model():
     
     Note: This is a draft implementation and it may change.
     """
+    USER_ID = user_utils.get_uid()
+
     src_lang = request.form.get("source_lang")
     trg_lang = request.form.get("target_lang")
+
     try:
         src_alpha_3, trg_alpha_3 = _validate_and_convert_langs(src_lang, trg_lang)
     except ValueError as e:
         return jsonify({"result": -1, "info": str(e)})
+    
     engine_path = os.path.join(
         app.config["PRELOADED_ENGINES_FOLDER"], f"{src_lang}-{trg_lang}"
     )
-    source_lang_db = UserLanguage.query.filter_by(code=src_lang, user_id=-1).first()
-    target_lang_db = UserLanguage.query.filter_by(code=trg_lang, user_id=-1).first()
+
+    source_lang_db = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).first()
+    target_lang_db = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).first()
+    
     if source_lang_db and target_lang_db:
         model_exists = Engine.query.filter_by(user_source_id=source_lang_db.id, 
                                         user_target_id=target_lang_db.id,
@@ -568,16 +598,16 @@ def download_model():
         if model_exists:
             return jsonify({"result": 200, "info": "Model already exists"})
 
-    model_link = None
+    model_url = None
     try:
-        model_link = get_opus_model_info(src_alpha_3, trg_alpha_3)["download_link"]
+        model_url = get_opus_model_info(src_alpha_3, trg_alpha_3)["download_link"]
         model_path = os.path.join(engine_path, "model")
         os.makedirs(engine_path)
     except ValueError as e:
         return jsonify({"result": -1, "info": str(e)})
   
     try:
-        r = requests.get(model_link, timeout=100, stream=True)
+        r = requests.get(model_url, timeout=100, stream=True)
         z = zipfile.ZipFile(io.BytesIO(r.content))
         z.extractall(model_path)
     except Exception as e:
