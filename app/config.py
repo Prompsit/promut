@@ -19,6 +19,11 @@ class Config(object):
     BASE_CONFIG_FOLDER = os.path.join(basedir, "base")
     EVALUATORS_FOLDER = os.path.join(BASEDIR, "blueprints/evaluate/evaluators")
 
+    # This variable is used throughout the code to enable preprocessing and postprocessing of data
+    # in the same way that people at OPUS do for their own models' input/output. Also used for
+    # selecting how the vocab is created, either using sentencepiece or OPUS way.
+    USE_OPUS_HANDLING = True
+
     INFIX = '.min' if os.environ.get('DEBUG') is None else ''
 
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \

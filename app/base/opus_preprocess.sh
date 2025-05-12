@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# USAGE preprocess.sh langid spmodel < input > output
+# USAGE preprocess.sh spmodel spmencode < input > output
 #
 
-SPMENCODE="/work/tudor/bismut/marian/build/spm_encode"
+SPMENCODE=$2
 
 ## simple pre-processing steps adapted from Moses tools
 
@@ -42,8 +42,8 @@ sed -e 's/，/,/g' \
     -e 's/〉/\>/g' \
     -e 's/【/\[/g' \
     -e 's/】/\]/g' \
-    -e 's/％/\%/g' |    
+    -e 's/％/\%/g' |
 perl -C -pe 's/(?!\n)\p{C}/ /g;' |
 sed 's/  */ /g;s/^ *//g;s/ *$//g' |
-${SPMENCODE} --model $2
+${SPMENCODE} --model $1
 
