@@ -199,7 +199,7 @@ $(document).ready(function () {
                 {
                     targets: 6,
                     render: function (data, type, row) {
-                        return data !== null ? `<div class="bleu-container"><div class="val-bleu">${data.toFixed(2)}<span>VAL.</span></div> ${row[8]["engine_test_score"] !==undefined? `<p class="separator">|</p> <div class="test-bleu">${row[8]["engine_test_score"]}<span>TEST</span></div>` : ""}</div>` : "—"
+                        return data !== null ? `<div class="bleu-container"><div class="val-bleu">${data.toFixed(2)}<span>VAL.</span></div> ${row[8]["engine_test_score"] !== undefined ? `<p class="separator">|</p> <div class="test-bleu">${row[8]["engine_test_score"]}<span>TEST</span></div>` : ""}</div>` : "—"
                     }
                 },
                 {
@@ -212,19 +212,14 @@ $(document).ready(function () {
                         let engine_data = row[8];
                         let template = document.importNode(document.querySelector("#engines-options-template").content, true);
 
-                        $(template).find(".export-btn").attr("href", engine_data.engine_export);
-                        $(template).find(".export-corpora-btn").attr("href", engine_data.engine_corpora_export);
 
-                        // show the training log only if the engine was trained/is normally created
-                        // if it's fresh from opus, don't show the training log
-                        if (engine_data.engine_status !== "opus") {
-                            $(template).find(".summary-btn").attr("href", engine_data.engine_summary);
-                            $(template).find(".summary-btn").removeClass("d-none");
+                        if (!engine_data.engine_status !== "opus") {
+                            $(template).find(".export-btn").addClass("d-none");
+                            $(template).find(".export-corpora-btn").addClass("d-none");
+                            $(template).find(".grab-btn").addClass("d-none");
                         }
 
                         if (public_mode) {
-                            $(template).find(".grab-btn").attr("href", engine_data.engine_grab);
-                            $(template).find(".grab-btn").removeClass("d-none");
 
                             if (engine_data.opus_engine && engine_data.user_is_admin) {
                                 $(template).find(".delete-btn").attr("href", engine_data.engine_delete);

@@ -2,114 +2,170 @@
 
 {% block library_content %}
 
-<h2 class="h5 sr-only">Your engines</h2>
-<ul class="nav nav-tabs engines-nav-tabs">
-    <li class="nav-item">
-        <a class="nav-link active public-nav-tab" data-toggle="tab" href="#public-engines">Public engines</a>
-    </li>
 
-    <li class="nav-item">
-        <a class="nav-link private-nav-tab" data-toggle="tab" href="#private-engines">Your engines</a>
-    </li>
-</ul>
-<div class="tab-content engine-tab">
-    <div class="tab-pane fade show active pt-4" id="public-engines">
-        <table class="table table-striped table-bordered engines-table w-100" data-public="true">
-            <thead>
-                <th></th>
-                <th>Engine name</th>
-                <th>Description</th>
-                <th>Languages</th>
-                <th>Date</th>
-                <th>Trainer</th>
-                <th>BLEU</th>
-                <th></th>
-            </thead>
-        </table>
-  </div>
-  <div class="tab-pane fade pt-4" id="private-engines">
-        {% if user_library|length > 0 %}
 
-        <table class="table table-striped table-bordered engines-table w-100">
-            <thead>
-                <th></th>
-                <th>Engine name</th>
-                <th>Description</th>
-                <th>Languages</th>
-                <th>Date</th>
-                <th>Trainer</th>
-                <th>BLEU</th>
-                <th></th>
-            </thead>
-        </table>
+<div class="opus-search-header mb-4">
+  <h2 class="h5 sr-only">Your engines</h2>
+  {% if is_admin() or is_researcher() %}
+  <h2><span>Download models from OPUS collection</span> <i class="fas fa-caret-up header-collapse-icon-opus d-none"></i>
+    <i class="fas fa-caret-down header-collapsed-icon-opus"></i>
+  </h2>
+</div>
+<div class="search-opus-models-container collapsed ">
+  <form class="search-opus-models-form mb-4 " action="{{ url_for('library.get_model') }}" enctype="multipart/form-data"
+    method="post">
+    <div style="display: flex;">
+      <div id="sourceSearchLangs" class="lang-dropdown-container">
+        <label for="source_lang_model">Source language</label>
+        <select class="custom-select mb-2 lang_sel_model source_lang_model" name="source_lang_model">
+          {% for language in languages %}
+          <option value="{{ language.code }}">{{ language.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="targetSearchLangs" class="lang-dropdown-container">
+        <label for="target_lang_model">Target language</label>
+        <select class="custom-select mb-2 lang_sel_model target_lang_model" name="target_lang_model">
+          {% for language in languages[1:] %}
+          <option value="{{ language.code }}">{{ language.name }}</option>
+          {% endfor %}
+          <option value="{{ languages[0].code }}">{{ languages[0].name }}</option>
+        </select>
 
-        {% else %}
-        <div class="jumbotron p-3 text-center">
-            <p class="h6 m-0">
-                Nothing yet!
-
-                {% if role_with_access %}
-                <a href="{{ url_for('train.train_index') }}">Train an engine now</a> or grab one.
-                {% endif %}
-            </p>
-        </div>
-        {% endif %}
-
+      </div>
+      <input class="btn btn-primary mb-2" style="margin: auto auto 0 0;height: 34px;" type="submit"
+        id="submit-dataset-search" value="Search models" />
     </div>
+    <div class="searching-models d-none text-center mt-4 mb-4">
+      <div class="h1 spinner mr-3">
+        <i class="fas fa-cog"></i>
+      </div>
+      <p class="h4">Searching for models in OPUS</p>
+    </div>
+  </form>
+  <div class="alert alert-info model-download-block d-none text-center mt-4 mb-4" role="alert">
+    <div class="h1 spinner mr-3">
+      <i class="fas fa-cog"></i>
+    </div>
+    <p class="h4"> Downloading model. Don't leave or refresh this page. </p>
+  </div>
+  <div class=" models-response-table">
+    <table id="dataTable" class="table table-bordered w-100"></table>
+  </div>
+  {% endif %}
 </div>
 
+
+
+<ul class="nav nav-tabs engines-nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link active public-nav-tab" data-toggle="tab" href="#public-engines">Public engines</a>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link private-nav-tab" data-toggle="tab" href="#private-engines">Your engines</a>
+  </li>
+</ul>
+<div class="tab-content engine-tab">
+  <div class="tab-pane fade show active pt-4" id="public-engines">
+    <table class="table table-striped table-bordered engines-table w-100" data-public="true">
+      <thead>
+        <th></th>
+        <th>Engine name</th>
+        <th>Description</th>
+        <th>Languages</th>
+        <th>Date</th>
+        <th>Trainer</th>
+        <th>BLEU</th>
+        <th></th>
+      </thead>
+    </table>
+  </div>
+  <div class="tab-pane fade pt-4" id="private-engines">
+    {% if user_library|length > 0 %}
+
+    <table class="table table-striped table-bordered engines-table w-100">
+      <thead>
+        <th></th>
+        <th>Engine name</th>
+        <th>Description</th>
+        <th>Languages</th>
+        <th>Date</th>
+        <th>Trainer</th>
+        <th>BLEU</th>
+        <th></th>
+      </thead>
+    </table>
+
+    {% else %}
+    <div class="jumbotron p-3 text-center">
+      <p class="h6 m-0">
+        Nothing yet!
+
+        {% if role_with_access %}
+        <a href="{{ url_for('train.train_index') }}">Train an engine now</a> or grab one.
+        {% endif %}
+      </p>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+
+
 <template id="engines-icon-template">
-    <div class="folder-shared folder-indicator d-none">
-        <i class="folder-icon fas fa-folder mr-2"></i>
-        <i class="second-icon fas fa-share-alt-square text-success"></i>
-    </div>
-    <div class="folder-grabbed folder-indicator d-none">
-        <i class="folder-icon fas fa-folder mr-2"></i>
-        <i class="second-icon fas fas fa-user text-warning"></i>
-    </div>
-    <div class="folder-owner d-none">
-        <i class="folder-icon fas fa-folder mr-2"></i>
-    </div>
+  <div class="folder-shared folder-indicator d-none">
+    <i class="folder-icon fas fa-folder mr-2"></i>
+    <i class="second-icon fas fa-share-alt-square text-success"></i>
+  </div>
+  <div class="folder-grabbed folder-indicator d-none">
+    <i class="folder-icon fas fa-folder mr-2"></i>
+    <i class="second-icon fas fas fa-user text-warning"></i>
+  </div>
+  <div class="folder-owner d-none">
+    <i class="folder-icon fas fa-folder mr-2"></i>
+  </div>
 </template>
 
 <template id="engines-options-template">
-    <div class="dropdown">
-        <button class="btn btn-link btn-sm" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <i class="fas fa-ellipsis-v"></i> <span class="sr-only">Options</span>
-        </button>
-        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-            <a href="#" class="stop-sharing-btn dropdown-item d-none">
-                <i class="fas fa-lock"></i> Stop sharing
-            </a>
+  <div class="dropdown">
+    <button class="btn btn-link btn-sm" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <i class="fas fa-ellipsis-v"></i> <span class="sr-only">Options</span>
+    </button>
+    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+      <a href="#" class="stop-sharing-btn dropdown-item d-none">
+        <i class="fas fa-lock"></i> Stop sharing
+      </a>
 
-            <a href="#" class="share-btn dropdown-item d-none">
-                <i class="fas fa-lock-open"></i> Share
-            </a>
+      <a href="#" class="share-btn dropdown-item d-none">
+        <i class="fas fa-lock-open"></i> Share
+      </a>
 
-            <a href="#" class="summary-btn d-none dropdown-item">
-                <i class="fas fa-chart-bar"></i> Training log
-            </a>
+      <a href="#" class="summary-btn d-none dropdown-item">
+        <i class="fas fa-chart-bar"></i> Training log
+      </a>
 
-            <a href="#" class="export-btn dropdown-item">
-                <i class="fas fa-download"></i> Download
-            </a>
+      <a href="#" class="export-btn dropdown-item">
+        <i class="fas fa-download"></i> Download
+      </a>
 
-            <a href="#" class="export-corpora-btn dropdown-item">
-                <i class="fas fa-file-export"></i> Download corpora
-            </a>
+      <a href="#" class="export-corpora-btn dropdown-item">
+        <i class="fas fa-file-export"></i> Download corpora
+      </a>
 
-            <a href="#" class="delete-btn dropdown-item d-none text-danger">
-                <i class="fas fa-trash"></i> Delete
-            </a>
+      <a href="#" class="delete-btn dropdown-item d-none text-danger">
+        <i class="fas fa-trash"></i> Delete
+      </a>
 
-            <a href="#" class="remove-btn dropdown-item d-none text-danger">
-                <i class="fas fa-times"></i> Remove
-            </a>
+      <a href="#" class="remove-btn dropdown-item d-none text-danger">
+        <i class="fas fa-times"></i> Remove
+      </a>
 
-            <a href="#" class="grab-btn dropdown-item d-none">
-                <i class="fas fa-file-import"></i> Grab
-            </a>
-        </div>
+      <a href="#" class="grab-btn dropdown-item d-none">
+        <i class="fas fa-file-import"></i> Grab
+      </a>
     </div>
+  </div>
 </template>
 {% endblock %}

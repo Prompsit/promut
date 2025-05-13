@@ -74,6 +74,8 @@ def library_engines():
     user_library = User.query.filter_by(id=user_utils.get_uid()).first().user_engines
     public_engines = Engine.query.filter_by(public=True)
 
+    languages = UserLanguage.query.filter_by(user_id=current_user.id).order_by(UserLanguage.name).all()
+
     user_engines = list(map(lambda l: l.engine, user_library))
     for engine in public_engines:
         engine.grabbed = engine in user_engines
@@ -82,6 +84,7 @@ def library_engines():
         "library_engines.html.jinja2",
         page_name="library_engines",
         page_title="Engines",
+        languages=languages,
         user_library=user_library,
         public_engines=public_engines,
         role_with_access=role_with_access,
@@ -93,8 +96,6 @@ def library_corpora_feed():
     public = request.form.get("public") == "true"
     used = request.form.get("used") == "true"
     not_used = request.form.get("not_used") == "true"
-
-    print("BEING CALLED OVER HERE*************")
 
     if public:
         library_objects = user_utils.get_user_corpora(public=True).all()
@@ -534,22 +535,23 @@ def _validate_and_convert_langs(src_lang, trg_lang):
 @utils.condec(login_required, user_utils.isUserLoginEnabled()) 
 def check_model():
     """Check OPUS model existence in DB given a source and target language."""
-    USER_ID = user_utils.get_uid()
+    try:
+        USER_ID = user_utils.get_uid()
 
-    src_lang = request.form.get("source_lang")
-    trg_lang = request.form.get("target_lang")
+        src_lang = request.form.get("source_lang")
+        trg_lang = request.form.get("target_lang")
 
-    source_lang_db = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).first()
-    target_lang_db = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).first()
+        source_lang_db = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).first()
+        target_lang_db = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).first()
 
-    if source_lang_db and target_lang_db:
-        model_exists = Engine.query.filter_by(user_source_id=source_lang_db.id, 
-                                        user_target_id=target_lang_db.id,
-                                        opus_engine=True).first()
-        if model_exists:
-            return jsonify({"result": -1, "info": "Model already exists"})
+        if source_lang_db and target_lang_db:
+            model_exists = Engine.query.filter_by(user_source_id=source_lang_db.id, 
+                                            user_target_id=target_lang_db.id,
+                                            opus_engine=True).first()
+            if model_exists:
+                return jsonify({"result": -1, "info": "Model already exists"})
 
-        return jsonify({"result": 200, "info": "Model not in DB"})
+            return jsonify({"result": 200, "info": "Model not in DB"})
 
     except Exception as e:
         return jsonify({"result": -1, "info": str(e)})
@@ -560,6 +562,7 @@ def get_model():
     """Get info and download link for an OPUS model given a source and target language."""
     src_lang = request.form.get("source_lang")
     trg_lang = request.form.get("target_lang")
+   
     try:
         src_alpha_3, trg_alpha_3 = _validate_and_convert_langs(src_lang, trg_lang)
         model_info = get_opus_model_info(src_alpha_3, trg_alpha_3)
