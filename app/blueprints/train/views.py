@@ -551,3 +551,33 @@ def train_test_status():
         return jsonify({ "result": 200, "test": task_value })
     else:
         return jsonify({ "result": -1 })
+
+@train_blueprint.route('/get-opus-models', methods=["POST"])
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def get_opus_models():
+    model_list = []
+
+    try:
+        USER_ID = user_utils.get_uid()
+
+        src_lang = request.form.get("source_lang")
+        trg_lang = request.form.get("target_lang")
+
+        source_lang_db = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).first()
+        target_lang_db = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).first()
+
+        if source_lang_db and target_lang_db:
+            model_list_query = Engine.query.filter_by(user_source_id=source_lang_db.id, 
+                                            user_target_id=target_lang_db.id,
+                                            opus_engine=True).all()
+            
+            for model_obj in model_list_query:
+                model_dict = {}
+                model_dict["id"] = model_obj.id
+                model_dict["name"] = model_obj.name
+                model_list.append(model_dict)
+
+    except Exception as e:
+        return jsonify({"result": -1, "info": str(e)})
+
+    return jsonify({"result": 200, "model_list": model_list})
