@@ -46,7 +46,9 @@ from app.utils.user_utils import is_admin, is_expert
 
 library_blueprint = Blueprint("library", __name__, template_folder="templates")
 import io
+import glob
 import yaml
+from ruamel.yaml import YAML
 import zipfile
 import requests
 
@@ -393,12 +395,59 @@ def library_delete(type, id):
 def library_export(type, id):
     zip_path = None
 
+    def write_yaml_to_archive(archive, yaml_path, name_in_archive):
+        yaml_ind = YAML()
+        yaml_ind.indent(mapping=2, sequence=4, offset=2)
+
+        # load the yaml file
+        with open(yaml_path, 'r') as file:
+            data = yaml.safe_load(file)
+
+        # modify the "vocabs" paths by removing "../" to comply with OPUS model relative paths
+        if 'vocabs' in data:
+            data['vocabs'] = [path.replace('../', '') for path in data['vocabs']]
+
+        # save the modified yaml back to file
+        aux_yaml = yaml_path + ".aux"
+        with open(aux_yaml, 'w') as file:
+            yaml_ind.dump(data, file)
+
+        archive.write(aux_yaml, arcname=name_in_archive)
+        os.remove(aux_yaml)
+
+        return archive
+
+
     if type == "library_engines":
+        print("_____________________________________", flush = True)
+        print("PREPARING ZIP FILE FOR MODEL HERE!!!!!", flush = True)
+
         engine = Engine.query.filter_by(id=id).first()
-        zip_path = os.path.join(
-            app.config["TMP_FOLDER"], "engine-{}.mut".format(engine.id)
-        )
-        shutil.make_archive(zip_path, "zip", engine.path, ".")
+        
+        zip_path = os.path.join(app.config["TMP_FOLDER"], "engine-{}.mut".format(engine.id))
+
+        # create the zip file and save only the relevant files in it, similar to OPUS models
+        with zipfile.ZipFile(zip_path+".zip", mode='w') as archive:
+            archive.write(os.path.join(engine.path, "source.spm"), arcname="source.spm")
+            archive.write(os.path.join(engine.path, "target.spm"), arcname="target.spm")
+            
+            # add the vocab files to the zip file
+            for file in glob.glob(f'{engine.path}/vocab.*.yml'):
+                archive.write(file, arcname=os.path.basename(file))
+            
+            # add the raw data splits to the zip file
+            for file in glob.glob(f'{engine.path}/*.raw'):
+                archive.write(file, arcname=os.path.basename(file))
+
+            # add the processing files that OPUS uses
+            archive.write(os.path.join(app.config["BASE_CONFIG_FOLDER"], "opus_preprocess.sh"), arcname="preprocess.sh")
+            archive.write(os.path.join(app.config["BASE_CONFIG_FOLDER"], "opus_postprocess.sh"), arcname="postprocess.sh")
+
+            # add the actual files of the trained model and also modify the vocabs key to comply with OPUS model relative paths
+            archive = write_yaml_to_archive(archive, os.path.join(engine.model_path, "model.npz.yml"), "model.npz.yml")
+            archive = write_yaml_to_archive(archive, os.path.join(engine.model_path, "model.npz.decoder.yml"), "model.npz.decoder.yml")
+            archive.write(os.path.join(engine.model_path, "model.npz.optimizer.npz"), arcname="model.npz.optimizer.npz")
+            archive.write(os.path.join(engine.model_path, "model.npz"), arcname="model.npz")
     else:
         tmp_folder = utils.tmpfolder()
         corpus = Corpus.query.filter_by(id=id).first()
@@ -569,13 +618,13 @@ def get_model():
         return jsonify({"result": -1, "info": str(e)})
 
 @library_blueprint.route("/download-model", methods=["POST"])
-@utils.condec(login_required, user_utils.isUserLoginEnabled()) 
+#@utils.condec(login_required, user_utils.isUserLoginEnabled()) 
 def download_model():
     """Download an OPUS model given a source and target language.
     
     Note: This is a draft implementation and it may change.
     """
-    USER_ID = user_utils.get_uid()
+    USER_ID = -1
 
     src_lang = request.form.get("source_lang")
     trg_lang = request.form.get("target_lang")
@@ -631,22 +680,6 @@ def download_model():
         )
         db.session.add(engine)
         db.session.commit()
-
-        # open the decoder yaml file, get the vocabulary name/path
-        # and change the file's name/path to source and target equivalents
-        with open(os.path.join(engine.model_path, "decoder.yml"), "r") as f:
-            decoder_config = yaml.safe_load(f)
-        
-        src_vocab_path = os.path.join(engine.model_path, decoder_config["vocabs"][0])
-        trg_vocab_path = os.path.join(engine.model_path, decoder_config["vocabs"][1])
-
-        shutil.move(src_vocab_path, os.path.join(engine.model_path, f"vocab.{src_lang}.yml"))
-
-        if src_vocab_path != trg_vocab_path:
-            shutil.move(trg_vocab_path, os.path.join(engine.model_path, f"vocab.{trg_lang}.yml"))
-        else:
-            shutil.copy2(os.path.join(engine.model_path, f"vocab.{src_lang}.yml"), 
-                            os.path.join(engine.model_path, f"vocab.{trg_lang}.yml"))
 
         return jsonify({"result": 200})
     except Exception as ex:

@@ -208,7 +208,7 @@ def marian_vocab(engine, src_lang, trg_lang, vocabularySize = 32000, use_opus_wa
 
                 marian_cmd = "cat {0} {1} | {2}/build/marian-vocab -m {3} > {4}".format(train_src_path, train_trg_path, app.config["MARIAN_FOLDER"], vocabularySize, vocab_src_path)
                 vocab_src = subprocess.run(marian_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                vocab_trg_path = vocab_src_path
+                shutil.copy(vocab_src_path, vocab_trg_path)
 
             else:
                 # call Marian command for creating vocabularies from train splits

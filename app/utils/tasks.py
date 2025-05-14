@@ -440,7 +440,7 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
 
                 # get Marian training command and set available GPUs in environment
                 config_path = os.path.join(engine.path, "config.yaml")
-                marian_cmd = "{0}/build/marian -c {1} {2}".format(
+                marian_cmd = "{0}/build/marian -c {1} {2} --relative-paths".format(
                     app.config["MARIAN_FOLDER"], config_path, marian_pretrained_cmd
                 )
                 env["CUDA_VISIBLE_DEVICES"] = "{}".format(gpu_id)
