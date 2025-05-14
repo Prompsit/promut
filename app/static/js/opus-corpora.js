@@ -18,25 +18,6 @@ $(document).ready(function () {
         }
     });
 
-    // const formData = new FormData();
-    // formData.append("task_id", "");
-    // formData.append("dataset", "");
-
-    // $.ajax({
-    //     url: '/data/set-session-data',
-    //     method: 'POST',
-    //     data: formData,
-    //     contentType: false,
-    //     cache: false,
-    //     processData: false,
-    //     success: function (response) {
-
-
-    //     },
-    //     error: function (xhr, status, error) {
-    //         console.error("Task id not saved")
-    //     }
-    // });
 
     let adjust_languages = (el) => {
         let other = $('.lang_sel_opus').not(el);

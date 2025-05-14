@@ -71,6 +71,13 @@
                 </a>
               </li>
               <li class="nav-item mb-2">
+                <a class="nav-link {{ 'active' if page_name == 'finetune' else '' }}"
+                  href="{{ url_for('finetune.finetune_index') }}">
+                  <i class="fas fa-sliders-h mr-2"></i>
+                  Finetune
+                </a>
+              </li>
+              <li class="nav-item mb-2">
                 <a class="nav-link {{ 'active' if page_name.startswith('translate') else '' }}"
                   href="{{ url_for('translate.translate_index') }}">
                   <i class="fas fa-globe-europe mr-2"></i>

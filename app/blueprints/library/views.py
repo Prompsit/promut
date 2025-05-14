@@ -76,6 +76,8 @@ def library_engines():
     user_library = User.query.filter_by(id=user_utils.get_uid()).first().user_engines
     public_engines = Engine.query.filter_by(public=True)
 
+    languages = UserLanguage.query.filter_by(user_id=current_user.id).order_by(UserLanguage.name).all()
+
     user_engines = list(map(lambda l: l.engine, user_library))
     for engine in public_engines:
         engine.grabbed = engine in user_engines
@@ -84,6 +86,7 @@ def library_engines():
         "library_engines.html.jinja2",
         page_name="library_engines",
         page_title="Engines",
+        languages=languages,
         user_library=user_library,
         public_engines=public_engines,
         role_with_access=role_with_access,
@@ -95,8 +98,6 @@ def library_corpora_feed():
     public = request.form.get("public") == "true"
     used = request.form.get("used") == "true"
     not_used = request.form.get("not_used") == "true"
-
-    print("BEING CALLED OVER HERE*************")
 
     if public:
         library_objects = user_utils.get_user_corpora(public=True).all()
@@ -610,6 +611,7 @@ def get_model():
     """Get info and download link for an OPUS model given a source and target language."""
     src_lang = request.form.get("source_lang")
     trg_lang = request.form.get("target_lang")
+   
     try:
         src_alpha_3, trg_alpha_3 = _validate_and_convert_langs(src_lang, trg_lang)
         model_info = get_opus_model_info(src_alpha_3, trg_alpha_3)

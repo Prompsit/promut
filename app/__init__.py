@@ -45,6 +45,7 @@ from .blueprints.auth.views import auth_blueprint
 from .blueprints.data.views import data_blueprint
 from .blueprints.library.views import library_blueprint
 from .blueprints.train.views import train_blueprint
+from .blueprints.finetune.views import finetune_blueprint
 from .blueprints.translate.views import translate_blueprint
 from .blueprints.inspect.views import inspect_blueprint
 from .blueprints.evaluate.views import evaluate_blueprint
@@ -55,6 +56,7 @@ blueprints = [["/auth", auth_blueprint],
                 ["/data", data_blueprint],
                 ["/library", library_blueprint],
                 ["/train", train_blueprint],
+                 ["/finetune", finetune_blueprint],
                 ["/translate", translate_blueprint],
                 ["/inspect", inspect_blueprint],
                 ["/evaluate", evaluate_blueprint],
