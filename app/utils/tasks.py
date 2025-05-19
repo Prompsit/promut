@@ -58,83 +58,117 @@ logger = get_task_logger(__name__)
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 # Engine training tasks
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+def join_corpora(list_name, phase, source_lang, target_lang, engine_id, user_id, used_corpora, params):
+    with app.app_context():
+        corpus = Corpus(owner_id=user_id, visible=False)
+        for train_corpus in params[list_name]:
+            corpus_data = json.loads(train_corpus)
+            corpus_id = corpus_data["id"]
+            corpus_size = corpus_data["size"]
 
+            if corpus_id not in used_corpora:
+                used_corpora[corpus_id] = 0
+
+            try:
+                og_corpus = Corpus.query.filter_by(id=corpus_id).first()
+
+                # We relate the original corpus with this engine in the database,
+                # for informational purposes. This way the user will be able to know
+                # which corpora were used to train the engine
+                engine = db.session.query(Engine).filter_by(id=engine_id).first()
+                engine.engine_corpora.append(
+                    Corpus_Engine(
+                        corpus=og_corpus,
+                        engine=engine,
+                        phase=phase,
+                        is_info=True,
+                        selected_size=corpus_size,
+                    )
+                )
+
+                corpus.user_source_id = og_corpus.user_source_id
+                corpus.user_target_id = og_corpus.user_target_id
+                for file_entry in og_corpus.corpus_files:
+                    with open(file_entry.file.path, "rb") as file_d:
+                        db_file = data_utils.upload_file(
+                            FileStorage(
+                                stream=file_d, filename=file_entry.file.name
+                            ),
+                            file_entry.file.user_language_id,
+                            selected_size=corpus_size,
+                            offset=used_corpora[corpus_id],
+                            user_id=user_id,
+                        )
+                    corpus.corpus_files.append(
+                        Corpus_File(
+                            db_file,
+                            role=(
+                                "source"
+                                if file_entry.file.language.code == source_lang
+                                else "target"
+                            ),
+                        )
+                    )
+                used_corpora[corpus_id] += corpus_size
+            except Exception as ex:
+                print(ex, flush=True)
+                raise ex
+
+        try:
+            db.session.add(corpus)
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise Exception
+
+        # We put the contents of the several files in a new single one, and we shuffle the sentences
+        try:
+            data_utils.join_corpus_files(corpus, shuffle=True, user_id=user_id)
+        except:
+            db.session.delete(corpus)
+            db.session.commit()
+            raise Exception
+
+        return corpus.id, used_corpora
+
+def link_files(corpus, engine, phase, config, params):
+    try:
+        sets_arr = []
+        for file_entry in corpus.corpus_files:
+            # create split filename and create path to it
+            split_name = "{}.{}".format(
+                phase,
+                (
+                    params["source_lang"]
+                    if file_entry.role == "source"
+                    else params["target_lang"]
+                ),
+            )
+
+            # link raw corpus path to raw split path
+            corpus_path_raw = file_entry.file.path
+            split_path_raw = str(os.path.join(engine.path, split_name)) + ".raw"
+            os.link(corpus_path_raw, split_path_raw)
+
+            # link preprocessed corpus path to preprocessed split path
+            corpus_path_pre = file_entry.file.path + ".mut.spe"
+            split_path_pre = str(os.path.join(engine.path, split_name))
+            os.link(corpus_path_pre, split_path_pre)
+
+            sets_arr.append(split_path_pre)
+
+        # insert it to configs in Marian style for train and valid sets, e.g. "train-sets" array
+        if phase != "test":
+            set_name = f"{phase}-sets"
+            config[set_name] = sets_arr
+        
+        return config
+
+    except Exception as ex:
+        logging.exception("An exception was thrown in LINK FILES")
 
 @celery.task(bind=True)
 def launch_training(self, user_id, engine_path, params):
-    def join_corpora(list_name, phase, source_lang, target_lang, engine_id):
-        with app.app_context():
-            corpus = Corpus(owner_id=user_id, visible=False)
-            for train_corpus in params[list_name]:
-                corpus_data = json.loads(train_corpus)
-                corpus_id = corpus_data["id"]
-                corpus_size = corpus_data["size"]
-
-                if corpus_id not in used_corpora:
-                    used_corpora[corpus_id] = 0
-
-                try:
-                    og_corpus = Corpus.query.filter_by(id=corpus_id).first()
-
-                    # We relate the original corpus with this engine in the database,
-                    # for informational purposes. This way the user will be able to know
-                    # which corpora were used to train the engine
-                    engine = db.session.query(Engine).filter_by(id=engine_id).first()
-                    engine.engine_corpora.append(
-                        Corpus_Engine(
-                            corpus=og_corpus,
-                            engine=engine,
-                            phase=phase,
-                            is_info=True,
-                            selected_size=corpus_size,
-                        )
-                    )
-
-                    corpus.user_source_id = og_corpus.user_source_id
-                    corpus.user_target_id = og_corpus.user_target_id
-                    for file_entry in og_corpus.corpus_files:
-                        with open(file_entry.file.path, "rb") as file_d:
-                            db_file = data_utils.upload_file(
-                                FileStorage(
-                                    stream=file_d, filename=file_entry.file.name
-                                ),
-                                file_entry.file.user_language_id,
-                                selected_size=corpus_size,
-                                offset=used_corpora[corpus_id],
-                                user_id=user_id,
-                            )
-                        corpus.corpus_files.append(
-                            Corpus_File(
-                                db_file,
-                                role=(
-                                    "source"
-                                    if file_entry.file.language.code == source_lang
-                                    else "target"
-                                ),
-                            )
-                        )
-                    used_corpora[corpus_id] += corpus_size
-                except Exception as ex:
-                    print(ex, flush=True)
-                    raise ex
-
-            try:
-                db.session.add(corpus)
-                db.session.commit()
-            except:
-                db.session.rollback()
-                raise Exception
-
-            # We put the contents of the several files in a new single one, and we shuffle the sentences
-            try:
-                data_utils.join_corpus_files(corpus, shuffle=True, user_id=user_id)
-            except:
-                db.session.delete(corpus)
-                db.session.commit()
-                raise Exception
-
-            return corpus.id
-
     try:
         with app.app_context():
             # Performs necessary steps to configure an engine
@@ -156,26 +190,35 @@ def launch_training(self, user_id, engine_path, params):
                 Flash.issue("The engine could not be created", Flash.ERROR)
                 return url_for("train.train_index", id=id)
 
-            train_corpus_id = join_corpora(
+            train_corpus_id, used_corpora = join_corpora(
                 "training[]",
                 phase="train",
                 source_lang=params["source_lang"],
                 target_lang=params["target_lang"],
                 engine_id=engine.id,
+                user_id=user_id,
+                used_corpora=used_corpora,
+                params=params
             )
-            dev_corpus_id = join_corpora(
+            dev_corpus_id, used_corpora = join_corpora(
                 "dev[]",
                 phase="dev",
                 source_lang=params["source_lang"],
                 target_lang=params["target_lang"],
                 engine_id=engine.id,
+                user_id=user_id,
+                used_corpora=used_corpora,
+                params=params
             )
-            test_corpus_id = join_corpora(
+            test_corpus_id, used_corpora = join_corpora(
                 "test[]",
                 phase="test",
                 source_lang=params["source_lang"],
                 target_lang=params["target_lang"],
                 engine_id=engine.id,
+                user_id=user_id,
+                used_corpora=used_corpora,
+                params=params
             )
 
             train_corpus = db.session.query(Corpus).filter_by(id=train_corpus_id).first()
@@ -241,48 +284,14 @@ def launch_training(self, user_id, engine_path, params):
             except:
                 raise Exception
 
-            def link_files(corpus, phase):
-                try:
-                    sets_arr = []
-                    for file_entry in corpus.corpus_files:
-                        # create split filename and create path to it
-                        split_name = "{}.{}".format(
-                            phase,
-                            (
-                                params["source_lang"]
-                                if file_entry.role == "source"
-                                else params["target_lang"]
-                            ),
-                        )
-
-                        # link raw corpus path to raw split path
-                        corpus_path_raw = file_entry.file.path
-                        split_path_raw = str(os.path.join(engine.path, split_name)) + ".raw"
-                        os.link(corpus_path_raw, split_path_raw)
-
-                        # link preprocessed corpus path to preprocessed split path
-                        corpus_path_pre = file_entry.file.path + ".mut.spe"
-                        split_path_pre = str(os.path.join(engine.path, split_name))
-                        os.link(corpus_path_pre, split_path_pre)
-
-                        sets_arr.append(split_path_pre)
-
-                    # insert it to configs in Marian style for train and valid sets, e.g. "train-sets" array
-                    if phase != "test":
-                        set_name = f"{phase}-sets"
-                        config[set_name] = sets_arr
-
-                except Exception as ex:
-                    logging.exception("An exception was thrown in LINK FILES")
-
             data_utils.tokenize(train_corpus_id, engine, use_opus_way = app.config['USE_OPUS_HANDLING'])
             data_utils.tokenize(dev_corpus_id, engine, use_opus_way = app.config['USE_OPUS_HANDLING'])
             data_utils.tokenize(test_corpus_id, engine, use_opus_way = app.config['USE_OPUS_HANDLING'])
 
             # link set files and insert in config file
-            link_files(train_corpus, "train")
-            link_files(dev_corpus, "valid")
-            link_files(test_corpus, "test")
+            link_files(corpus=train_corpus, engine=engine, phase="train", config=config, params=params)
+            link_files(corpus=dev_corpus, engine=engine, phase="valid", config=config, params=params)
+            link_files(corpus=test_corpus, engine=engine, phase="test", config=config, params=params)
 
             ######################################################################################################
             # use these paths if normal vocabulary files is wanted, no tokenization 
