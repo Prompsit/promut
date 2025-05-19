@@ -508,8 +508,10 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
                 GPUManager.free_device(gpu_id)
                 db.session.commit()
                 refresh_full_graph_log(engine.path)
+                db.session.remove()
     except Exception as ex:
         logging.exception("An exception was thrown in TRAIN_ENGINE!")
+        db.session.remove()
 
 
 @celery.task(bind=True)
@@ -997,6 +999,7 @@ def process_upload_request(
                 corpus.user_target_id = language
 
             db.session.add(db_file)
+            db.session.commit()
             corpus.corpus_files.append(Corpus_File(db_file, role=role))
 
         return db_file
@@ -1128,14 +1131,14 @@ def process_upload_request(
                         os.remove(trg_path)
 
             db.session.add(corpus)
+            db.session.commit()
 
             user = User.query.filter_by(id=user_id).first()
             user.user_corpora.append(LibraryCorpora(corpus=corpus, user=user))
         except Exception as e:
             db.session.rollback()
-            raise Exception(
-                "Something went wrong on our end... Please, try again later"
-            )
+            db.session.remove()
+            raise Exception("Something went wrong on our end... Please, try again later")
 
         if target_db_file:
             source_lines = utils.file_length(source_db_file.path)
@@ -1143,9 +1146,11 @@ def process_upload_request(
 
             if source_lines != target_lines:
                 db.session.rollback()
+                db.session.remove()
                 raise Exception("Source and target file should have the same length")
 
         db.session.commit()
+        db.session.remove()
 
     return True
 

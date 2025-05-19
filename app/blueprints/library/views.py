@@ -682,6 +682,7 @@ def download_model():
         )
         db.session.add(engine)
         db.session.commit()
+        db.session.remove()
 
         return jsonify({"result": 200})
     except Exception as ex:

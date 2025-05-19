@@ -111,6 +111,7 @@ def get_opus_corpora_by_langs():
     for line in output["corpora"]:
         if line["source"] == src_lang and line["target"] == trg_lang:
             datasets.append(line)
+    db.session.remove()
 
     return jsonify({ "result": 200, "datasets": datasets })
 
@@ -130,7 +131,9 @@ def check_opus_corpus():
         check = Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).exists()
 
         if db.session.query(check).scalar():
+            db.session.remove()
             return jsonify({ "result": -1 })
+        db.session.remove()
 
         return jsonify({ "result": 200})
     except Exception as ex:
