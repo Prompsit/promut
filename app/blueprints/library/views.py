@@ -682,9 +682,50 @@ def download_model():
         )
         db.session.add(engine)
         db.session.commit()
+
+        shutil.move(os.path.join(engine.model_path, "source.spm"), engine.path)
+        shutil.move(os.path.join(engine.model_path, "target.spm"), engine.path)
+        shutil.move(os.path.join(engine.model_path, "postprocess.sh"), engine.path)
+        shutil.move(os.path.join(engine.model_path, "preprocess.sh"), engine.path)
+        shutil.move(os.path.join(engine.model_path, "README.md"), engine.path)
+        shutil.move(os.path.join(engine.model_path, "LICENSE"), engine.path)
+
+        # change the name of whatever the OPUS model is called, to a human readable one
+        model_name = glob.glob(f'{engine.model_path}/*.npz')
+        shutil.move(model_name[0], os.path.join(engine.model_path, "model.npz"))
+
+        # modify the "vocabs" paths by adding "../" to comply with ProMut model paths
+        yaml_ind = YAML()
+        yaml_ind.indent(mapping=2, sequence=4, offset=2)
+
+        # load the yaml file
+        decoder_path = os.path.join(engine.model_path, "decoder.yml")
+        with open(decoder_path, 'r') as file:
+            data = yaml.safe_load(file)
+
+        # modify the "vocabs" paths by removing "../" to comply with OPUS model relative paths
+        vocab_src = f"vocab.{src_lang}.yml"
+        vocab_trg = f"vocab.{trg_lang}.yml"
+        if 'vocabs' in data:
+            data['vocabs'] = ["../" + vocab_src, "../" + vocab_trg]
+            data['models'] = ['model.npz']
+
+        # save the modified yaml back to file
+        with open(decoder_path, 'w') as file:
+            yaml_ind.dump(data, file)
+
+        shutil.move(decoder_path, os.path.join(engine.model_path, "model.npz.decoder.yml"))
+
+        # change vocab file name and duplicate it
+        vocab_path = glob.glob(f'{engine.model_path}/*.vocab.yml')[0]
+        shutil.move(vocab_path, os.path.join(engine.path, vocab_src))
+        shutil.copy(os.path.join(engine.path, vocab_src), os.path.join(engine.path, vocab_trg))
+
         db.session.remove()
 
         return jsonify({"result": 200})
     except Exception as ex:
-        print(str(ex), flush=True)
+        print(ex, flush=True)
+        db.session.rollback()
+        db.session.remove()
         return jsonify({"result": -1, "info": str(ex)})
