@@ -212,16 +212,22 @@ $(document).ready(function () {
                         let engine_data = row[8];
                         let template = document.importNode(document.querySelector("#engines-options-template").content, true);
 
+                        $(template).find(".export-btn").attr("href", engine_data.engine_export);
+                        $(template).find(".export-corpora-btn").attr("href", engine_data.engine_corpora_export);
 
-                        if (!engine_data.engine_status !== "opus") {
+                        $(template).find(".summary-btn").attr("href", engine_data.engine_summary);
+                        $(template).find(".summary-btn").removeClass("d-none");
+
+
+                        if (engine_data.engine_status === "opus") {
                             $(template).find(".export-btn").addClass("d-none");
                             $(template).find(".export-corpora-btn").addClass("d-none");
                             $(template).find(".grab-btn").addClass("d-none");
+                            $(template).find(".summary-btn").addClass("d-none");
                         }
 
                         if (public_mode) {
-
-                            if (engine_data.opus_engine && engine_data.user_is_admin) {
+                            if (engine_data.engine_status === "opus" && engine_data.user_is_admin) {
                                 $(template).find(".delete-btn").attr("href", engine_data.engine_delete);
                                 $(template).find(".delete-btn").removeClass("d-none");
                             }
@@ -275,6 +281,12 @@ $(document).ready(function () {
     $('.opus-search-header').on('click', function (e) {
         e.preventDefault();
         $('.search-opus-corpora-container').toggleClass('collapsed');
+        $('.header-collapse-icon-opus').toggleClass('d-none');
+        $('.header-collapsed-icon-opus').toggleClass('d-none');
+    })
+    $('.opus-model-search-header').on('click', function (e) {
+        e.preventDefault();
+        $('.search-opus-models-container').toggleClass('collapsed');
         $('.header-collapse-icon-opus').toggleClass('d-none');
         $('.header-collapsed-icon-opus').toggleClass('d-none');
     })

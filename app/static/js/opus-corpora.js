@@ -166,17 +166,6 @@ $(document).ready(function () {
             processData: false
         }).promise();
     }
-    // function reloadTableData(round = 1) {
-    //     if (round >= 5) {
-    //         $('#submit-dataset-search').click();
-    //         return;
-    //     }
-    //     setTimeout(() => {
-    //         $(".corpora-table").dataTable().api().ajax.reload();
-    //         reloadTableData(round + 1)
-    //     }, 10000);
-    // }
-
 
     async function displayDataTable(dataTableContainer, data) {
         dataTableContainer.html('');
@@ -274,7 +263,6 @@ $(document).ready(function () {
                 success: function (response) {
 
                     $('.already-in-library').prop('disabled', true);
-                    notyf.success({ message: 'Dataset downloaded and added to your collection!', duration: 3500, position: { x: "middle", y: "top" } });
                     if (response) {
                         try {
                             const formData = new FormData();

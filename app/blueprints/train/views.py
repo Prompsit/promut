@@ -551,3 +551,38 @@ def train_test_status():
         return jsonify({ "result": 200, "test": task_value })
     else:
         return jsonify({ "result": -1 })
+
+
+
+
+
+@train_blueprint.route('/graph_logs', methods=['GET'])
+def get_graph_logs():
+    # Get engine_id from query parameter
+    engine_id = request.args.get('engine_id')
+    user_id = request.args.get('user_id')
+
+    if not engine_id:
+        return jsonify({'error': 'engine_id parameter is required'}), 400
+    
+    engine = Engine.query.filter_by(id=engine_id).first()
+
+
+    file_path = f"{engine.path}/graph_logs.yaml"
+
+
+    try:
+        # Read and parse the YAML file
+        with open(file_path, 'r') as file:
+            yaml_data = yaml.safe_load(file)
+
+        return jsonify(yaml_data)
+    
+    except FileNotFoundError:
+        return jsonify([]), 404
+    
+    except yaml.YAMLError as e:
+        return jsonify({'error': f'Failed to parse YAML: {str(e)}'}), 400
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

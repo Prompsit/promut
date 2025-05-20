@@ -1,7 +1,6 @@
 $(document).ready(function () {
     let engine_id = $("#engine_id").val();
     let engine_stopped = undefined;
-    let sec = 0;
 
     const interval = 1000;
     let setupTimer = (el) => {
@@ -23,25 +22,32 @@ $(document).ready(function () {
         }, interval);
     });
 
+    function displayRounds(rounds) {
+        if (Object.entries(rounds).length === 1) return;
+        const container = $(".rounds");
+        container.html("");
 
-    // const interval = 1000;
+        Object.entries(rounds).map((round) => {
+            container.append(`<button data-path="${round[1].replace("/graph_dict.yaml", "")}" class="ml-2">${round[0]}</button>`)
+        })
+    }
 
-    // let setupTimer = (el) => {
-    //     let timestamp = parseInt($(el).attr("data-started"));
-    //     let begin = moment();
-    //     let end = moment.unix(timestamp);
-    //     end = end.add(2, 'hours');
-    //     let duration = moment.duration(begin.diff(end))
 
-    //     $(el).html(moment.utc(duration.asMilliseconds()).format("HH:mm:ss"))
-    // }
+    function readYamlFile(userId, engineId) {
+        return $.ajax({
+            url: `/train/graph_logs?user_id=${userId}&engine_id=${engineId}`,
+            method: 'GET',
+            dataType: 'json'
+        });
+    }
 
-    // $(".time-left").each(function (i, el) {
-    //     setupTimer(el)
-    //     setInterval(() => {
-    //         setupTimer(el)
-    //     }, interval);
-    // });
+    readYamlFile(userId, engine_id)
+        .then(data => {
+            if (data) {
+                displayRounds(data);
+            }
+        })
+        .catch(error => console.error('Error:', error.statusText));
 
 
 
@@ -253,6 +259,7 @@ $(document).ready(function () {
         })
 
         engine_stopped = data.stopped
+
         return data.stopped ? false : true;
     }, true);
 
