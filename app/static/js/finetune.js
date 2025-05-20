@@ -363,7 +363,7 @@ $(document).ready(function () {
                 data.append($(el).attr("name"), $(el).find("option:selected").val());
             }
             if ($(el).find("option:selected").data("identifier")) {
-                data.append("engine_id", $(el).find("option:selected").data("identifier"));
+                data.append("opus_engine_id", $(el).find("option:selected").data("identifier"));
             }
         });
 

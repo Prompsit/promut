@@ -22,13 +22,18 @@ $(document).ready(function () {
         }, interval);
     });
 
+
+    /// Training rounds and historic training data code
+
     function displayRounds(rounds) {
         if (Object.entries(rounds).length === 1) return;
-        const container = $(".rounds");
+        const container = $(".rounds-container");
         container.html("");
 
+        $(".rounds").removeClass("d-none")
+
         Object.entries(rounds).map((round) => {
-            container.append(`<button data-path="${round[1].replace("/graph_dict.yaml", "")}" class="ml-2">${round[0]}</button>`)
+            container.append(`<button data-path="${round[1].replace("/graph_dict.yaml", "")}" class="ml-2 rounds-btn">${round[0]}</button>`)
         })
     }
 
@@ -46,10 +51,22 @@ $(document).ready(function () {
             if (data) {
                 displayRounds(data);
             }
+            if (engine_stopped != undefined || engine_stopped == false) {
+                $('.dashboard-btns button').prop('disabled', true);
+            } else {
+                $('.dashboard-btns button').prop('disabled', false);
+            }
         })
         .catch(error => console.error('Error:', error.statusText));
 
 
+    $('.rounds-container').on('click', '.rounds-btn', function () {
+        $(this).addClass('active-round').siblings().removeClass('active-round');
+    });
+
+    $('.rounds-btn').on('click', function () {
+
+    })
 
     let make_chart = (element, chart_data) => {
         let chart = new ApexCharts(element, {
