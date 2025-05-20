@@ -10,6 +10,7 @@
 {% include "datatables.min.js.jinja2" %}
 <script src="{{ url_for('static', filename='js/longpoll' + infix + '.js') }}"></script>
 <script src="{{ url_for('static', filename='js/train' + infix + '.js') }}"></script>
+<script src="{{ url_for('static', filename='js/finetune' + infix + '.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -78,11 +79,16 @@
           </div>
         </div>
 
+        <div class="model-selector col-12 col-sm-6">
+          <label for="opusModel" class="h6">Model</label>
+          <select class="custom-select mb-2 lang_sel target_lang" name="opusModel" id="opusModel"></select>
+        </div>
+
         <div class="form-group col-12 col-sm-6" id="vocabularySizeGroup">
           <label class="col-form-label h6">Vocabulary size</label>
           <div class="input-group">
-            <input type="number" name="vocabularySize" class="form-control" value="16000" min="16000" max="32000"
-              step="8000" />
+            <input type="number" name="vocabularySize" class="form-control" value="32000" min="16000" max="32000"
+              step="8000" disabled />
             <div class="input-group-prepend">
               <div class="input-group-text">sub-words</div>
             </div>
@@ -93,7 +99,7 @@
           <label class="col-form-label h6">Beam size</label>
           <div class="input-group">
             <input type="number" name="beamSizeTxt" id="beamSizeTxt" class="form-control" value="6" min="6" max="8"
-              step="1" />
+              step="1" disabled />
             <div class="input-group-prepend">
               <div class="input-group-text">hypothesis</div>
             </div>
@@ -106,7 +112,7 @@
             <input type="number" name="batchSizeTxt" id="batchSizeTxt" class="form-control" value="16" min="16"
               max="128" step="8" />
             <div class="input-group-prepend">
-              <div class="input-group-text">tokens</div>
+              <div class="input-group-text">sentences</div>
             </div>
           </div>
         </div>
@@ -248,9 +254,9 @@
           <input type=reset class="btn btn-secondary reset-btn" value="Reset" />
 
           {% if not is_normal() %}
-          <input type=submit class="btn btn-primary btn-start-training" value="Start training" disabled />
+          <input type=submit class="btn btn-primary btn-start-training" value="Start finetuning" disabled />
           {% else %}
-          <button class="btn btn-primary" disabled>Start training</button>
+          <button class="btn btn-primary" disabled>Start finetuning</button>
           {% endif %}
         </div>
       </div>
