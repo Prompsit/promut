@@ -27,7 +27,6 @@ valid-max-length: 128
 save-freq: 1000
 disp-freq: 50
 exponential-smoothing: 0.0001
-#disp-first: 10
 
 valid-metrics:
     - ce-mean-words
@@ -35,36 +34,23 @@ valid-metrics:
     - bleu-detok
     - bleu
 
-beam-size: 6
 normalize: 1
 max-length: 200
 
 cost-type: ce-mean-words
-type: transformer
-task: transformer-base
-enc-depth: 6
-dec-depth: 6
-dim-emb: 512
-transformer-heads: 8
-transformer-dim-ffn: 2048
-transformer-ffn-depth: 2
-transformer-ffn-activation: swish
-transformer-decoder-autoreg: self-attention
 
-transformer-dropout: 0.1
 label-smoothing: 0.1
-
-layer-normalization: True
-tied-embeddings-all: True
 
 learn-rate: 0.0003
 lr-warmup: 1000
 lr-decay-inv-sqrt: 16000
 lr-report: True
+
 optimizer-params:
     - 0.9
     - 0.98
     - 1e-09
-clip-norm: 0 # disable clipping
+
+clip-norm: 0
 sync-sgd: true
 optimizer-delay: 2
