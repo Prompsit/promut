@@ -463,7 +463,7 @@ def launch_finetuning(self, user_id, engine_path, params):
             # set the vocabulary size by default to 32k and beam size from model options
             params["vocabularySize"] = '32000'
             
-            with open(os.path.join(opus_engine.model_path, "model.npz"), "r") as opus_config_file:
+            with open(os.path.join(opus_engine.model_path, "model.npz.decoder.yml"), "r") as opus_config_file:
                 opus_config = yaml.load(opus_config_file, Loader=yaml.FullLoader)
             params['beamSizeTxt'] = str(opus_config['beam-size'])
 
