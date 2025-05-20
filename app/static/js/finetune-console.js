@@ -46,6 +46,11 @@ $(document).ready(function () {
             if (data) {
                 displayRounds(data);
             }
+            if (engine_stopped != undefined && engine_stopped == true) {
+                $('.dashboard-btns button').prop('disabled', true);
+            } else {
+                $('.dashboard-btns button').prop('disabled', false);
+            }
         })
         .catch(error => console.error('Error:', error.statusText));
 
