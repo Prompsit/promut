@@ -274,7 +274,7 @@ $(document).ready(function () {
                 success: function (response) {
 
                     $('.already-in-library').prop('disabled', true);
-                    notyf.success({ message: 'Dataset downloaded and added to your collection!', duration: 3500, position: { x: "middle", y: "top" } });
+                    // notyf.success({ message: 'Dataset downloaded and added to your collection!', duration: 3500, position: { x: "middle", y: "top" } });
                     if (response) {
                         try {
                             const formData = new FormData();

@@ -59,6 +59,7 @@
 
 .data-upload-form,
 .search-opus-corpora-container,
+.search-opus-models-container,
 .corpora-nav-tabs-container,
 .multiple-user-actions {
     overflow: hidden;
@@ -66,7 +67,7 @@
 
 .data-upload-form.collapsed,
 .search-opus-corpora-container.collapsed,
-.corpora-nav-tabs-container.collapsed .multiple-user-actions.collapsed {
+.search-opus-models-container.collapsed .corpora-nav-tabs-container.collapsed .multiple-user-actions.collapsed {
     height: 0px;
     padding: 0px;
 }

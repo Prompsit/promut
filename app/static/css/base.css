@@ -152,7 +152,8 @@ html {
   gap: 10px;
 }
 
-.chart-grid button {
+.chart-grid button,
+.dashboard-btns button {
   padding: 5px 16px;
   border: none;
   background: #017360;
@@ -161,7 +162,8 @@ html {
   cursor: pointer;
 }
 
-.chart-grid button:disabled {
+.chart-grid button:disabled,
+.dashboard-btns button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

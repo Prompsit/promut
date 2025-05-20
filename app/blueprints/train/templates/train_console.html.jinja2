@@ -17,7 +17,7 @@
 
 {% block content %}
 <input type=hidden id="engine_id" value="{{ engine.id }}" />
-
+<p>{{ engine }}</p>
 <div class="row">
   <div class="col-12 col-sm-8">
     {% if engine.has_stopped() %}
@@ -237,9 +237,12 @@
 
 <div class="row mt-5">
   <div class="col-12 mb-4">
-    <div class="d-flex align-items-center">
+    <div class="d-flex flex-column">
       <div class="h3 mr-3">
         <i class="fas fa-chart-line"></i> Dashboard
+      </div>
+      <div class="dashboard-btns mt-5 d-flex justify-content-between"><button>Historic training data</button>
+        <div class="rounds"></div>
       </div>
 
       <div class="ml-2 flex-grow-1">
