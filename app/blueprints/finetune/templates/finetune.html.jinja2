@@ -9,7 +9,6 @@
 {% block resources %}
 {% include "datatables.min.js.jinja2" %}
 <script src="{{ url_for('static', filename='js/longpoll' + infix + '.js') }}"></script>
-<script src="{{ url_for('static', filename='js/train' + infix + '.js') }}"></script>
 <script src="{{ url_for('static', filename='js/finetune' + infix + '.js') }}"></script>
 {% endblock %}
 
@@ -42,7 +41,7 @@
 {% else %}
 <div class="row mt-4">
   <div class="col-12">
-    <form action="{{ url_for('train.train_start') }}" method="POST" class="train-form">
+    <form action="{{ url_for('finetune.finetune_start') }}" method="POST" class="finetune-form">
       <div class="row">
         <div class="col-12 col-sm-6">
           <label for="nameText" class="h6">Name</label>
@@ -80,8 +79,8 @@
         </div>
 
         <div class="model-selector col-12 col-sm-6">
-          <label for="opusModel" class="h6">Model</label>
-          <select class="custom-select mb-2 lang_sel target_lang" name="opusModel" id="opusModel"></select>
+          <label for="engine_name" class="h6">Model</label>
+          <select class="custom-select mb-2 lang_sel target_lang" name="engine_name" id="engine_name"></select>
         </div>
 
         <div class="form-group col-12 col-sm-6" id="vocabularySizeGroup">
