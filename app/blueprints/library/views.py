@@ -725,6 +725,7 @@ def download_model():
 
         return jsonify({"result": 200})
     except Exception as ex:
+        print("ERROR WHILE DOWNLOADING OPUS MODEL", flush=True)
         print(ex, flush=True)
         db.session.rollback()
         db.session.remove()

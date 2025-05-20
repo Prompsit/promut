@@ -171,8 +171,7 @@ def link_files(corpus, engine, phase, config, params):
 def launch_training(self, user_id, engine_path, params):
     try:
         with app.app_context():
-            # Performs necessary steps to configure an engine
-            # and get it ready for training
+            # Performs necessary steps to configure an engine and get it ready for training
 
             engine = Engine(path=engine_path)
             engine.uploader_id = user_id
@@ -310,8 +309,9 @@ def launch_training(self, user_id, engine_path, params):
                 trg_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
             ######################################################################################################
 
-            # set vocabulary paths and dimensions, setting paths
-            # so marian can automatically train a sentencepiece tokenizer
+            # set vocabulary paths and dimensions
+            # if no OPUS handling is wanted, then marian can automatically train 
+            # a sentencepiece model if .spm files are specified here
             src_vocab = os.path.join(
                 engine.path, src_vocab_path
             )
@@ -348,6 +348,193 @@ def launch_training(self, user_id, engine_path, params):
 
             # Flash.issue("The engine could not be configured", Flash.ERROR)
             logging.exception("An exception was thrown in LAUNCH_TRAINING function!")
+            return -1
+
+@celery.task(bind=True)
+def launch_finetuning(self, user_id, engine_path, params):
+    try:
+        with app.app_context():
+            # Performs necessary steps to configure an engine and get it ready for finetuning
+
+            engine = Engine(path=engine_path)
+
+            engine.uploader_id = user_id
+            engine.status = "launching"
+            engine.bg_task_id = self.request.id
+            engine.name = params["nameText"]
+            engine.description = params["descriptionText"]
+
+            db.session.add(engine)
+            db.session.commit()
+
+            used_corpora = {}
+
+            try:
+                os.makedirs(engine_path)
+            except:
+                Flash.issue("The engine could not be created", Flash.ERROR)
+                return url_for("train.train_index", id=id)
+
+            # set engine model path and create the folder so Marian can use it
+            engine.model_path = os.path.join(engine.path, "model")
+            os.mkdir(engine.model_path)
+
+            # copy all the necessary opus files into engine.path and engine.model_path
+            opus_engine = Engine.query.filter_by(id=params["opus_engine_id"]).first()
+
+            shutil.copy(os.path.join(opus_engine.path, "source.spm"), engine.path)
+            shutil.copy(os.path.join(opus_engine.path, "target.spm"), engine.path)
+
+            shutil.copy(os.path.join(opus_engine.model_path, "model.npz"), engine.model_path)
+            shutil.copy(os.path.join(opus_engine.model_path, "model.npz.decoder.yml"), engine.model_path)
+
+            # prepare corpora and data sets
+            train_corpus_id, used_corpora = join_corpora(
+                "training[]",
+                phase="train",
+                source_lang=params["source_lang"],
+                target_lang=params["target_lang"],
+                engine_id=engine.id,
+                user_id=user_id,
+                used_corpora=used_corpora,
+                params=params
+            )
+            dev_corpus_id, used_corpora = join_corpora(
+                "dev[]",
+                phase="dev",
+                source_lang=params["source_lang"],
+                target_lang=params["target_lang"],
+                engine_id=engine.id,
+                user_id=user_id,
+                used_corpora=used_corpora,
+                params=params
+            )
+            test_corpus_id, used_corpora = join_corpora(
+                "test[]",
+                phase="test",
+                source_lang=params["source_lang"],
+                target_lang=params["target_lang"],
+                engine_id=engine.id,
+                user_id=user_id,
+                used_corpora=used_corpora,
+                params=params
+            )
+
+            train_corpus = db.session.query(Corpus).filter_by(id=train_corpus_id).first()
+            dev_corpus = db.session.query(Corpus).filter_by(id=dev_corpus_id).first()
+            test_corpus = db.session.query(Corpus).filter_by(id=test_corpus_id).first()
+
+            source_lang = UserLanguage.query.filter_by(code=params["source_lang"], user_id=user_id).one()
+            engine.user_source_id = source_lang.id
+
+            target_lang = UserLanguage.query.filter_by(code=params["target_lang"], user_id=user_id).one()
+            engine.user_target_id = target_lang.id
+
+            # add data sets to the engine
+            engine.engine_corpora.append(Corpus_Engine(corpus=train_corpus, engine=engine, phase="train"))
+            engine.engine_corpora.append(Corpus_Engine(corpus=dev_corpus, engine=engine, phase="dev"))
+            engine.engine_corpora.append(Corpus_Engine(corpus=test_corpus, engine=engine, phase="test"))
+
+            engine.status = "training_pending"
+            engine.launched = datetime.datetime.utcnow().replace(tzinfo=None)
+
+            # link the datasets and engine to the user
+            user = User.query.filter_by(id=user_id).first()
+            user.user_engines.append(LibraryEngine(engine=engine, user=user))
+
+            db.session.add(engine)
+            db.session.commit()
+
+            # create config file for finetuning
+            config = None
+            config_file_path = os.path.join(engine.path, "config.yaml")
+
+            # get base Marian finetuning configuration
+            # the finetuning config follows the same steps as in normal training,
+            # however beam-size and dim-vocabs (beam size, vocabulary dimensions) will
+            # be specified from the OPUS model parameters if available
+            # additionally, the options 'type' and 'task' and anything else related
+            # to the model options is removed, so that these are taken from the OPUS model
+            shutil.copyfile(os.path.join(app.config["BASE_CONFIG_FOLDER"], "transformer-marian-finetuning.yaml"), config_file_path)
+            
+            with open(config_file_path, "r") as config_file:
+                config = yaml.load(config_file, Loader=yaml.FullLoader)
+            
+            # set the vocabulary size by default to 32k and beam size from model options
+            params["vocabularySize"] = '32000'
+            
+            with open(os.path.join(opus_engine.model_path, "model.npz"), "r") as opus_config_file:
+                opus_config = yaml.load(opus_config_file, Loader=yaml.FullLoader)
+            params['beamSizeTxt'] = str(opus_config['beam-size'])
+
+            # final preparation and tokenization of data sets
+            data_utils.tokenize(train_corpus_id, engine, use_opus_way = app.config['USE_OPUS_HANDLING'])
+            data_utils.tokenize(dev_corpus_id, engine, use_opus_way = app.config['USE_OPUS_HANDLING'])
+            data_utils.tokenize(test_corpus_id, engine, use_opus_way = app.config['USE_OPUS_HANDLING'])
+
+            # link data set files and insert in config file
+            link_files(corpus=train_corpus, engine=engine, phase="train", config=config, params=params)
+            link_files(corpus=dev_corpus, engine=engine, phase="valid", config=config, params=params)
+            link_files(corpus=test_corpus, engine=engine, phase="test", config=config, params=params)
+            
+            ######################################################################################################
+            # use these paths if normal vocabulary files is wanted, no tokenization 
+            # call marian-vocab to create vocabulary files
+            src_vocab_path, trg_vocab_path = data_utils.marian_vocab(
+                engine,
+                params["source_lang"],
+                params["target_lang"],
+                params["vocabularySize"],
+                use_opus_way = app.config['USE_OPUS_HANDLING']
+            )
+            
+            # use these paths if only sentencepiece model is wanted and OPUS handling is set to False
+            if not app.config['USE_OPUS_HANDLING']:
+                src_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
+                trg_vocab_path = f"vocab.{params['source_lang']}{params['target_lang']}.spm"
+            ######################################################################################################
+
+            # set vocabulary paths and dimensions
+            # if no OPUS handling is wanted, then marian can automatically train 
+            # a sentencepiece model if .spm files are specified here
+            src_vocab = os.path.join(engine.path, src_vocab_path)
+            trg_vocab = os.path.join(engine.path, trg_vocab_path)
+            config["vocabs"] = [src_vocab, trg_vocab]
+            config["dim-vocabs"] = [params["vocabularySize"], params["vocabularySize"]]
+
+            # set paths to model files and to training log
+            config["model"] = os.path.join(engine.path, "model/model.npz")
+            config["log"] = os.path.join(engine.path, "model/train.log")
+
+            # given that fresh OPUS models don't have a training log, we just create an empty
+            # one so that no problems arise later in the code
+            with open(config["log"], 'w') as file:
+                pass
+            
+            # set user values for epochs, early stopping patience and validation frequency
+            config["after"] = f"{params['epochsText']}e"
+            config["early-stopping"] = int(params["patienceTxt"])
+            config["valid-freq"] = int(params["validationFreq"])
+
+            config["mini-batch"] = int(params['batchSizeTxt'])
+            config["beam-size"] = int(params['beamSizeTxt'])
+
+            with open(config_file_path, "w") as config_file:
+                yaml.dump(config, config_file)
+
+            engine.status = "ready"
+            engine.bg_task_id = None
+            db.session.commit()
+
+            return engine.id
+
+    except Exception as ex:
+        with app.app_context():
+            db.session.delete(engine)
+            db.session.commit()
+
+            # Flash.issue("The engine could not be configured", Flash.ERROR)
+            logging.exception("An exception was thrown in LAUNCH_FINETUNING function!")
             return -1
 
 def add_graph_log(engine_model_path, engine_path):

@@ -105,9 +105,16 @@ def finetune_launch():
     id = request.form.get('engine_id')
     if user_utils.is_normal(): return url_for('index')
 
-    task_id, monitor_task_id = finetuner.launch(id, user_utils.get_user_role())
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", flush = True)
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", flush = True)
+    print("-   FINETUNING SHOULD HAVE STARTED RIGHT HERE  ------", flush = True)
+    print("-   HOWEVER, RESUME MUST BE CALLED INSTEAD     ------", flush = True)
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", flush = True)
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", flush = True)
+    #task_id, monitor_task_id = finetuner.launch(id, user_utils.get_user_role())
 
-    return url_for('finetune.finetune_console', id=id)
+    #return url_for('finetune.finetune_console', id=id)
+    return url_for('index')
 
 @finetune_blueprint.route('/console/<id>')
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
