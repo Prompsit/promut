@@ -33,7 +33,7 @@ $(document).ready(function () {
         $(".rounds").removeClass("d-none")
 
         Object.entries(rounds).map((round) => {
-            container.append(`<button data-path="${round[1].replace("/graph_dict.yaml", "")}" class="ml-2 rounds-btn">${round[0]}</button>`)
+            container.append(`<button data-path="${round[0]}" class="ml-2 rounds-btn">${round[0]}</button>`)
         })
     }
 
@@ -62,11 +62,19 @@ $(document).ready(function () {
 
     $('.rounds-container').on('click', '.rounds-btn', function () {
         $(this).addClass('active-round').siblings().removeClass('active-round');
+        const path = $(this).data('path');
+
+        retrieveTrainingRound(path);
     });
 
-    $('.rounds-btn').on('click', function () {
+    $('.dashboard-btns').on('click', '.full', function () {
+        $(this).addClass('active-round').siblings().removeClass('active-round');
 
-    })
+        retrieveFullTrainingData(engine_id);
+    });
+
+
+
 
     let make_chart = (element, chart_data) => {
         let chart = new ApexCharts(element, {
@@ -221,6 +229,8 @@ $(document).ready(function () {
         })
     });
 
+
+
     /* Train status */
     longpoll(5000, {
         url: `../train_status`,
@@ -302,4 +312,68 @@ $(document).ready(function () {
             log_table.ajax.reload()
         }
     }, 5000);
+
+
+    function retrieveTrainingRound(path) {
+        $.ajax({
+            url: `../historic_training_data`,
+            method: "post",
+            data: {
+                tags: Object.keys(chart_metadata),
+                engine_id: engine_id,
+                graph_id: path
+            }, success:
+                function (data) {
+                    $(".training-chart").each(function (i, e) {
+                        let tag = $(this).attr("data-tag");
+                        if (data) {
+                            let { stats, stopped } = data
+                            let tag_stats = stats[tag];
+                            if (tag_stats) {
+                                let series = []
+                                for (stat of tag_stats) {
+                                    series.push([stat.step, stat.value])
+                                }
+
+                                charts[tag].updateSeries([{ data: series }]);
+                            }
+                        }
+                    });
+
+                }
+        });
+    }
+
+
+
+    function retrieveFullTrainingData(engine_id) {
+        $.ajax({
+            url: `../full_training_graph`,
+            method: "post",
+            data: {
+                tags: Object.keys(chart_metadata),
+                engine_id: engine_id,
+            }, success:
+                function (data) {
+                    $(".training-chart").each(function (i, e) {
+                        let tag = $(this).attr("data-tag");
+                        if (data) {
+                            let { stats, stopped } = data
+                            let tag_stats = stats[tag];
+                            if (tag_stats) {
+                                let series = []
+                                for (stat of tag_stats) {
+                                    series.push([stat.step, stat.value])
+                                }
+
+                                charts[tag].updateSeries([{ data: series }]);
+                            }
+                        }
+                    });
+
+                }
+        });
+    }
+
+
 });

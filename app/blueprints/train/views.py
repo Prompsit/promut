@@ -144,12 +144,14 @@ def train_console(id):
 def full_train_graph():
     id = request.form.get('engine_id')
 
+    stats = {}
+
+
     try:
         engine = Engine.query.filter_by(id=id).first()
         
-        graph_dict_path = os.path.join(engine_path, "full_graph.yaml")
+        graph_dict_path = os.path.join(engine.path, "full_graph.yaml")
 
-        stats = {}
 
         stats_aux = {}
         with open(graph_dict_path) as f:
@@ -179,6 +181,10 @@ def historic_train_graph():
     id = request.form.get('engine_id')
     graph_id = request.form.get('graph_id')
 
+
+    stats = {}
+
+
     try:
         engine = Engine.query.filter_by(id=id).first()
         
@@ -188,7 +194,6 @@ def historic_train_graph():
             graphs_dict = yaml.load(f, Loader = yaml.FullLoader)
         graph_dict_path = graphs_dict[int(graph_id)]
 
-        stats = {}
 
         stats_aux = {}
         with open(graph_dict_path) as f:
