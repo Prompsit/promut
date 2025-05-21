@@ -460,8 +460,9 @@ def launch_finetuning(self, user_id, engine_path, params):
             with open(config_file_path, "r") as config_file:
                 config = yaml.load(config_file, Loader=yaml.FullLoader)
             
-            # set the vocabulary size by default to 32k and beam size from model options
-            params["vocabularySize"] = '32000'
+            # set the vocabulary size by default to 0 and beam size from model options
+            # for vocab size just delete de parameter so Marian can use default/model values
+            del params["vocabularySize"]
             
             with open(os.path.join(opus_engine.model_path, "model.npz.decoder.yml"), "r") as opus_config_file:
                 opus_config = yaml.load(opus_config_file, Loader=yaml.FullLoader)
@@ -480,13 +481,16 @@ def launch_finetuning(self, user_id, engine_path, params):
             ######################################################################################################
             # use these paths if normal vocabulary files is wanted, no tokenization 
             # call marian-vocab to create vocabulary files
-            src_vocab_path, trg_vocab_path = data_utils.marian_vocab(
-                engine,
-                params["source_lang"],
-                params["target_lang"],
-                params["vocabularySize"],
-                use_opus_way = app.config['USE_OPUS_HANDLING']
-            )
+            src_lang = params["source_lang"]
+            trg_lang = params["target_lang"]
+
+            src_vocab_path = f"vocab.{src_lang}.yml"
+            trg_vocab_path = f"vocab.{trg_lang}.yml"
+            opus_src_vocab_path = os.path.join(opus_engine.path, src_vocab_path)
+            opus_trg_vocab_path = os.path.join(opus_engine.path, trg_vocab_path)
+
+            shutil.copy(opus_src_vocab_path, engine.path)
+            shutil.copy(opus_trg_vocab_path, engine.path)
             
             # use these paths if only sentencepiece model is wanted and OPUS handling is set to False
             if not app.config['USE_OPUS_HANDLING']:
@@ -495,12 +499,11 @@ def launch_finetuning(self, user_id, engine_path, params):
             ######################################################################################################
 
             # set vocabulary paths and dimensions
-            # if no OPUS handling is wanted, then marian can automatically train 
+            # if no OPUS handling is wanted, then marian can automatically train
             # a sentencepiece model if .spm files are specified here
             src_vocab = os.path.join(engine.path, src_vocab_path)
             trg_vocab = os.path.join(engine.path, trg_vocab_path)
             config["vocabs"] = [src_vocab, trg_vocab]
-            config["dim-vocabs"] = [params["vocabularySize"], params["vocabularySize"]]
 
             # set paths to model files and to training log
             config["model"] = os.path.join(engine.path, "model/model.npz")
@@ -516,7 +519,9 @@ def launch_finetuning(self, user_id, engine_path, params):
             config["early-stopping"] = int(params["patienceTxt"])
             config["valid-freq"] = int(params["validationFreq"])
 
-            config["mini-batch"] = int(params['batchSizeTxt'])
+            # mini-batch doesn't get used because of memory need,
+            # instead mini-batch-fit is used directly from the config file
+            #config["mini-batch"] = int(params['batchSizeTxt'])
             config["beam-size"] = int(params['beamSizeTxt'])
 
             with open(config_file_path, "w") as config_file:
