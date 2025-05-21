@@ -552,11 +552,8 @@ def train_test_status():
     else:
         return jsonify({ "result": -1 })
 
-
-
-
-
 @train_blueprint.route('/graph_logs', methods=['GET'])
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
 def get_graph_logs():
     # Get engine_id from query parameter
     engine_id = request.args.get('engine_id')
