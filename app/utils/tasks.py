@@ -340,12 +340,10 @@ def launch_training(self, user_id, engine_path, params):
             engine.bg_task_id = None
             db.session.commit()
 
-            whatever = something + 123 + "aaa"
-
             return engine.id
     except Exception as ex:
         with app.app_context():
-            db.session.rollback()
+            db.session.delete(engine)
             db.session.commit()
 
             if os.path.exists(engine_path) and os.path.isdir(engine_path):
@@ -540,7 +538,7 @@ def launch_finetuning(self, user_id, engine_path, params):
 
     except Exception as ex:
         with app.app_context():
-            db.session.rollback()
+            db.session.delete(engine)
             db.session.commit()
 
             if os.path.exists(engine_path) and os.path.isdir(engine_path):

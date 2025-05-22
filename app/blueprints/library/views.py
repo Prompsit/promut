@@ -620,13 +620,13 @@ def get_model():
         return jsonify({"result": -1, "info": str(e)})
 
 @library_blueprint.route("/download-model", methods=["POST"])
-#@utils.condec(login_required, user_utils.isUserLoginEnabled()) 
+@utils.condec(login_required, user_utils.isUserLoginEnabled()) 
 def download_model():
     """Download an OPUS model given a source and target language.
     
     Note: This is a draft implementation and it may change.
     """
-    USER_ID = -1
+    USER_ID = user_utils.get_uid()
 
     src_lang = request.form.get("source_lang")
     trg_lang = request.form.get("target_lang")
