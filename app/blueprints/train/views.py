@@ -93,7 +93,7 @@ def launch_status():
         if engine_id != -1:
             return jsonify({ "result": 200, "engine_id": result.get() })
         else:
-            return jsonify({ "result": -2 })
+            return jsonify({ "result": -1 })
     else:
         return jsonify({ "result": -1 })
     
