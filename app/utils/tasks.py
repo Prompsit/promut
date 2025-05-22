@@ -833,7 +833,7 @@ def translate_text(self, user_id, engine_id, lines):
             db.session.commit()
         except Exception as ex:
             print("Fails in translate_text", flush = True)
-            print(ex, flush = True)
+            print(str(ex), flush = True)
             db.session.rollback()
     return translations
 

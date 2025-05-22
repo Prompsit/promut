@@ -3,11 +3,21 @@ from app.utils import utils
 import tempfile
 import subprocess
 import os
+import yaml
 
 
 class MarianWrapper:
     def __init__(self, engine_path):
-        self.model = str(engine_path) + "/model.npz.best-bleu.npz.decoder.yml"
+        try:
+            # for inference the model specified in the decoder.yml should be used
+            self.model = os.path.join(engine_path, "model.npz.decoder.yml")
+            
+            print("MARIAN WRAPPER MODEL USED ----")
+            print(self.model)
+            print("MARIAN WRAPPER MODEL USED ----")
+        except Exception as ex:
+            print("Exception in MarianWrapper init ----")
+            print(ex, flush = True)
 
     def translate(self, lines, n_best=False, engine_path = None, use_opus_way = False):
         translations = []
