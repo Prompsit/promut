@@ -231,7 +231,6 @@ $(document).ready(function () {
                         if (engine_data.engine_status === "opus") {
                             $(template).find(".export-btn").addClass("d-none");
                             $(template).find(".export-corpora-btn").addClass("d-none");
-                            $(template).find(".grab-btn").addClass("d-none");
                             $(template).find(".summary-btn").addClass("d-none");
                         }
 
@@ -240,6 +239,8 @@ $(document).ready(function () {
                                 $(template).find(".delete-btn").attr("href", engine_data.engine_delete);
                                 $(template).find(".delete-btn").removeClass("d-none");
                             }
+                            $(template).find(".grab-btn").attr("href", engine_data.engine_grab);
+                            $(template).find(".grab-btn").removeClass("d-none");
                         } else {
                             if (engine_data.engine_owner) {
                                 if (engine_data.engine_public) {

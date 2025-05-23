@@ -365,7 +365,8 @@ def launch_finetuning(self, user_id, engine_path, params):
             engine.status = "launching"
             engine.bg_task_id = self.request.id
             engine.name = params["nameText"]
-            engine.description = params["descriptionText"]
+            engine.description = params["descriptionText"] + " - Finetuned from model: " + params["engine_name"]
+            engine.finetuned = True
 
             db.session.add(engine)
             db.session.commit()
@@ -833,7 +834,7 @@ def translate_text(self, user_id, engine_id, lines):
             db.session.commit()
         except Exception as ex:
             print("Fails in translate_text", flush = True)
-            print(ex, flush = True)
+            print(str(ex), flush = True)
             db.session.rollback()
     return translations
 

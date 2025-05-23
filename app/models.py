@@ -65,6 +65,7 @@ class Engine(Resource):
     test_score = db.Column(db.Float)
     
     opus_engine = db.Column(db.Boolean, default=False)
+    finetuned = db.Column(db.Boolean, default=False)
 
     source_id = db.Column(db.String(3), db.ForeignKey('language.code'))
     user_source_id = db.Column(db.Integer, db.ForeignKey('user_language.id'))
