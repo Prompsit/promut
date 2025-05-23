@@ -37,16 +37,16 @@ finetune_blueprint = Blueprint('finetune', __name__, template_folder='templates'
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def finetune_index():
     currently_finetuning = Engine.query.filter_by(uploader_id = user_utils.get_uid()) \
-                            .filter(Engine.status.like("finetuning")).all()
+                            .filter(Engine.status.like("training")).all()
 
     if (len(currently_finetuning) > 0):
-        return redirect(url_for('finetune.finetune_console', id=currently_finetuning[0].id))
+        return redirect(url_for('train.train_console', id=currently_finetuning[0].id))
 
     currently_launching = Engine.query.filter_by(uploader_id = user_utils.get_uid()) \
                             .filter(Engine.status.like("launching")).all()
                             
     if (len(currently_launching) > 0): 
-        return redirect(url_for('finetune.finetune_launching', task_id=currently_launching[0].bg_task_id))
+        return redirect(url_for('train.train_launching', task_id=currently_launching[0].bg_task_id))
 
     random_name = namegenerator.gen()
     tryout = 0
