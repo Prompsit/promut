@@ -115,6 +115,14 @@ def finetune_launch():
 
     return url_for('train.train_console', id=id)
 
+
+@finetune_blueprint.route('/finetuning-failed')
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def training_failed(task_id):
+    if user_utils.is_normal(): return redirect(url_for('index'))
+
+    return render_template('finetune_failed.html.jinja2', page_name='finetune', page_title='Finetuning failed')
+
 @finetune_blueprint.route('/get-opus-models', methods=["POST"])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def get_opus_models():

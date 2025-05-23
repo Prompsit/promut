@@ -29,7 +29,7 @@
 </div>
 {%endif%}
 
-<h2 class="h5">Train a neural engine</h2>
+<h2 class="h5 section-title">Finetune a pre-trained neural engine</h2>
 
 {% if corpora | length == 0 %}
 <div class="jumbotron p-3 text-center">
@@ -109,7 +109,7 @@
           <label class="col-form-label h6">Batch size</label>
           <div class="input-group">
             <input type="number" name="batchSizeTxt" id="batchSizeTxt" class="form-control" value="16" min="16"
-              max="128" step="8" />
+              max="128" step="8" disabled />
             <div class="input-group-prepend">
               <div class="input-group-text">sentences</div>
             </div>

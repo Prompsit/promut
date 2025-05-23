@@ -176,6 +176,15 @@ $(document).ready(function () {
                         let engine_data = row[8];
                         let template = document.importNode(document.querySelector("#engines-icon-template").content, true);
 
+
+                        if (engine_data.opus_engine) {
+                            $(template).find(".opus-engine").removeClass("d-none");
+                        }
+
+                        if (isAdmin === "True") {
+                            $(template).find(".multiselect-checkbox").removeClass("d-none");
+                        }
+
                         if (engine_data.engine_owner) {
                             if (engine_data.engine_public) {
                                 $(template).find(".folder-shared").removeClass("d-none");

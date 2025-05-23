@@ -1,0 +1,17 @@
+{% extends "base.html.jinja2" %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<input type=hidden id="task_id" value="{{ task_id }}" />
+<div class="row align-items-center alert alert-danger" role="alert">
+  <div class="col-12 col-sm-4">
+    <h1 class="section-title">Training!</h1>
+    <p>Unfortunately your finetuning failed. Please try again.</p>
+    <div class="training-failed-btns">
+      <a href="{{ url_for('finetune.finetune_index') }}">Finetune</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,5 +1,10 @@
 $(document).ready(function () {
 
+
+
+    let languageNames = new Intl.DisplayNames(["en"], { type: "language" });
+
+
     let adjust_languages = (el) => {
         let other = $('.lang_sel_model').not(el);
         let selected_lang = $(el).find('option:selected').val();
@@ -43,7 +48,6 @@ $(document).ready(function () {
 
             },
             success: function (response) {
-
                 const container = $('.models-response-table');
                 displayDataTable(container, response);
 
@@ -78,7 +82,7 @@ $(document).ready(function () {
 
         const table = $('<table id="dataTable" class="table table-bordered w-100">');
 
-        const headers = ["Model", "BLEU score", "Size", "Language pair", "Download"];
+        const headers = ["Model", "BLEU", "Size", "Language pair", "Download"];
 
         const headerRow = $('<tr>');
         headers.forEach(header => {
@@ -97,6 +101,8 @@ $(document).ready(function () {
             [data].map(async (row, idx) => {
                 const exists = await checkIfExists();
 
+
+
                 const rowElement = $('<tr>');
 
                 fields.forEach(header => {
@@ -111,6 +117,11 @@ $(document).ready(function () {
                         rowElement.append(`<td>${row["size"] ? Intl.NumberFormat("en", {
                             notation: "compact",
                         }).format(row["size"]) : ""}</td>`);
+                    } else if (header === "langpair") {
+                        const langcodes = row[header].split("-");
+                        const source = languageNames.of(langcodes[0]);
+                        const target = languageNames.of(langcodes[1])
+                        rowElement.append(`<td>${source} - ${target}</td>`);
                     }
                     else {
                         rowElement.append(`<td>${row[header]}</td>`);

@@ -153,7 +153,8 @@ html {
 }
 
 .chart-grid button,
-.dashboard-btns button {
+.dashboard-btns button,
+.training-failed a {
   padding: 5px 16px;
   border: none;
   background: #017360;

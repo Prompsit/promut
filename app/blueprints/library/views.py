@@ -466,6 +466,8 @@ def library_export(type, id):
     return send_file(zip_path + ".zip", as_attachment=True)
 
 
+
+
 @library_blueprint.route("/export-corpora/<id>")
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def library_corpora_export(id):
