@@ -208,7 +208,8 @@ $(document).ready(function () {
                 {
                     targets: 6,
                     render: function (data, type, row) {
-                        return data !== null ? `<div class="bleu-container" id=${row[8].engine_delete.replace("/library/delete/library_engines/", "")}><div class="val-bleu">${data.toFixed(2)}<span>VAL.</span></div> ${row[8]["engine_test_score"] !== undefined ? `<p class="separator">|</p> <div class="test-bleu">${row[8]["engine_test_score"]}<span>TEST</span></div>` : ""}</div>` : `<div class="bleu-container" id=${row[8].engine_delete.replace("/library/delete/library_engines/", "")}>—</div>`
+                        const test_score = row[8].engine_test_score;
+                        return data !== null ? `<div class="bleu-container" id=${row[8].engine_delete.replace("/library/delete/library_engines/", "")}><div class="val-bleu">${data.toFixed(2)}<span>VAL.</span></div> ${test_score !== undefined ? `<p class="separator">|</p> <div class="test-bleu">${test_score}<span>TEST</span></div>` : ""}</div>` : `<div class="bleu-container" id=${row[8].engine_delete.replace("/library/delete/library_engines/", "")}>${test_score !== -1 && test_score !== undefined && test_score}</div>`
                     }
                 },
                 {
