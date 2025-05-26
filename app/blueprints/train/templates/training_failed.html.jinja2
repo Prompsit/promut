@@ -1,0 +1,18 @@
+{% extends "base.html.jinja2" %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<input type=hidden id="task_id" value="{{ task_id }}" />
+<div class="row align-items-center alert alert-danger failed pb-4" role="alert">
+  <div class="col-12">
+    <h1 class="section-title">Engine launch failed!</h1>
+    <p class="h5">An error occurred during the preparation steps of launching your training. Please try again or contact
+      support.</p>
+    <div class="training-failed mt-4 ">
+      <a href="{{ url_for('train.train_index') }}" class="mb-6">Train an engine</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

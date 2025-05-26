@@ -391,6 +391,20 @@ def library_delete(type, id):
     return redirect(request.referrer)
 
 
+@library_blueprint.route("/delete-user", methods=["POST"])
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def library_delete_multiple():
+    id = int(request.form.get('id'))
+    type = request.form.get('type');
+
+    try:
+        user_utils.library_delete(type, id)
+        return jsonify({ "result": 200})
+    except Exception as ex:
+        print(ex, flush = True)
+        return jsonify({ "result": -1})  
+
+
 @library_blueprint.route("/export/<type>/<id>")
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def library_export(type, id):
@@ -464,6 +478,8 @@ def library_export(type, id):
         shutil.rmtree(tmp_folder)
 
     return send_file(zip_path + ".zip", as_attachment=True)
+
+
 
 
 @library_blueprint.route("/export-corpora/<id>")

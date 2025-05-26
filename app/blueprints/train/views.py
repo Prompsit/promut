@@ -73,6 +73,14 @@ def train_launching(task_id):
 
     return render_template('launching.html.jinja2', page_name='train', page_title='Launching training', task_id=task_id)
 
+
+@train_blueprint.route('/training-failed')
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def training_failed():
+    if user_utils.is_normal(): return redirect(url_for('index'))
+
+    return render_template('training_failed.html.jinja2', page_name='train', page_title='Launching failed')
+
 @train_blueprint.route('/start', methods=['POST'])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def train_start():
@@ -93,9 +101,14 @@ def launch_status():
         if engine_id != -1:
             return jsonify({ "result": 200, "engine_id": result.get() })
         else:
-            return jsonify({ "result": -1 })
+            return jsonify({
+                "result": -1,
+                "error_url": url_for('train.training_failed')
+            })
     else:
-        return jsonify({ "result": -1 })
+        return jsonify({
+            "result": -1,
+        })
     
 import pytz    
 
@@ -290,6 +303,17 @@ def train_status():
                             "test_task_id": engine.test_task_id, "test_score": engine.test_score })
     else:
         return jsonify({ "stats": [], "stopped": engine.has_stopped() })
+    
+@train_blueprint.route('/engine-running', methods=["POST"])
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def engine_running():
+    id = request.form.get('id')
+
+    
+    engine = Engine.query.filter_by(id = id).first()
+
+    return jsonify({ "stopped": engine.has_stopped() })
+
 
 @train_blueprint.route('/train_stats', methods=["POST"])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())

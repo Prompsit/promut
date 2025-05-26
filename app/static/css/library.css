@@ -67,7 +67,9 @@
 
 .data-upload-form.collapsed,
 .search-opus-corpora-container.collapsed,
-.search-opus-models-container.collapsed .corpora-nav-tabs-container.collapsed .multiple-user-actions.collapsed {
+.search-opus-models-container.collapsed,
+.corpora-nav-tabs-container.collapsed,
+.multiple-user-actions.collapsed {
     height: 0px;
     padding: 0px;
 }

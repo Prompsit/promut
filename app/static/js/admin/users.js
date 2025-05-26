@@ -107,6 +107,7 @@ $(document).ready(function () {
     }
 
     $('.multiple-user-actions').on('click', 'button', async function () {
+
         const action = $(this).attr('id');
         const selectedUsers = [...$('tr.selected td:first-child')].map(el => el.innerText);
         $('.multiple-user-actions').toggle("d-none");
@@ -118,7 +119,6 @@ $(document).ready(function () {
         event.stopPropagation();
         const action = $(this).attr('id');
         const user = $(this).closest("tr").find("td:first-child")[0].innerText;
-
         try {
             await processUsers([user], action);
         } catch (error) {

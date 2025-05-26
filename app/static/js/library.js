@@ -176,6 +176,14 @@ $(document).ready(function () {
                         let engine_data = row[8];
                         let template = document.importNode(document.querySelector("#engines-icon-template").content, true);
 
+                        if (engine_data.opus_engine) {
+                            $(template).find(".opus-engine").removeClass("d-none");
+                        }
+
+                        if (isAdmin === "True") {
+                            $(template).find(".multiselect-checkbox").removeClass("d-none");
+                        }
+
                         if (engine_data.engine_owner) {
                             if (engine_data.engine_public) {
                                 $(template).find(".folder-shared").removeClass("d-none");
@@ -186,7 +194,8 @@ $(document).ready(function () {
                             $(template).find(".folder-grabbed").removeClass("d-none");
                         }
 
-                        let ghost = document.createElement('div');
+
+                        let ghost = document.createElement('div.actions-container');
                         $(ghost).append(template);
 
                         return ghost.innerHTML;
@@ -199,7 +208,7 @@ $(document).ready(function () {
                 {
                     targets: 6,
                     render: function (data, type, row) {
-                        return data !== null ? `<div class="bleu-container"><div class="val-bleu">${data.toFixed(2)}<span>VAL.</span></div> ${row[8]["engine_test_score"] !== undefined ? `<p class="separator">|</p> <div class="test-bleu">${row[8]["engine_test_score"]}<span>TEST</span></div>` : ""}</div>` : "—"
+                        return data !== null ? `<div class="bleu-container" id=${row[8].engine_delete.replace("/library/delete/library_engines/", "")}><div class="val-bleu">${data.toFixed(2)}<span>VAL.</span></div> ${row[8]["engine_test_score"] !== undefined ? `<p class="separator">|</p> <div class="test-bleu">${row[8]["engine_test_score"]}<span>TEST</span></div>` : ""}</div>` : `<div class="bleu-container" id=${row[8].engine_delete.replace("/library/delete/library_engines/", "")}>—</div>`
                     }
                 },
                 {
@@ -258,6 +267,98 @@ $(document).ready(function () {
             ]
         });
     });
+
+    let engines_table = $('.engines-table');
+
+    $("#multiple-users-btn-engines").on('click', function () {
+        $('.multiple-user-actions-engines').toggle('d-none');
+    })
+
+    engines_table.on('click', 'tbody tr td:first-child .multiselect-checkbox', function (e) {
+        const row = e.currentTarget.closest("tr");
+
+        const rows = $(engines_table).find('tr.selected');
+
+        row.classList.toggle('selected');
+        if (rows.length > 0) {
+            $("#multiple-users-btn-engines").removeClass('d-none');
+        } else {
+            $("#multiple-users-btn-engines").addClass('d-none');
+        }
+    });
+
+
+    async function processUsers(users, action) {
+        var notyf = new Notyf();
+
+        const notifications = { delete: "Deletion successful" }
+
+        const errors = { delete: "Error while deleting." }
+
+        try {
+            for (const user of users) {
+                let formData = new FormData();
+                formData.append("id", user)
+                formData.append("type", action);
+
+                $.ajax({
+                    url: `/library/delete-user`,
+                    method: 'POST',
+                    data: formData,
+                    contentType: false,
+                    cache: false,
+                    processData: false,
+                    success: function (response) {
+                        window.location.reload(true);
+                        return;
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error deleting user", user)
+
+                    }
+                });
+            }
+            notyf.success({ message: notifications[`${action}`], duration: 3500, position: { x: "middle", y: "top" } });
+
+        } catch (error) {
+            notyf.error({ message: errors[`${action}`], duration: 3500, position: { x: "middle", y: "top" } });
+            console.error('Deletion failed:', error);
+            console.error('Failed to process users:', error);
+        }
+
+
+    }
+
+    $('.multiple-user-actions-engines').on('click', 'button', async function () {
+        const selectedUsers = [...$('tr.selected .bleu-container')].map(el => el.id);
+
+        $('.multiple-user-actions').toggle("d-none");
+        await processUsers(selectedUsers, "delete");
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ///////////////////////////////////
+    ///////////////////////////////////
+    ///////////////////////////////////
+
 
     $(".details-table").DataTable({
         dom: "t",

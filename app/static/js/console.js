@@ -2,6 +2,33 @@ $(document).ready(function () {
     let engine_id = $("#engine_id").val();
     let engine_stopped = undefined;
 
+
+    let data = new FormData();
+    data.append("id", engine_id);
+
+    $.ajax({
+        url: '/train/engine-running',
+        method: 'POST',
+        data: data,
+        contentType: false,
+        cache: false,
+        processData: false,
+        success: function (response) {
+            if (!response.stopped) {
+                $('.dashboard-btns').addClass('d-none');
+            } else {
+                $('.dashboard-btns').removeClass('d-none');
+            }
+
+        },
+        error: function (xhr, status, error) {
+            console.error(error, "Task id not saved")
+        }
+    });
+
+
+
+
     const interval = 1000;
     let setupTimer = (el) => {
         let elapsed = parseInt($(el).attr("data-elapsed"));
@@ -51,11 +78,7 @@ $(document).ready(function () {
             if (data) {
                 displayRounds(data);
             }
-            if (engine_stopped != undefined || engine_stopped == false) {
-                $('.dashboard-btns button').prop('disabled', true);
-            } else {
-                $('.dashboard-btns button').prop('disabled', false);
-            }
+
         })
         .catch(error => console.error('Error:', error.statusText));
 
