@@ -1,12 +1,12 @@
 version: '3.1'
 
 services:
-    mutnmt_lukas:
-        container_name: mutnmt_lukas
-        image: mutnmt_lukas:latest
+    mutnmt_tudor:
+        container_name: mutnmt_tudor
+        image: mutnmt_tudor:latest
         build: .
         ports:
-            - "8091:5011"
+            - "8087:5007"
         environment: 
             DEBUG: 1
             CREDENTIALS_USERNAME: admin
@@ -20,5 +20,5 @@ services:
                 reservations:
                     devices:
                         - driver: nvidia
-                          device_ids: ['1']
+                          device_ids: ['0']
                           capabilities: [gpu, utility, compute]
