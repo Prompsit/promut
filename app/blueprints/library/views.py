@@ -586,10 +586,11 @@ def download_model():
             return jsonify({"result": 200, "info": "Model already exists"})
 
     model_url = None
+    model_info = get_opus_model_info(src_alpha_3, trg_alpha_3)
     try:
-        model_url = get_opus_model_info(src_alpha_3, trg_alpha_3)["download_link"]
+        model_url = model_info["download_link"]
         model_path = os.path.join(engine_path, "model")
-        os.makedirs(engine_path)
+        os.makedirs(engine_path, exist_ok=True)
     except ValueError as e:
         return jsonify({"result": -1, "info": str(e)})
   
@@ -613,7 +614,8 @@ def download_model():
             public=True,
             launched=date,
             finished=date,
-            status="opus"
+            status="opus",
+            test_score=model_info["score"] if model_info["score_type"] == "bleu" else -1
         )
         db.session.add(engine)
         db.session.commit()
