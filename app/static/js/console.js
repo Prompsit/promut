@@ -140,7 +140,7 @@ $(document).ready(function () {
                         if (chart_data.id != "train_learning_rate") {
                             if (val == 0) return 0
                             if (val % parseInt(val) == 0) return parseInt(val)
-                            return val.toFixed(8)
+                            return val.toFixed(2)
                         } else {
                             return val.toExponential(2);
                         }

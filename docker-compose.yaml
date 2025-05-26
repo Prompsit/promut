@@ -20,5 +20,5 @@ services:
                 reservations:
                     devices:
                         - driver: nvidia
-                          device_ids: ['2']
+                          device_ids: ['1']
                           capabilities: [gpu, utility, compute]
