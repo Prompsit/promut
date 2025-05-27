@@ -30,6 +30,16 @@ class Config(object):
         'sqlite:///' + os.path.join(DATA_FOLDER, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "connect_args": {
+            "timeout": 30,
+            "check_same_thread": False
+        }
+    }
+    SQLALCHEMY_SESSION_OPTIONS = {
+        "autoflush": False
+    }
+
     SECRET_KEY = 'development key' # change by your own
     DEBUG      = False
 
@@ -67,3 +77,5 @@ class Config(object):
     CELERY_BROKER_URL = 'redis://localhost:6379/0'
     CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
     CELERYD_CONCURRENCY = 4
+
+    
