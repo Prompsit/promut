@@ -123,38 +123,17 @@ def check_opus_corpus():
         trg_lang = request.form.get('target_lang')
         corpus_name = request.form.get('corpus_name')
 
-        USER_ID = user_utils.get_uid()
-        source_lang_id = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).one().id
-        target_lang_id = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).one().id
-
-        test_src = UserLanguage.query.filter_by(code=src_lang).first().id
-        test_trg = UserLanguage.query.filter_by(code=trg_lang).first().id
-
-        # Check if corpus has already been downloaded for the given source and target languages
-        check = Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).exists()
-
-
-        print("--------------------------------------------------------------------------------------", flush = True)
-        #print(Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).first().source.code, flush = True)
-        #print(Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).first().target.code, flush = True)
+       # to check if an OPUS corpus has already been downloaded by anyone
+        # we have to use all the corpora with the given name and then 
+        # check if the input src and trg languages are the same as
+        # any of the corpora that are obtained by the query
         all_corpora = Corpus.query.filter_by(name=corpus_name).all()
-        print(all_corpora, flush = True)
-        print("-", flush = True)
-        print(src_lang, flush = True)
-        print(trg_lang, flush = True)
 
-        for corp in all_corpora:
-            print(corp.source.code, flush = True)
-            print(corp.target.code, flush = True)
-            if src_lang == corp.source.code and trg_lang == corp.target.code:
-                print(f"corpus {corpus_name} - src: ({corp.source.code}, {src_lang}) - trg: ({corp.target.code}, {trg_lang})")
-            print("-", flush = True)
-
-        print("--------------------------------------------------------------------------------------", flush = True)
-
-        if db.session.query(check).scalar():
-            db.session.remove()
-            return jsonify({ "result": -1 })
+        for corpus in all_corpora:
+            if src_lang == corpus.source.code and trg_lang == corpus.target.code:
+                db.session.remove()
+                return jsonify({ "result": -1 }) 
+        
         db.session.remove()
 
         return jsonify({ "result": 200})
@@ -181,10 +160,16 @@ def download_opus_corpus():
         target_lang_id = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).one().id
 
         # Check if corpus has already been downloaded for the given source and target languages
-        check = Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).exists()
+        # to check if an OPUS corpus has already been downloaded by anyone
+        # we have to use all the corpora with the given name and then 
+        # check if the input src and trg languages are the same as
+        # any of the corpora that are obtained by the query
+        all_corpora = Corpus.query.filter_by(name=corpus_name).all()
 
-        if db.session.query(check).scalar():
-            return jsonify({ "result": -1 })
+        for corpus in all_corpora:
+            if src_lang == corpus.source.code and trg_lang == corpus.target.code:
+                db.session.remove()
+                return jsonify({ "result": -1 })
 
         # if corpus doesn't exist in db, but there are folders/files with it, then delete them
         opus_workdir = app.config["OPUS_FILES_FOLDER"]
