@@ -183,6 +183,9 @@ $(document).ready(function () {
                         if (isAdmin === "True") {
                             $(template).find(".multiselect-checkbox").removeClass("d-none");
                         }
+                        if (engine_data.engine_owner) {
+                            $(template).find(".multiselect-checkbox").removeClass("d-none");
+                        }
 
                         if (engine_data.engine_owner) {
                             if (engine_data.engine_public) {
