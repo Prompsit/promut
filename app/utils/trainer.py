@@ -21,7 +21,8 @@ class Trainer(object):
     def launch(id, user_role, retrain_path = ""):
         task = tasks.train_engine.apply_async(args=[id, user_role, retrain_path])
         monitor_task = tasks.monitor_training.apply_async(args=[id])
-        return task.id, monitor_task.id
+        #return task.id, monitor_task.id
+        return task.id
 
     @staticmethod
     def finish(engine):

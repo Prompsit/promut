@@ -91,7 +91,7 @@ def train_start():
     return jsonify({ "result": 200, "launching_url": url_for('train.train_launching', task_id=task.id) })
 
 @train_blueprint.route('/launch_status', methods=['POST'])
-@utils.condec(login_required, user_utils.isUserLoginEnabled())
+#@utils.condec(login_required, user_utils.isUserLoginEnabled())
 def launch_status():
     task_id = request.form.get('task_id')
     result = tasks.launch_training.AsyncResult(task_id)
@@ -118,7 +118,8 @@ def train_launch():
     id = request.form.get('engine_id')
     if user_utils.is_normal(): return url_for('index')
 
-    task_id, monitor_task_id = Trainer.launch(id, user_utils.get_user_role())
+    #task_id, monitor_task_id = Trainer.launch(id, user_utils.get_user_role())
+    task_id = Trainer.launch(id, user_utils.get_user_role())
 
     return url_for('train.train_console', id=id)
 
@@ -153,7 +154,7 @@ def train_console(id):
             elapsed = engine.runtime, corpora=corpora, elapsed_format=utils.seconds_to_timestring(engine.runtime) if engine.runtime else None)
 
 @train_blueprint.route('/full_training_graph', methods=["POST"])
-@utils.condec(login_required, user_utils.isUserLoginEnabled())
+#@utils.condec(login_required, user_utils.isUserLoginEnabled())
 def full_train_graph():
     id = request.form.get('engine_id')
 
@@ -189,7 +190,7 @@ def full_train_graph():
     return jsonify({"stats": stats })
 
 @train_blueprint.route('/historic_training_data', methods=["POST"])
-@utils.condec(login_required, user_utils.isUserLoginEnabled())
+#@utils.condec(login_required, user_utils.isUserLoginEnabled())
 def historic_train_graph():
     id = request.form.get('engine_id')
     graph_id = request.form.get('graph_id')
@@ -231,7 +232,7 @@ def historic_train_graph():
     return jsonify({"stats": stats })
 
 @train_blueprint.route('/graph_data', methods=["POST"])
-@utils.condec(login_required, user_utils.isUserLoginEnabled())
+#@utils.condec(login_required, user_utils.isUserLoginEnabled())
 def train_graph():
     tags = request.form.getlist('tags[]')
     id = request.form.get('id')
@@ -316,7 +317,7 @@ def engine_running():
 
 
 @train_blueprint.route('/train_stats', methods=["POST"])
-@utils.condec(login_required, user_utils.isUserLoginEnabled())
+#@utils.condec(login_required, user_utils.isUserLoginEnabled())
 def train_stats():
     engine_id = request.form.get('id')
     engine = Engine.query.filter_by(id=engine_id).first()
@@ -413,7 +414,7 @@ def train_stats():
     
 
 @train_blueprint.route('/log', methods=["POST"])
-@utils.condec(login_required, user_utils.isUserLoginEnabled())
+#@utils.condec(login_required, user_utils.isUserLoginEnabled())
 def train_log():
     engine_id = request.form.get('engine_id')
     draw = request.form.get('draw')
@@ -542,7 +543,8 @@ def train_resume(engine_id):
             engine.finished = None
             db.session.commit()
 
-            task_id, _ = Trainer.launch(engine_id, user_utils.get_user_role(), retrain_path = current_model)
+            #task_id, _ = Trainer.launch(engine_id, user_utils.get_user_role(), retrain_path = current_model)
+            task_id = Trainer.launch(engine_id, user_utils.get_user_role(), retrain_path = current_model)
             i = 0
             while engine.has_stopped() and i < 100:
                 db.session.refresh(engine)

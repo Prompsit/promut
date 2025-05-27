@@ -127,8 +127,30 @@ def check_opus_corpus():
         source_lang_id = UserLanguage.query.filter_by(code=src_lang, user_id=USER_ID).one().id
         target_lang_id = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).one().id
 
+        test_src = UserLanguage.query.filter_by(code=src_lang).first().id
+        test_trg = UserLanguage.query.filter_by(code=trg_lang).first().id
+
         # Check if corpus has already been downloaded for the given source and target languages
         check = Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).exists()
+
+
+        print("--------------------------------------------------------------------------------------", flush = True)
+        #print(Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).first().source.code, flush = True)
+        #print(Corpus.query.filter_by(name=corpus_name, user_source_id=source_lang_id, user_target_id=target_lang_id).first().target.code, flush = True)
+        all_corpora = Corpus.query.filter_by(name=corpus_name).all()
+        print(all_corpora, flush = True)
+        print("-", flush = True)
+        print(src_lang, flush = True)
+        print(trg_lang, flush = True)
+
+        for corp in all_corpora:
+            print(corp.source.code, flush = True)
+            print(corp.target.code, flush = True)
+            if src_lang == corp.source.code and trg_lang == corp.target.code:
+                print(f"corpus {corpus_name} - src: ({corp.source.code}, {src_lang}) - trg: ({corp.target.code}, {trg_lang})")
+            print("-", flush = True)
+
+        print("--------------------------------------------------------------------------------------", flush = True)
 
         if db.session.query(check).scalar():
             db.session.remove()

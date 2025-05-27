@@ -342,6 +342,8 @@ def launch_training(self, user_id, engine_path, params):
 
             return engine.id
     except Exception as ex:
+        logging.exception("An exception was thrown in LAUNCH_TRAINING function!")
+        print(ex, flush = True)
         with app.app_context():
             db.session.delete(engine)
             db.session.commit()
@@ -350,7 +352,6 @@ def launch_training(self, user_id, engine_path, params):
                 shutil.rmtree(engine_path)
 
             # Flash.issue("The engine could not be configured", Flash.ERROR)
-            logging.exception("An exception was thrown in LAUNCH_TRAINING function!")
             return -1
 
 @celery.task(bind=True)
@@ -624,16 +625,17 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
     # track of its progress
     try:
         with app.app_context():
-            engine = Engine.query.filter_by(id=engine_id).first()
-            engine.status = "launching"
-            db.session.commit()
-            gpu_id = GPUManager.wait_for_available_device(
-                is_admin=(user_role == EnumRoles.ADMIN)
-            )
-            engine.gid = gpu_id
-            db.session.commit()
+            gpu_id = GPUManager.wait_for_available_device(is_admin=(user_role == EnumRoles.ADMIN))
+            eng_path = ""
 
             try:
+                engine = Engine.query.filter_by(id=engine_id).first()
+                engine.status = "launching"
+                engine.gid = gpu_id
+                db.session.commit()
+
+                eng_path = engine.path
+
                 env = os.environ.copy()
 
                 # set Marian pretrained path if the user wants to start training the model again
@@ -702,20 +704,24 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
                             Trainer.stop(engine_id, calculate_elapsed = True)
 
                         GPUManager.free_device(gpu_id)
-                        refresh_full_graph_log(engine.path)
+                        refresh_full_graph_log(eng_path)
+                        db.session.remove()
                         return
 
                 if marian_process.poll() is None:
-                    refresh_full_graph_log(engine.path)
+                    refresh_full_graph_log(eng_path)
                     Trainer.stop(engine_id, calculate_elapsed = True)
 
             except Exception as ex:
                 logging.exception("An exception was thrown in TRAIN_ENGINE!")
+                logging.error("An exception was thrown in TRAIN_ENGINE!", exc_info=True)
+                print(ex, flush = True)
             finally:
                 engine.status = "stopped"
                 GPUManager.free_device(gpu_id)
                 db.session.commit()
-                refresh_full_graph_log(engine.path)
+                if eng_path != "":
+                    refresh_full_graph_log(eng_path)
                 db.session.remove()
     except Exception as ex:
         logging.exception("An exception was thrown in TRAIN_ENGINE!")
@@ -725,6 +731,7 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
 @celery.task(bind=True)
 def monitor_training(self, engine_id):
     redis_conn = redis.Redis()
+    time.sleep(10)
 
     def monitor():
         try:
@@ -744,10 +751,10 @@ def monitor_training(self, engine_id):
                         engine.power = int(power + current_power) / updates
                         db.session.commit()
 
-                        time.sleep(10)
+                        time.sleep(12)
                         monitor()
                 else:
-                    time.sleep(5)
+                    time.sleep(30)
                     monitor()
         except Exception as ex:
             logging.exception("An exception was thrown in MONITOR!")
