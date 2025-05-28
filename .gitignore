@@ -14,7 +14,7 @@ app/list
 id_rsa
 id_rsa.pub
 known_hosts
-client-secret.json
+client-secret*.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
