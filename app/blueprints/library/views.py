@@ -683,3 +683,44 @@ def download_model():
         db.session.rollback()
         db.session.remove()
         return jsonify({"result": -1, "info": str(ex)})
+
+
+
+
+
+import requests
+import time
+
+TARGET_URL = "https://opus.nlpl.eu"
+
+@library_blueprint.route("/ping", methods=["GET"])
+def ping_url():
+    try:
+        start_time = time.time()
+        response = requests.get(TARGET_URL, timeout=5)
+        end_time = time.time()
+        
+        return jsonify({
+            'status': 'success',
+            'url': TARGET_URL,
+            'response_code': response.status_code,
+            'response_time': f"{(end_time - start_time)*1000:.2f}ms",
+            'is_up': response.status_code == 200
+        })
+    except requests.exceptions.Timeout:
+        return jsonify({
+            'status': 'error',
+            'url': TARGET_URL,
+            'error': 'Timeout',
+            'is_up': False
+        }), 504
+    except requests.exceptions.RequestException as e:
+        return jsonify({
+            'status': 'error',
+            'url': TARGET_URL,
+            'error': str(e),
+            'is_up': False
+        }), 503
+
+if __name__ == '__main__':
+    app.run(debug=True)

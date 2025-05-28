@@ -186,6 +186,10 @@ html {
   font-weight: bold;
 }
 
+.not-allowed {
+  cursor: not-allowed;
+}
+
 .multiple-users-actions-container {
   width: fit-content;
   margin: 0 0 20px auto;

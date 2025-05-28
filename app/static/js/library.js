@@ -4,6 +4,26 @@ $(document).ready(function () {
         if (col) $(col).addClass("d-none");
     }
 
+    $.ajax({
+        url: `/library/ping`,
+        method: 'GET',
+        contentType: false,
+        cache: false,
+        processData: false,
+        success: function (response) {
+            if (!response.is_up) {
+                $(".opus-unavailable-models").removeClass("d-none");
+                $(".opus-model-search-header").addClass("alert alert-secondary not-allowed");
+                //  $(".opus-unavailable-datasets").removeClass("d-none");
+                // $(".opus-search-header").addClass("alert alert-secondary not-allowed");
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("Error checking OPUS web", error)
+
+        }
+    });
+
     let hide_responsive = (columns) => {
         // Sometimes datatables returns "-" instead of a boolean, in that case
         // we return, since we don't know if it means that the column
