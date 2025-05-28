@@ -643,11 +643,6 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
                 if retrain_path != "" and os.path.exists(retrain_path):
                     marian_pretrained_cmd = f"--pretrained-model {retrain_path}"
 
-                print(
-                    "---- PRETRAINED MODEL: {0}".format(marian_pretrained_cmd),
-                    flush=True,
-                )
-
                 # get Marian training command and set available GPUs in environment
                 config_path = os.path.join(engine.path, "config.yaml")
                 marian_cmd = "{0}/build/marian -c {1} {2} --relative-paths".format(
@@ -655,21 +650,10 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
                 )
                 env["CUDA_VISIBLE_DEVICES"] = "{}".format(gpu_id)
 
-                print('--------------------------------', flush = True)
-                print(marian_cmd, flush = True)
-                print('--------------------------------', flush = True)
-
-                print("---- CUDA DEVICES: {0}".format(gpu_id))
-                print("CONFIG PATH: " + str(config_path))
-                print("DOES CONFIG EXIST: " + str(os.path.isfile(config_path)))
-
-                print("------- BEFORE STARTING MARIAN", flush=True)
                 # run Marian training command
                 # popen command must be run with shell functionality, and a process group must be created
                 # with preexec_fn in order to be able to kill the process later with SIGTERM, else it won't stop
                 marian_process = subprocess.Popen(marian_cmd, env=env, shell=True, preexec_fn = os.setsid)
-                print("-- PID: " + str(marian_process.pid), flush = True)
-                print("------- AFTER STARTING MARIAN", flush = True)
 
                 engine.status = "training"
                 engine.pid = marian_process.pid
@@ -677,11 +661,6 @@ def train_engine(self, engine_id, user_role, retrain_path=""):
                 
                 # add the graph log path to the logs file for historic use
                 add_graph_log(engine.model_path, engine.path)
-
-                print("-- ENGINE PID: " + str(engine.pid), flush = True)
-                print("-- ENGINE ID: " + str(engine_id) + " / " + str(engine.id), flush = True)
-                print("-- ENGINE PATH: " + str(engine.path), flush = True)
-                print("-- ENGINE MODEL PATH: " + str(engine.model_path), flush = True)
 
                 # trainings are limited to 1 hour unless user has researcher or admin role
                 start = datetime.datetime.now()
@@ -893,8 +872,6 @@ def inspect_details(self, user_id, engine_id, line):
             use_opus_way = app.config['USE_OPUS_HANDLING']
 
             if use_opus_way:
-                print("------", flush = True)
-                print("USE OPUS WAY OF INSPECT ---", flush = True)
 
                 line_tok = tokenizer.tokenize(line, use_opus_way = use_opus_way)
 
