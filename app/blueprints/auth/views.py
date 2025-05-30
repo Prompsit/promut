@@ -199,15 +199,15 @@ def demo_log_in():
     # If demo user is not present, add
 
     if User.query.filter_by(demo=True).first() is None:
-        admin_role = Role.query.filter_by(name=EnumRoles.ADMIN).first()
+        demo_role = Role.query.filter_by(name=EnumRoles.DEMO).first()
         demo_user = User(
             id=-1,
-            username="Amun-PRO",
+            username="Amun",
             social_id="DEMO",
             email="demo@example.com",
             demo=True,
             avatar_url="/img/profile.png",
-            role=admin_role,
+            role=demo_role,
         )
         db.session.add(demo_user)
         db.session.commit()
