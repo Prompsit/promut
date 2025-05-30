@@ -1,4 +1,6 @@
 import os
+import json
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):
@@ -49,14 +51,18 @@ class Config(object):
     ADMIN_EMAIL = ""
 
     USER_LOGIN_ENABLED          = True
-    ENABLE_NEW_LOGINS           = False
+    ENABLE_NEW_LOGINS           = True
     USER_WHITELIST_ENABLED      = True
     BANNED_USERS                = []
     OAUTHLIB_INSECURE_TRANSPORT = True # True also behind firewall,  False -> require HTTPS
-    GOOGLE_OAUTH_CLIENT_ID      = ''
-    GOOGLE_OAUTH_CLIENT_SECRET  = ''
+
+    with open(os.path.join(BASE_CONFIG_FOLDER, "client-secret.json"), "r") as file:
+        data = json.load(file)
+
+    GOOGLE_OAUTH_CLIENT_ID      = data["web"]["client_id"]
+    GOOGLE_OAUTH_CLIENT_SECRET  = data["web"]["client_secret"]
     GOOGLE_USER_DATA_URL        = '/oauth2/v1/userinfo'
-    USE_PROXY_FIX = False
+    USE_PROXY_FIX = True
 
     try:
         with open(os.path.join(LIST_FOLDER, 'admin.list'), 'r') as admin_file:
