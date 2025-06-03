@@ -67,14 +67,16 @@ class Config(object):
     try:
         with open(os.path.join(LIST_FOLDER, 'admin.list'), 'r') as admin_file:
             ADMINS = [line.strip() for line in admin_file if line.strip() != ""]
-    except:
+    except Exception as ex:
+        print("Exception in whitelist creation: " + str(ex), flush = True)
         ADMINS = []
 
     if USER_WHITELIST_ENABLED:
         try:
             with open(os.path.join(LIST_FOLDER, 'white.list'), 'r') as whitelist_file:
                 WHITELIST = [line.strip() for line in whitelist_file if line.strip() != ""]
-        except:
+        except Exception as ex:
+            print("Exception in whitelist creation: " + str(ex), flush = True)
             WHITELIST = None
     else:
         WHITELIST = None

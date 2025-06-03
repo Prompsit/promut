@@ -121,9 +121,15 @@ def google_logged_in(blueprint, token):
         # Update admins
         for i in app.config["ADMINS"]:
             try:
-                adminuser = User.query.filter(User.email == i).one()
-                adminuser.admin = True
-            except NoResultFound:
+                user_exists = User.query.filter(User.email == i).one()
+
+                admin_role = Role.query.filter_by(name=EnumRoles.ADMIN).first()
+                user.admin = True
+                user.role = admin_role
+                db.session.commit()
+
+            except Exception as ex:
+                print("Exception adding the user as admin: " + str(ex), flush = True)
                 pass
 
         db.session.commit()
