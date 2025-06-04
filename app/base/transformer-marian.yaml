@@ -24,7 +24,7 @@ valid-mini-batch: 16
 valid-max-length: 128
 
 save-freq: 1000
-disp-freq: 50
+disp-freq: 200
 exponential-smoothing: 0.0001
 #disp-first: 10
 
