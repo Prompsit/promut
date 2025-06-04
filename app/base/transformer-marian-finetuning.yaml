@@ -11,7 +11,7 @@ after: 4e
 early-stopping: 5
 
 seed: 42
-workspace: 5000
+workspace: 1700
 shuffle-in-ram: true # speed up shuffling, may eat all the ram when using very big training files
 
 quiet-translation: true
@@ -53,4 +53,4 @@ optimizer-params:
 
 clip-norm: 0
 sync-sgd: true
-optimizer-delay: 4
+optimizer-delay: 6
