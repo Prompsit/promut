@@ -7,10 +7,14 @@ import yaml
 
 
 class MarianWrapper:
-    def __init__(self, engine_path):
+    def __init__(self, engine_path, finetuned, opus_engine, src_lang_3, trg_lang_3):
         try:
             # for inference the model specified in the decoder.yml should be used
             self.model = os.path.join(engine_path, "model.npz.decoder.yml")
+            self.finetuned = finetuned
+            self.opus_engine = opus_engine
+            self.src_lang_3 = src_lang_3
+            self.trg_lang_3 = trg_lang_3
             
             print("MARIAN WRAPPER MODEL USED ----")
             print(self.model)
@@ -25,6 +29,14 @@ class MarianWrapper:
         n_best_flag = "--n-best" if n_best else ""
         input_tmp = tempfile.NamedTemporaryFile(delete=False)
         lines = [line.rstrip("\n") + "\n" for line in lines]
+
+        # if this is a multilingual finetuned model that comes from OPUS
+        # we have to manually set the target language via a token
+        MULTILANG_CONCAT = ""
+        if self.finetuned or self.opus_engine:
+        #    lines = [f">>{self.trg_lang_3}<< " + line for line in lines]
+            MULTILANG_CONCAT = f"| sed 's/^/>>{self.trg_lang_3}<< /'"
+
         with open(input_tmp.name, "w") as f:
             f.writelines(lines)
 
@@ -35,11 +47,12 @@ class MarianWrapper:
             spm_model_path = os.path.join(engine_path, 'source.spm')
             spm_script_path = os.path.join(app.config["MARIAN_FOLDER"], "build/spm_encode")
 
-            marian_opus_cmd = "cat {0} | {1} {2} {3} | {4}/build/marian-decoder -c {5} {6} -w 4000 | {7} > {8}".format(
+            marian_opus_cmd = "cat {0} | {1} {2} {3} {4} | {5}/build/marian-decoder -c {6} {7} -w 4000 | {8} > {9}".format(
                     input_tmp.name, 
                     preprocess_script_path, 
                     spm_model_path, 
                     spm_script_path, 
+                    MULTILANG_CONCAT,
                     app.config["MARIAN_FOLDER"], 
                     self.model,
                     n_best_flag,
@@ -60,8 +73,9 @@ class MarianWrapper:
                 raise Exception
         else:
             marian_cmd = (
-                "cat {0} | {1}/build/marian-decoder -c {2} {3} -w 4000 > {4}".format(
+                "cat {0} {1} | {2}/build/marian-decoder -c {3} {4} -w 4000 > {5}".format(
                     input_tmp.name,
+                    MULTILANG_CONCAT,
                     app.config["MARIAN_FOLDER"],
                     self.model,
                     n_best_flag,
@@ -85,6 +99,12 @@ class MarianWrapper:
     def translate_file(self, input_path, output_path, n_best = False, engine_path = None, use_opus_way = False):
         n_best_flag = "--n-best" if n_best else ""
 
+        # if this is a multilingual finetuned model that comes from OPUS
+        # we have to manually set the target language via a token
+        MULTILANG_CONCAT = ""
+        if self.finetuned or self.opus_engine:
+            MULTILANG_CONCAT = f"| sed 's/^/>>{self.trg_lang_3}<< /'"
+
         if use_opus_way:
             # preprocess.sh spmodel cmake_dir < input > output
             preprocess_script_path = os.path.join(app.config["BASE_CONFIG_FOLDER"], "opus_preprocess.sh")
@@ -92,11 +112,12 @@ class MarianWrapper:
             spm_model_path = os.path.join(engine_path, 'source.spm')
             spm_script_path = os.path.join(app.config["MARIAN_FOLDER"], "build/spm_encode")
 
-            marian_opus_cmd = "cat {0} | {1} {2} {3} | {4}/build/marian-decoder -c {5} {6} -w 4000 | {7} > {8}".format(
+            marian_opus_cmd = "cat {0} | {1} {2} {3} {4} | {5}/build/marian-decoder -c {6} {7} -w 4000 | {8} > {9}".format(
                     input_path, 
                     preprocess_script_path, 
                     spm_model_path, 
                     spm_script_path, 
+                    MULTILANG_CONCAT, 
                     app.config["MARIAN_FOLDER"], 
                     self.model,
                     n_best_flag,
@@ -118,11 +139,12 @@ class MarianWrapper:
 
         else:
             marian_cmd = (
-                "{0}/build/marian-decoder -c {1} {2} -i {3} -o {4} -w 4000 --mini-batch 16".format(
+                "cat {0} {1} | {2}/build/marian-decoder -c {3} {4} -w 4000 > {5}".format(
+                    input_path,
+                    MULTILANG_CONCAT,
                     app.config["MARIAN_FOLDER"],
                     self.model,
                     n_best_flag,
-                    input_path,
                     output_path,
                 )
             )

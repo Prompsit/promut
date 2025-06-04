@@ -49,11 +49,13 @@ def upload_file():
     this_upload = user_utils.get_user_folder(key)
 
     try:
-        os.mkdir(this_upload)
-    except:
-        shutil.rmtree(this_upload)
-        os.mkdir(this_upload)
-    
+        os.makedirs(this_upload, exist_ok=True)
+    except Exception as ex:
+        print("Exception in upload_file in translate/views: " + str(ex), flush = True)
+        #shutil.rmtree(this_upload)
+        #os.mkdir(this_upload)
+
+
     user_file_path = os.path.join(this_upload, secure_filename(user_file.filename))
     user_file.save(user_file_path)
 
