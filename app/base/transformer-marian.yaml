@@ -9,7 +9,7 @@ after: 4e
 early-stopping: 5
 
 seed: 42
-workspace: 6000
+workspace: 5300
 shuffle-in-ram: true # speed up shuffling, may eat all the ram when using very big training files
 
 quiet-translation: true
