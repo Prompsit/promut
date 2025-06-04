@@ -804,26 +804,11 @@ def launch_engine(user_id, engine_id):
         user.user_running_engines.append(RunningEngines(engine=engine, user=user))
         db.session.commit()
 
-        source_lang = UserLanguage.query.filter_by(id=engine.user_source_id, user_id=user_id).one()
-        target_lang = UserLanguage.query.filter_by(id=engine.user_target_id, user_id=user_id).one()
-
-        print(source_lang.code, flush = True)
-        print(source_lang.code, flush = True)
-        print(target_lang.code, flush = True)
-        print(target_lang.code, flush = True)
+        source_lang = UserLanguage.query.filter_by(id=engine.user_source_id).one()
+        target_lang = UserLanguage.query.filter_by(id=engine.user_target_id).one()
 
         src_lang_3 = iso639.Lang(source_lang.code).pt3
         trg_lang_3 = iso639.Lang(target_lang.code).pt3
-
-        print(src_lang_3, flush = True)
-        print(src_lang_3, flush = True)
-        print(trg_lang_3, flush = True)
-        print(trg_lang_3, flush = True)
-
-        print(f"Finetuned: {str(engine.finetuned)}", flush = True)
-        print(f"Finetuned: {str(engine.finetuned)}", flush = True)
-        print(f"OPUS Engine: {str(engine.opus_engine)}", flush = True)
-        print(f"OPUS Engine: {str(engine.opus_engine)}", flush = True)
 
         translator = MarianWrapper(engine.model_path, engine.finetuned, engine.opus_engine, src_lang_3, trg_lang_3)
 
