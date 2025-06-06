@@ -15,10 +15,7 @@ class MarianWrapper:
             self.opus_engine = opus_engine
             self.src_lang_3 = src_lang_3
             self.trg_lang_3 = trg_lang_3
-            
-            print("MARIAN WRAPPER MODEL USED ----")
-            print(self.model)
-            print("MARIAN WRAPPER MODEL USED ----")
+
         except Exception as ex:
             print("Exception in MarianWrapper init ----")
             print(ex, flush = True)
@@ -82,6 +79,11 @@ class MarianWrapper:
                     output_tmp.name,
                 )
             )
+
+            print("______________________________", flush = True)
+            print("TRANSLATING LINE WITH COMMAND:", flush = True)
+            print(marian_cmd, flush = True)
+            print("______________________________", flush = True)
 
             try:
                 subprocess.run(marian_cmd, shell=True, capture_output=True, check=True)
@@ -148,6 +150,11 @@ class MarianWrapper:
                     output_path,
                 )
             )
+
+            print("______________________________", flush = True)
+            print("TRANSLATING FILE WITH COMMAND:", flush = True)
+            print(marian_cmd, flush = True)
+            print("______________________________", flush = True)
 
             try:
                 subprocess.run(marian_cmd, shell=True, capture_output=True, check=True)

@@ -27,7 +27,7 @@ class ToursCollection(object):
                 {
                     'element': 'epochsText',
                     'title': 'Duration',
-                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 7 and 10 epochs in Promut.'
+                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 6 and 10 epochs in Promut.'
                 },
                 {
                     'element': 'patienceGroup',
@@ -37,7 +37,7 @@ class ToursCollection(object):
                 {
                     'element': 'validationFreq',
                     'title': 'Validation frequency',
-                    'description': 'The amount of steps included before an evaluation of the status of the training takes place. Validation cycles happen many times inside an epoch. A validation every 3000 and 9000 steps is what we recommend for Promut.'
+                    'description': 'The amount of steps included before an evaluation of the status of the training takes place. Validation cycles happen many times inside an epoch. A validation every 800 and 1200 steps is what we recommend for Promut depending on dataset size.'
                 },
                 {
                     'element': 'vocabularySizeGroup',
@@ -47,12 +47,72 @@ class ToursCollection(object):
                 {
                     'element': 'batchSizeTxt',
                     'title': 'Batch size',
-                    'description': 'The amount of tokens processed in each step is known as the batch size. This is needed because it is not possible to give the full amount of data in the training set to the neural network at once. Try with batch sizes between 6000 and 9000 tokens with Promut.'
+                    'description': 'The amount of sentences processed in each step is known as the batch size. This is needed because it is not possible to give the full amount of data in the training set to the neural network at once. Try with batch sizes between 32 and 64 sentences with Promut.'
                 },
                 {
                     'element': 'beamSizeTxt',
                     'title': 'Beam size',
                     'description': 'Number of translation hypothesis taken into account when translating a word. Set it between 6 to 8 in Promut.'
+                },
+                {
+                    'element': 'corpus-selector',
+                    'title': 'Corpus selector',
+                    'description': 'You almost have it! The last step is to choose the datasets for the training, validation and test processes. You can choose a whole dataset or just a part of it. When you have it clear, click on the plus sign (+)'
+                }
+            ]
+        },
+        'finetune': {
+            'tour_title': 'It looks like you want to finetune an OPUS engine. Do you want help?',
+            'tooltips': True,
+            'popovers': [
+                {
+                    'element': 'nameText',
+                    'title': 'Name your neural engine'
+                },
+                {
+                    'element': 'source_lang',
+                    'title': 'Source and target languages',
+                    'description': 'Choose the source and target language of your neural engine. Make sure you have datasets available for the selected languages.'
+                },
+                {
+                    'element': 'descriptionText',
+                    'title': 'Description',
+                    'description': 'You can write a brief description about your neural engine. Maybe you can say whether it is a generic or a custom engine.'
+                },
+                {
+                    'element': 'engine_name',
+                    'title': 'Description',
+                    'description': '.'
+                },
+                {
+                    'element': 'epochsText',
+                    'title': 'Duration',
+                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 6 and 10 epochs in Promut.'
+                },
+                {
+                    'element': 'patienceGroup',
+                    'title': 'Stopping condition',
+                    'description': 'Your engine will stop if it does not improve after a set amount of validations. Our tip for Promut is to set it between 3 and 5. You can also stop the engine manually at any time.'
+                },
+                {
+                    'element': 'validationFreq',
+                    'title': 'Validation frequency',
+                    'description': 'The amount of steps included before an evaluation of the status of the training takes place. Validation cycles happen many times inside an epoch. A validation every 800 and 1200 steps is what we recommend for Promut depending on dataset size.'
+                },
+                {
+                    'element': 'vocabularySizeGroup',
+                    'title': 'Vocabulary size',
+                    'description': 'Vocabulary for finetuning is not customizable, as it depends completely on the already generated vocabulary of the downloaded OPUS models.'
+                },
+                {
+                    'element': 'batchSizeTxt',
+                    'title': 'Batch size',
+                    'description': 'Batch sizes for finetuning are not customizable, given the vast size of OPUS models. This is left internally to Marian to optimize batch sizes during training.'
+                },
+                {
+                    'element': 'beamSizeTxt',
+                    'title': 'Beam size',
+                    'description': 'Beam size for finetuning is not customizable, and instead the one set by the OPUS authors in the OPUS model configuration is used.'
                 },
                 {
                     'element': 'corpus-selector',

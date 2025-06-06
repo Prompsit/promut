@@ -434,9 +434,6 @@ def library_export(type, id):
 
 
     if type == "library_engines":
-        print("_____________________________________", flush = True)
-        print("PREPARING ZIP FILE FOR MODEL HERE!!!!!", flush = True)
-
         engine = Engine.query.filter_by(id=id).first()
         
         zip_path = os.path.join(app.config["TMP_FOLDER"], "engine-{}.mut".format(engine.id))

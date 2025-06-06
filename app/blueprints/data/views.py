@@ -138,7 +138,7 @@ def check_opus_corpus():
 
         return jsonify({ "result": 200})
     except Exception as ex:
-        print(ex, flush = True)
+        print("Exception in check_opus_corpus: " + str(ex), flush = True)
         return jsonify({ "result": -2})
 
 @data_blueprint.route('/download-opus-corpus', methods=['POST'])
@@ -192,7 +192,7 @@ def download_opus_corpus():
 
         return jsonify({ "result": 200, "task_id": task.id})
     except Exception as ex:
-        print(ex, flush = True)
+        print("Exception in download_opus_corpus: " + str(ex), flush = True)
         return jsonify({ "result": -2})
     
 
@@ -238,7 +238,7 @@ def check_downloading():
 
         return jsonify({ "result": 200, "finished": finished})
     except Exception as ex:
-        print(ex, flush=True)
+        print("Exception in check_downloading: " + str(ex), flush = True)
         return jsonify({ "result": -1})
 
 from flask import session
@@ -255,8 +255,8 @@ def set_session_data():
         session["dataset"] = dataset
         
         return jsonify({ "result": 200})
-    except Exception as e:
-        print(ex, flush = True)
+    except Exception as ex:
+        print("Exception in set_session_data: " + str(ex), flush = True)
         return jsonify({ "result": -1})
 
 @data_blueprint.route('/get-session-data', methods=['GET'])
@@ -265,5 +265,5 @@ def get_session_data():
     try:
         return jsonify({ "result": 200, "pending_download": session["pending_download"], "dataset": session["dataset"]})
     except Exception as ex:
-        print(ex, flush = True)
+        print("Exception in get_session_data: " + str(ex), flush = True)
         return jsonify({ "result": -1})
