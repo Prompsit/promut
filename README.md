@@ -16,18 +16,17 @@ ProMut preserves former MutNMT features and adds new ones:
 
 * Upload and manage datasets
     * Upload datasets in text, TMX or TSV format
-    * NEW - Upload datasets from the OPUS dataset repository
     * Tag datasets depending on domain
     * Share datasets with other users
+    * NEW - Download datasets from the OPUS dataset repository
 * Train and manage engines
     * Select datasets or a subset of those datasets and train a Transformer model
-    * NEW - Use MarianNMT instead of JoeyNMT as the core MT framework
     * Track progress of the training process with data tables and charts
     * Stop and resume training at anytime
-    * NEW - Continue training engines with new data
     * Manage, share and download engines
     * Inspect engines training log
-    * NEW - Upload Engines from OPUS-MT
+    * NEW - Use MarianNMT instead of JoeyNMT as the core MT framework
+    * NEW - Download Engines from OPUS-MT
 * Translate text and documents
     * Select an already trained engine to translate text or documents (HTML, TMX, PDF and Office formats supported)
 * Inspect an engine
@@ -35,7 +34,7 @@ ProMut preserves former MutNMT features and adds new ones:
     * NEW - Know how to reuse engines in OPUS-CAT
 * Evaluate translations
     * Upload parallel translation files to evaluate them using BLEU, chrF3, TER and TTR metrics
-    * NEW Add COMET as a new metric
+    * NEW Added COMET as a new metric
  
 
 
@@ -43,7 +42,7 @@ ProMut preserves former MutNMT features and adds new ones:
 
 ProMut is provided as a [Docker](https://www.docker.com/) container. This container is based on [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker).
 
-In order to run ProMut, you need access to an NVIDIA GPU. You must install the [necessary drivers](https://github.com/NVIDIA/nvidia-docker/wiki/Frequently-Asked-Questions#how-do-i-install-the-nvidia-driver) on the host machine. Note that you do not need to install the CUDA Toolkit on the host system, but it should be compatible with CUDA 11.
+In order to run ProMut, you need access to an NVIDIA GPU. You must install the [necessary drivers](https://github.com/NVIDIA/nvidia-docker/wiki/Frequently-Asked-Questions#how-do-i-install-the-nvidia-driver) on the host machine. Note that you do not need to install the CUDA Toolkit on the host system, but it should be compatible with CUDA 11+.
 
 ## Roadmap
 
@@ -51,11 +50,10 @@ Building and launching ProMut consists on:
 
 1. Set up preloaded engines
 2. Set up user authentication
-3. Set up user lists: admins and whitelist
-4. Set up proxy fix
+3. Set up proxy fix
+4. Set up user lists: admins and whitelist
 5. Build the Docker image
-6. Decide on data persistance
-7. Launch the container
+6. Launch the container
 
 ## Building ProMut
 
@@ -67,46 +65,56 @@ You can build ProMut with preloaded engines so that users have something to tran
 
 Create the `app/preloaded` folder even if you don't want to include any preloaded engines. This folder is ignored by Docker in order to make build process faster and the image smaller, so it is mounted by default as a volume.
 
-Each engine must be stored in its own folder, and must have been trained with [MarianNMT](https://marian-nmt.github.io/)).
+Engines must be Transformer-based, and must have been trained with [MarianNMT](https://marian-nmt.github.io/)), or preferably downloaded from OPUS.
 ProMut will use the `model/train.log` to retrieve information about the engine, so make sure that file is available.
 
-This is an example of an `app/preloaded` tree with one preloaded engine:
+Each engine must be stored in its own folder, this is an example of an `app/preloaded` tree with one preloaded engine:
 
 ```
 + app/
 |   + preloaded/
 |   |   + transformer-en-es/
-|   |   |    - best.ckpt
 |   |   |    - config.yaml
-|   |   |    - train.model
-|   |   |    - train.vocab
-|   |   |    - validations.txt
+|   |   |    - source.spm
+|   |   |    - target.spm
+|   |   |    - vocab.en.yml
+|   |   |    - vocab.es.yml
 |   |   |    + model/
+|   |   |    |    - model.npz.yml
+|   |   |    |    - model.npz.decoder.yml
+|   |   |    |    - model.npz
 |   |   |    |    - train.log
-|   |   |    |    + tensorboard/
 ```
+
+Any configuration files must have internal relative paths.
 
 ### Multiple user account setup
 
 ProMut provides authentication based on the Google identity server through the OAUTH2 protocol. The procedure of setting such a server in the Google side is a bit complex and Google changes it from time to time, but it can be found [here](https://developers.google.com/identity/protocols/OAuth2UserAgent). Although not official, a useful resource is [this video](https://www.youtube.com/watch?v=A_5zc3DYZfs).
 
-From the process above, you will get at the end two strings, "client ID" and "client secret". You can edit the config.py file in the following way (alternatively, you can create a instance/config.py file with the following content):
+From the process above, you will get at the end a client secret `.json` file containing two strings: "client ID" and "client secret". This json file should be placed in the following path: `/app/base/client-secret.json`.
+
+You can edit the config.py file if you want to change the files name, location, or set ID and secret manually:
 
 ```python
-SECRET_KEY = 'put a random string here'
-DEBUG      = False
-
 USER_LOGIN_ENABLED          = True
-USER_WHITELIST_ENABLED      = False
+ENABLE_NEW_LOGINS           = True
+USER_WHITELIST_ENABLED      = True
+BANNED_USERS                = []
 OAUTHLIB_INSECURE_TRANSPORT = True # True also behind firewall,  False -> require HTTPS
-GOOGLE_OAUTH_CLIENT_ID      = 'xxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com'
-GOOGLE_OAUTH_CLIENT_SECRET  = 'xxxxxxxxxxxxxxx'
-USE_PROXY_FIX               = False
+
+with open(os.path.join(BASE_CONFIG_FOLDER, "client-secret.json"), "r") as file:
+    data = json.load(file)
+
+GOOGLE_OAUTH_CLIENT_ID      = data["web"]["client_id"]
+GOOGLE_OAUTH_CLIENT_SECRET  = data["web"]["client_secret"]
+GOOGLE_USER_DATA_URL        = '/oauth2/v1/userinfo'
+USE_PROXY_FIX = True
 ```
 
 ### Admin accounts
 
-To specify admin accounts, please create a file in `app/lists` called `admin.list`, containing one administrator email per line. The admin accounts will allow you to use admin features. You can set as many as you want.
+To specify admin accounts, please create a file in `app/lists` called `admin.list`, containing one administrator email per line. The admin accounts will allow you to use admin features. You can set as many as you want, and should always have at least one as you won't be able to change other users' roles.
 
 ### Whitelist
 
@@ -118,30 +126,14 @@ Google Authentication may fail to work under some scenarios, for example behind 
 
 ### Good to go!
 
-Once you are ready, build ProMut:
+Once you are ready, build ProMut and run the container:
 
 ```
 docker build -t promut .
+
+docker-compose up -d
 ```
 
 ## Data persistance
 
-Logs, database and user data like datasets or engines are stored inside the container in `/opt/promut/data`. This folder is mounted in `./data` by default, so that it persists in case of removing the container. Make sure to create the `./data` folder in the project's directory if it does not exist.
-
-## Launching the container
-
-The [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) image this container is based on is not compatible with [docker-compose](https://docs.docker.com/compose/). A script to run ProMut is provided to make launching the container easier:
-
-```
-./run.sh cuda 5000 promut:latest
-```
-
-This will setup ProMut to run on port `5000`.
-
-## Database
-
-If it is the first time you run ProMut, make sure to update your database:
-
-```
-docker exec promut bash -c "cd /opt/promut/app/ && source ../venv/bin/activate && FLASK_APP=../app flask db upgrade"
-```
+Logs, database and user data like datasets or engines are stored inside the container in `/opt/promut/data`. This folder is mounted in `./data` by default, so that it persists in case of removing the container. Make sure to create the `./data` folder in the project's directory if it does not exist after running the container.
