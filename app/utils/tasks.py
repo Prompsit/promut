@@ -881,8 +881,9 @@ def inspect_details(self, user_id, engine_id, line):
             use_opus_way = app.config['USE_OPUS_HANDLING']
 
             if use_opus_way:
-
-                line_tok = tokenizer.tokenize(line, use_opus_way = use_opus_way)
+                line = line.split("\n")[0]
+                
+                line_tok = tokenizer.tokenize([line], use_opus_way = use_opus_way)
 
                 n_best = translator.translate([line], n_best=True, engine_path = engine.path, use_opus_way = use_opus_way)
 
@@ -895,15 +896,16 @@ def inspect_details(self, user_id, engine_id, line):
                     "source": engine.source.code,
                     "target": engine.target.code,
                     "preproc_input": line_tok,
-                    "preproc_output": tokenizer.tokenize(sentences[0], use_opus_way = use_opus_way),
+                    "preproc_output": tokenizer.tokenize([sentences[0]], use_opus_way = use_opus_way),
                     "nbest": sentences,
                     "alignments": [],
                     "postproc_output": sentences[0],
                 }
 
             else:
+                line = line.split("\n")[0]
                 tokenizer.load()
-                line_tok = tokenizer.tokenize(line)
+                line_tok = tokenizer.tokenize([line])
                 n_best = translator.translate([line], n_best=True)
                 sentences = []
                 for sent in n_best:
@@ -914,7 +916,7 @@ def inspect_details(self, user_id, engine_id, line):
                     "source": engine.source.code,
                     "target": engine.target.code,
                     "preproc_input": line_tok,
-                    "preproc_output": tokenizer.tokenize(sentences[0]),
+                    "preproc_output": tokenizer.tokenize([sentences[0]]),
                     "nbest": sentences,
                     "alignments": [],
                     "postproc_output": sentences[0],

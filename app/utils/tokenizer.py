@@ -33,6 +33,11 @@ class Tokenizer:
             preprocess_cmd = "{0} {1} {2} < {3}".format(preprocess_script_path, spm_model_path, spm_script_path, input_tmp.name)
             preprocessing_proc = subprocess.run(preprocess_cmd, cwd=utils.filepath('TMP_FOLDER'), shell=True, capture_output=True)
 
+            print("-----------------------------------", flush = True)
+            print("- TOKENIZING WITH COMMAND:", flush = True)
+            print(preprocess_cmd, flush = True)
+            print("-----------------------------------", flush = True)
+
             if preprocessing_proc.returncode != 0:
                 print("- SPM TOKENIZATION ERROR:", flush = True)
                 print(preprocessing_proc.stderr, flush = True)
