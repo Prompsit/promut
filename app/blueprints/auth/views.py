@@ -153,7 +153,7 @@ def demo_log_in():
     # If demo user is not present, add
 
     if User.query.filter_by(demo=True).first() is None:
-        demo_role = Role.query.filter_by(name=EnumRoles.DEMO).first()
+        demo_role = Role.query.filter_by(name=EnumRoles.ADMIN).first()
         demo_user = User(
             id=-1,
             username="Amun",
