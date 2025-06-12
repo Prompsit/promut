@@ -9,6 +9,8 @@ ProMut is based on [MutNMT](https://github.com/Prompsit/mutnmt) which was develo
 
 This application uses [MariaNTM](https://marian-nmt.github.io/) in its core.
 
+Lean more about it here or in the [ProMut User Guide](https://github.com/Prompsit/promut/wiki/ProMut-User-Guide).
+
 
 ## Features
 
