@@ -56,11 +56,11 @@ class Config(object):
     BANNED_USERS                = []
     OAUTHLIB_INSECURE_TRANSPORT = True # True also behind firewall,  False -> require HTTPS
 
-    with open(os.path.join(BASE_CONFIG_FOLDER, "client-secret.json"), "r") as file:
-        data = json.load(file)
+    #with open(os.path.join(BASE_CONFIG_FOLDER, "client-secret.json"), "r") as file:
+    #    data = json.load(file)
 
-    GOOGLE_OAUTH_CLIENT_ID      = data["web"]["client_id"]
-    GOOGLE_OAUTH_CLIENT_SECRET  = data["web"]["client_secret"]
+    #GOOGLE_OAUTH_CLIENT_ID      = data["web"]["client_id"]
+    #GOOGLE_OAUTH_CLIENT_SECRET  = data["web"]["client_secret"]
     GOOGLE_USER_DATA_URL        = '/oauth2/v1/userinfo'
     USE_PROXY_FIX = True
 

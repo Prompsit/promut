@@ -121,6 +121,9 @@ $(document).ready(function () {
         let formData = new FormData();
         formData.append("source_lang", $(".source_lang_search option:selected").val());
         formData.append("target_lang", $(".target_lang_search option:selected").val());
+        
+        formData.append("source_lang_code_custom", $("#sourceCustomLangCodeOpus option:selected").val());
+        formData.append("source_lang_name_custom", $("#sourceCustomLangNameOpus option:selected").val());
 
         $(".searching-corpora").removeClass("d-none");
 
@@ -258,6 +261,8 @@ $(document).ready(function () {
             formData.append("corpus", rowData[0])
             formData.append("source_lang", $(".source_lang_search option:selected").val());
             formData.append("target_lang", $(".target_lang_search option:selected").val());
+            formData.append("source_lang_custom", $(".source_lang_search_custom option:selected").val());
+            formData.append("source_lang_name_custom", $(".source_lang_search_custom option:selected").text());
             // Disable button during download
             button.prop('disabled', true);
             button.text('Downloading...');

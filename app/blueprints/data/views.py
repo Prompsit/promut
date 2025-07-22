@@ -97,6 +97,26 @@ def get_opus_corpora_by_langs():
     src_lang = request.form.get('source_lang')
     trg_lang = request.form.get('target_lang')
 
+    src_lang_code_custom = request.form.get('source_lang_code_custom')
+    trg_lang_code_custom = request.form.get('target_lang_code_custom')
+
+    print("--------------------", flush = True)
+    print("- real")
+    print(f"src: {src_lang}", flush = True)
+    print(f"trg: {trg_lang}", flush = True)
+    print("--------------------", flush = True)
+    print("--------------------", flush = True)
+    print("- custom")
+    print(f"src: {src_lang_code_custom}", flush = True)
+    print(f"trg: {trg_lang_code_custom}", flush = True)
+    print("--------------------", flush = True)
+    
+    if src_lang_code_custom:
+        src_lang = src_lang_code_custom
+    
+    if trg_lang_code_custom:
+        trg_lang = trg_lang_code_custom
+
     full_url = f"http://opus.nlpl.eu/opusapi/?&source={src_lang}&target={trg_lang}&preprocessing=moses&version=latest"
     data = requests.get(full_url)
 
@@ -148,6 +168,13 @@ def download_opus_corpus():
         src_lang = request.form.get('source_lang')
         trg_lang = request.form.get('target_lang')
         corpus = request.form.get('corpus')
+
+        src_lang_code_custom = request.form.get('source_lang_code_custom')
+        src_lang_name_custom = request.form.get('source_lang_name_custom')
+
+        if src_lang_code_custom:
+            src_lang = src_lang_code_custom
+            custom_lang = user_utils.add_custom_language(src_lang_code_custom, src_lang_name_custom)
 
         data = requests.get(f"http://opus.nlpl.eu/opusapi/?corpus={corpus}&source={src_lang}&target={trg_lang}&preprocessing=moses&version=latest")
         output = data.json()

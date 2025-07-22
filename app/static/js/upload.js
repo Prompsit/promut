@@ -51,6 +51,7 @@ $(document).ready(function() {
         $(other).removeClass('target-col-disabled')
     });
 
+    // custom language switch for uploading
     $('.lang-mode-switch').on('click', function(e) {
         e.preventDefault();
 
@@ -63,6 +64,24 @@ $(document).ready(function() {
             $(`#${target}CustomLangs`).addClass('d-none');
 
             $(`#${target}CustomLangs input`).each(function(i, el) {
+                $(el).val('');
+            });
+        }
+    });
+
+    // custom language switch for opus
+    $('.lang-mode-switch-opus').on('click', function(e) {
+        e.preventDefault();
+
+        const target = $(this).hasClass('lang-mode-switch-source-opus') ? 'source' : 'target';
+        if ($(this).hasClass('lang-mode-to-custom-opus')) {
+            $(`#${target}DefaultLangsOpus`).addClass('d-none');
+            $(`#${target}CustomLangsOpus`).removeClass('d-none');
+        } else {
+            $(`#${target}DefaultLangsOpus`).removeClass('d-none');
+            $(`#${target}CustomLangsOpus`).addClass('d-none');
+
+            $(`#${target}CustomLangsOpus input`).each(function(i, el) {
                 $(el).val('');
             });
         }

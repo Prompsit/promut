@@ -253,14 +253,36 @@
   <form class="search-opus-corpora-form mb-4 " action="{{ url_for('data.get_opus_corpora_by_langs') }}"
     enctype="multipart/form-data" method="post">
     <div style="display: flex;">
-      <div id="sourceSearchLangs" class="lang-dropdown-container">
+      <div id="sourceSearchLangsOpus" class="lang-dropdown-container">
         <label for="source_lang_search">Source language</label>
+        <a title="Switch to custom language" aria-label="Switch to custom language" href="#" role="button"
+          class="lang-mode-switch-opus lang-mode-switch-source-opus lang-mode-to-custom-opus">
+          <i class="fas fa-sliders-h"></i>
+        </a>
         <select class="custom-select mb-2 lang_sel_opus source_lang_search" name="source_lang_search">
           {% for language in languages %}
           <option value="{{ language.code }}">{{ language.name }}</option>
           {% endfor %}
         </select>
+        <div id="sourceCustomLangsOpus" class="d-none">
+          <div class="d-flex align-items-center justify-content-between">
+            <label for="sourceCustomLangCodeOpus">Custom source language</label>
+
+            <a title="Switch to custom language" aria-label="Switch to default languages" href="#"
+              role="button" class="lang-mode-switch-opus lang-mode-switch-source-opus lang-mode-to-default-opus">
+              <i class="fas fa-sliders-h"></i>
+            </a>
+          </div>
+          <div class="input-group">
+            <input type="text" class="form-control" name="sourceCustomLangCodeOpus" id="sourceCustomLangCodeOpus"
+              placeholder="EG" style="flex: 0 1 25%;" maxlength="3" />
+
+            <input type="text" class="form-control" name="sourceCustomLangNameOpus" id="sourceCustomLangNameOpus"
+              placeholder="Hieroglyphs" />
+          </div>
+        </div>
       </div>
+
       <div id="targetSearchLangs" class="lang-dropdown-container">
         <label for="target_lang_search">Target language</label>
         <select class="custom-select mb-2 lang_sel_opus target_lang_search" name="target_lang_search">
@@ -269,8 +291,8 @@
           {% endfor %}
           <option value="{{ languages[0].code }}">{{ languages[0].name }}</option>
         </select>
-
       </div>
+
       <input class="btn btn-primary mb-2" style="margin: auto auto 0 0;height: 34px;" type="submit"
         id="submit-dataset-search" value="Search datasets" />
     </div>
