@@ -121,9 +121,12 @@ $(document).ready(function () {
         let formData = new FormData();
         formData.append("source_lang", $(".source_lang_search option:selected").val());
         formData.append("target_lang", $(".target_lang_search option:selected").val());
-        
-        formData.append("source_lang_code_custom", $("#sourceCustomLangCodeOpus option:selected").val());
-        formData.append("source_lang_name_custom", $("#sourceCustomLangNameOpus option:selected").val());
+        formData.append("source_lang_code_custom", $("#sourceCustomLangCodeOpus").val());
+        formData.append("source_lang_name_custom", $("#sourceCustomLangNameOpus").val());
+
+        formData.append("target_lang_code_custom", $("#targetCustomLangCodeOpus").val());
+        formData.append("target_lang_name_custom", $("#targetCustomLangNameOpus").val());
+
 
         $(".searching-corpora").removeClass("d-none");
 
@@ -160,6 +163,7 @@ $(document).ready(function () {
         formData.append("source_lang", $(".source_lang_search option:selected").val());
         formData.append("target_lang", $(".target_lang_search option:selected").val());
 
+
         return $.ajax({
             url: '/data/check-opus-corpus',
             method: 'POST',
@@ -169,16 +173,7 @@ $(document).ready(function () {
             processData: false
         }).promise();
     }
-    // function reloadTableData(round = 1) {
-    //     if (round >= 5) {
-    //         $('#submit-dataset-search').click();
-    //         return;
-    //     }
-    //     setTimeout(() => {
-    //         $(".corpora-table").dataTable().api().ajax.reload();
-    //         reloadTableData(round + 1)
-    //     }, 10000);
-    // }
+
 
 
     async function displayDataTable(dataTableContainer, data) {
@@ -261,13 +256,19 @@ $(document).ready(function () {
             formData.append("corpus", rowData[0])
             formData.append("source_lang", $(".source_lang_search option:selected").val());
             formData.append("target_lang", $(".target_lang_search option:selected").val());
-            formData.append("source_lang_custom", $(".source_lang_search_custom option:selected").val());
-            formData.append("source_lang_name_custom", $(".source_lang_search_custom option:selected").text());
+
+            formData.append("source_lang_code_custom", $("#sourceCustomLangCodeOpus").val());
+            formData.append("source_lang_name_custom", $("#sourceCustomLangNameOpus").val());
+
+            formData.append("target_lang_code_custom", $("#targetCustomLangCodeOpus").val());
+            formData.append("target_lang_name_custom", $("#targetCustomLangNameOpus").val());
+
             // Disable button during download
             button.prop('disabled', true);
             button.text('Downloading...');
             button.addClass('selected-dataset-download')
             $('.download-btn').prop('disabled', true);
+
 
             $.ajax({
                 url: '/data/download-opus-corpus',
