@@ -100,29 +100,13 @@ def get_opus_corpora_by_langs():
     src_lang_code_custom = request.form.get('source_lang_code_custom')
     trg_lang_code_custom = request.form.get('target_lang_code_custom')
 
+    # if either source or target custom language boxes have value,
+    # set the real source/target with said value to search in OPUS
     if src_lang_code_custom:
             src_lang = src_lang_code_custom
 
     if trg_lang_code_custom:
             trg_lang = trg_lang_code_custom
-
-
-    print("--------------------", flush = True)
-    print("- real")
-    print(f"src: {src_lang}", flush = True)
-    print(f"trg: {trg_lang}", flush = True)
-    print("--------------------", flush = True)
-    print("--------------------", flush = True)
-    print("- custom")
-    print(f"src: {src_lang_code_custom}", flush = True)
-    print(f"trg: {trg_lang_code_custom}", flush = True)
-    print("--------------------", flush = True)
-    
-    if src_lang_code_custom:
-        src_lang = src_lang_code_custom
-    
-    if trg_lang_code_custom:
-        trg_lang = trg_lang_code_custom
 
     full_url = f"http://opus.nlpl.eu/opusapi/?&source={src_lang}&target={trg_lang}&preprocessing=moses&version=latest"
     data = requests.get(full_url)
@@ -182,15 +166,15 @@ def download_opus_corpus():
         trg_lang_code_custom = request.form.get('target_lang_code_custom')
         trg_lang_name_custom = request.form.get('target_lang_name_custom')
 
-        print(src_lang, trg_lang, src_lang_code_custom, src_lang_name_custom, "--------------------------", flush=True)
-
+        # if either source or target custom language boxes have value,
+        # set the real source/target with said value and add it to DB
         if src_lang_code_custom:
             src_lang = src_lang_code_custom
             custom_lang = user_utils.add_custom_language(src_lang_code_custom, src_lang_name_custom)
 
         if trg_lang_code_custom:
             trg_lang = trg_lang_code_custom
-            custom_lang = user_utils.add_custom_language(trg_lang_code_custom, trg_lang_name_custom)    
+            custom_lang = user_utils.add_custom_language(trg_lang_code_custom, trg_lang_name_custom)
 
         data = requests.get(f"http://opus.nlpl.eu/opusapi/?corpus={corpus}&source={src_lang}&target={trg_lang}&preprocessing=moses&version=latest")
         output = data.json()
