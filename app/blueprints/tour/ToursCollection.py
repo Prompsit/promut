@@ -27,7 +27,7 @@ class ToursCollection(object):
                 {
                     'element': 'epochsText',
                     'title': 'Duration',
-                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 6 and 10 epochs in Promut.'
+                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 4 and 10 epochs in Promut.'
                 },
                 {
                     'element': 'patienceGroup',
@@ -37,7 +37,7 @@ class ToursCollection(object):
                 {
                     'element': 'validationFreq',
                     'title': 'Validation frequency',
-                    'description': 'The amount of steps included before an evaluation of the status of the training takes place. Validation cycles happen many times inside an epoch. A validation every 800 and 1200 steps is what we recommend for Promut depending on dataset size.'
+                    'description': 'The amount of steps included before an evaluation of the status of the training takes place. Validation cycles happen many times inside an epoch. A validation every 600 and 1200 steps is what we recommend for Promut depending on dataset size.'
                 },
                 {
                     'element': 'vocabularySizeGroup',
@@ -47,7 +47,7 @@ class ToursCollection(object):
                 {
                     'element': 'batchSizeTxt',
                     'title': 'Batch size',
-                    'description': 'The amount of sentences processed in each step is known as the batch size. This is needed because it is not possible to give the full amount of data in the training set to the neural network at once. Try with batch sizes between 32 and 64 sentences with Promut.'
+                    'description': 'The amount of sentences processed in each step is known as the batch size. This is needed because it is not possible to give the full amount of data in the training set to the neural network at once. Try with batch sizes between 16 and 128 sentences with Promut.'
                 },
                 {
                     'element': 'beamSizeTxt',
@@ -77,17 +77,17 @@ class ToursCollection(object):
                 {
                     'element': 'descriptionText',
                     'title': 'Description',
-                    'description': 'You can write a brief description about your neural engine. Maybe you can say whether it is a generic or a custom engine.'
+                    'description': 'You can write a brief description about your neural engine.'
                 },
                 {
                     'element': 'engine_name',
-                    'title': 'Description',
-                    'description': '.'
+                    'title': 'Model',
+                    'description': 'Choose the OPUS model you wish to finetune for the selected language pair. You must have first "grabbed" a public OPUS model in the Engines tab'
                 },
                 {
                     'element': 'epochsText',
                     'title': 'Duration',
-                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 6 and 10 epochs in Promut.'
+                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 4 and 10 epochs in Promut.'
                 },
                 {
                     'element': 'patienceGroup',
@@ -97,7 +97,7 @@ class ToursCollection(object):
                 {
                     'element': 'validationFreq',
                     'title': 'Validation frequency',
-                    'description': 'The amount of steps included before an evaluation of the status of the training takes place. Validation cycles happen many times inside an epoch. A validation every 800 and 1200 steps is what we recommend for Promut depending on dataset size.'
+                    'description': 'The amount of steps included before an evaluation of the status of the training takes place. Validation cycles happen many times inside an epoch. A validation every 600 and 1200 steps is what we recommend for Promut depending on dataset size.'
                 },
                 {
                     'element': 'vocabularySizeGroup',
@@ -116,7 +116,7 @@ class ToursCollection(object):
                 },
                 {
                     'element': 'corpus-selector',
-                    'title': 'Corpus selector',
+                    'title': 'Dataset selector',
                     'description': 'You almost have it! The last step is to choose the datasets for the training, validation and test processes. You can choose a whole dataset or just a part of it. When you have it clear, click on the plus sign (+)'
                 }
             ]
