@@ -34,8 +34,8 @@
 {% if corpora | length == 0 %}
 <div class="jumbotron p-3 text-center">
   <p class="h6 m-0">
-    You need datasets to train an engine. <a href="{{ url_for('library.library_corpora') }}">Upload</a> a dataset or <a
-      href="{{ url_for('library.library_engines') }}">grab</a> an engine
+    You need datasets to train an engine. <a href="{{ url_for('library.library_corpora') }}">Upload</a> or <a
+      href="{{ url_for('library.library_engines') }}">grab</a> a dataset
   </p>
 </div>
 {% else %}
