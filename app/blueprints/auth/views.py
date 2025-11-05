@@ -152,14 +152,14 @@ def demo_log_in():
 
     # If demo user is not present, add
 
-    if User.query.filter_by(demo=True).first() is None:  # quitar el "or True" despues de la primera vez
+    if User.query.filter_by(demo=True).first() is None:
         #demo_role = Role.query.filter_by(name=EnumRoles.DEMO).first()
         demo_role = Role.query.filter_by(name=EnumRoles.ADMIN).first()
         demo_user = User(
-            id=16,
-            username="Amun-Second",
+            id=-1,
+            username="Amun",
             social_id="DEMO",
-            email="demo-second@example.com",
+            email="demo@example.com",
             demo=True,
             avatar_url="/img/profile.png",
             role=demo_role,
@@ -181,8 +181,7 @@ def demo_log_in():
                     db.session.add(user_language)
             db.session.commit()
 
-    #demo_user = User.query.filter_by(demo=True).first()
-    demo_user = User.query.filter_by(id=16).first() ### descomentar esto si haces log out o cierras el navegador
+    demo_user = User.query.filter_by(demo=True).first()
 
     if demo_user:
         login_user(demo_user)
