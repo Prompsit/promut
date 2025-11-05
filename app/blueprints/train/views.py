@@ -195,7 +195,12 @@ def historic_train_graph():
     id = request.form.get('engine_id')
     graph_id = request.form.get('graph_id')
 
-
+    ######
+    ######
+    ######
+    ######
+    ######
+    ######
     stats = {}
 
 
@@ -425,10 +430,15 @@ def train_log():
     dir = request.form.get('order[0][dir]')
 
     engine = Engine.query.filter_by(id = engine_id).first()
-    if engine.model_path:
-        train_log_path = os.path.join(engine.model_path, 'train.log')
-    else:
-        train_log_path = os.path.join(engine.path, 'model/train.log')
+
+    # get the specific training log from the log_id
+    training_log_id = request.form.get('log_id')
+    training_logs = os.path.join(engine.path, "training_logs.yaml")
+
+    # get the training log path from the yaml dict
+    with open(training_logs, "r") as f:
+        train_log_dict = yaml.load(f, Loader = yaml.FullLoader)
+    train_log_path = train_log_dict[int(training_log_id)]
 
     rows = []
     try:

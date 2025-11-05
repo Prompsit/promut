@@ -558,7 +558,11 @@ def add_graph_log(engine_model_path, engine_path):
         dict_path = os.path.join(engine_model_path, "graph_dict.yaml")
         graph_log = os.path.join(engine_path, "graph_logs.yaml")
 
+        log_path = os.path.join(engine_model_path, "train.log")
+        training_log = os.path.join(engine_path, "training_logs.yaml")
+
         if os.path.exists(graph_log):
+            # prepare new graph log
             with open(graph_log, "r") as f:
                 graphs_dict = yaml.load(f, Loader = yaml.FullLoader)
 
@@ -567,12 +571,30 @@ def add_graph_log(engine_model_path, engine_path):
 
             with open(graph_log, "w") as f:
                 yaml.dump(graphs_dict, f)
+
+            # prepare new training log
+            with open(training_log, "r") as f:
+                log_dict = yaml.load(f, Loader = yaml.FullLoader)
+
+            new_index = max(log_dict.keys()) + 1
+            log_dict[new_index] = log_path
+
+            with open(training_log, "w") as f:
+                yaml.dump(log_dict, f)
         else:
+            # write first graph log
             graphs_dict = {}
             graphs_dict[1] = dict_path
 
             with open(graph_log, "w") as f:
                 yaml.dump(graphs_dict, f)
+
+            # write first training log
+            log_dict = {}
+            log_dict[1] = log_path
+
+            with open(training_log, "w") as f:
+                yaml.dump(log_dict, f)
     except:
         logging.exception("An exception was thrown in ADD_GRAPH_LOG!")
 
