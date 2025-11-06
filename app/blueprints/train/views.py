@@ -437,7 +437,7 @@ def train_log():
     if request.form.get('log_id') is not None:
         training_log_id = request.form.get('log_id')
     else:
-        with open(graph_log, "r") as f:
+        with open(training_logs, "r") as f:
             train_log_dict = yaml.load(f, Loader = yaml.FullLoader)
             training_log_id = max(train_log_dict.keys())
 
