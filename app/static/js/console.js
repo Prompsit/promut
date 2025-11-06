@@ -16,8 +16,10 @@ $(document).ready(function () {
         success: function (response) {
             if (!response.stopped) {
                 $('.dashboard-btns').addClass('d-none');
+                $('.log-btns').addClass('d-none');
             } else {
                 $('.dashboard-btns').removeClass('d-none');
+                $('.log-btns').removeClass('d-none');
             }
 
         },
@@ -54,13 +56,19 @@ $(document).ready(function () {
 
     function displayRounds(rounds) {
         if (Object.entries(rounds).length === 1) return;
+        const logsContainer = $(".log-rounds-container");
+        logsContainer.html("");
         const container = $(".rounds-container");
         container.html("");
 
         $(".rounds").removeClass("d-none")
+        $(".log-rounds").removeClass("d-none")
 
         Object.entries(rounds).map((round) => {
             container.append(`<button data-path="${round[0]}" class="ml-2 rounds-btn">${round[0]}</button>`)
+        })
+        Object.entries(rounds).map((round) => {
+            logsContainer.append(`<button data-path="${round[0]}" class="ml-2 log-rounds-btn">${round[0]}</button>`)
         })
     }
 
@@ -72,6 +80,7 @@ $(document).ready(function () {
             dataType: 'json'
         });
     }
+
 
     readYamlFile(userId, engine_id)
         .then(data => {
@@ -89,6 +98,13 @@ $(document).ready(function () {
 
         retrieveTrainingRound(path);
     });
+    $('.log-rounds-container').on('click', '.log-rounds-btn', function () {
+        $(this).addClass('active-round').siblings().removeClass('active-round');
+        const path = $(this).data('path');
+
+        retrieveLogRound(path);
+    });
+
 
     $('.dashboard-btns').on('click', '.full', function () {
         $(this).addClass('active-round').siblings().removeClass('active-round');
@@ -96,6 +112,11 @@ $(document).ready(function () {
         retrieveFullTrainingData(engine_id);
     });
 
+    $('.log-btns').on('click', '.full', function () {
+        $(this).addClass('active-round').siblings().removeClass('active-round');
+
+        retrieveTrainingRound(path);
+    });
 
 
 
@@ -335,6 +356,25 @@ $(document).ready(function () {
             log_table.ajax.reload()
         }
     }, 5000);
+
+    function retrieveLogRound(path) {
+        let log_table = $(".log-table").DataTable({
+            processing: true,
+            serverSide: true,
+            responsive: true,
+            order: [[0, "desc"]],
+            ajax: {
+                url: "../log",
+                method: "post",
+                data: { engine_id: engine_id, log_id: path }
+            },
+            columnDefs: [{
+                targets: [0, 1, 2, 3, 4],
+                responsivePriority: 1
+            }]
+        });
+        log_table.ajax.reload()
+    }
 
 
     function retrieveTrainingRound(path) {

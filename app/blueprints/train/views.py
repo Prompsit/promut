@@ -432,8 +432,14 @@ def train_log():
     engine = Engine.query.filter_by(id = engine_id).first()
 
     # get the specific training log from the log_id
-    training_log_id = request.form.get('log_id')
     training_logs = os.path.join(engine.path, "training_logs.yaml")
+
+    if request.form.get('log_id') is not None:
+        training_log_id = request.form.get('log_id')
+    else:
+        with open(graph_log, "r") as f:
+            train_log_dict = yaml.load(f, Loader = yaml.FullLoader)
+            training_log_id = max(train_log_dict.keys())
 
     # get the training log path from the yaml dict
     with open(training_logs, "r") as f:
@@ -482,7 +488,6 @@ def train_log():
         "recordsFiltered": len(rows_filtered) if search else len(rows),
         "data": rows_filtered if search else final_rows
     })
-
 
 @train_blueprint.route('/attention/<id>')
 @utils.condec(login_required, user_utils.isUserLoginEnabled())

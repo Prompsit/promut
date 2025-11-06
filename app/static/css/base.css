@@ -154,6 +154,7 @@ html {
 
 .chart-grid button,
 .dashboard-btns button,
+.log-btns button,
 .training-failed a {
   padding: 5px 16px;
   border: none;
@@ -165,9 +166,14 @@ html {
 }
 
 .chart-grid button:disabled,
+.log-btns button:disabled,
 .dashboard-btns button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.log-rounds {
+  margin-left: auto;
 }
 
 .chart-grid select {
