@@ -542,11 +542,14 @@ def check_model():
         target_lang_db = UserLanguage.query.filter_by(code=trg_lang, user_id=USER_ID).first()
 
         if source_lang_db and target_lang_db:
-            model_exists = Engine.query.filter_by(user_source_id=source_lang_db.id, 
-                                            user_target_id=target_lang_db.id,
-                                            opus_engine=True).first()
-            if model_exists:
-                return jsonify({"result": -1, "info": "Model already exists"})
+            for engine in Engine.query.all():
+                source_l = UserLanguage.query.filter_by(id=engine.user_source_id).first()
+                target_l = UserLanguage.query.filter_by(id=engine.user_target_id).first()
+                
+                # return if there's a match of source and target codes and model is also opus
+                if source_l.code == src_lang and target_l.code == trg_lang:
+                    if engine.opus_engine:
+                        return jsonify({"result": -1, "info": "Model already exists"})
 
             return jsonify({"result": 200, "info": "Model not in DB"})
 
