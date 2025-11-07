@@ -502,11 +502,18 @@ def train_attention(id):
         return send_file(os.path.join(app.config['BASE_CONFIG_FOLDER'], "attention.png"))
 
 
+# def _train_stop(id, user_stop):
+#     try:
+#         Trainer.stop(id, user_stop=user_stop)
+#         return jsonify({"result": 200, "info": "Model training stopped successfully."})
+#     except:
+#         return jsonify({"result": 500, "info": "Model training couldn not be stopped."})
+
 def _train_stop(id, user_stop):
     Trainer.stop(id, user_stop=user_stop)
     return redirect(url_for('train.train_console', id=id))
 
-@train_blueprint.route('/stop/<id>')
+@train_blueprint.route('/stop/<id>', methods=["POST"])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def train_stop(id):
     if user_utils.is_normal(): return redirect(url_for('index'))

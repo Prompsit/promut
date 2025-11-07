@@ -37,7 +37,7 @@ $(document).ready(function () {
         let timestamp = parseInt($(el).attr("data-started"));
         let now = moment();
         let start = moment.unix(timestamp);
-        start = start.add(2, 'hours');
+        start = start.add(1, 'hours');
         let duration = moment.duration(now.diff(start)).add(elapsed, "seconds")
 
 
@@ -274,6 +274,20 @@ $(document).ready(function () {
     });
 
 
+    // $('.stop-btn').on('click', function () {
+    //     $.ajax({
+    //         url: `../stop/${engine_id}`,
+    //         method: 'POST',
+    //     }).done(function (result) {
+    //         console.log(result.result, "HOLA")
+    //         if (result.result === 200) {
+    //             window.location.reload();
+    //         }
+    //     })
+    // });
+
+
+
 
     /* Train status */
     longpoll(5000, {
@@ -307,7 +321,7 @@ $(document).ready(function () {
         if (data.power_reference) {
             $(".power-reference").html("");
             for (power_ref of data.power_reference) {
-                $(".power-reference").html($(".power-reference").html() + `${power_ref}<br />`)
+                $(".power-reference").html($(".power-reference").html() + `${power_ref} <br/> `)
             }
         }
 
@@ -334,8 +348,10 @@ $(document).ready(function () {
         return data.stopped ? false : true;
     }, true);
 
-    /* Train log */
-    let log_table = $(".log-table").DataTable({
+    let nextLogId = null;
+    let pendingSpecialReload = false;
+
+    const log_table = $(".log-table").DataTable({
         processing: true,
         serverSide: true,
         responsive: true,
@@ -343,7 +359,10 @@ $(document).ready(function () {
         ajax: {
             url: "../log",
             method: "post",
-            data: { engine_id: engine_id }
+            data: function (d) {
+                d.engine_id = engine_id;          // always sent
+                if (nextLogId != null) d.log_id = nextLogId; // only when set
+            }
         },
         columnDefs: [{
             targets: [0, 1, 2, 3, 4],
@@ -352,30 +371,21 @@ $(document).ready(function () {
     });
 
     setInterval(() => {
-        if (log_table.page() == 0 && !engine_stopped) {
-            log_table.ajax.reload()
+        if (log_table.page() === 0 && !engine_stopped && !pendingSpecialReload) {
+            log_table.ajax.reload(null, false); // false: don't reset paging
         }
     }, 5000);
 
-    function retrieveLogRound(path) {
-        let log_table = $(".log-table").DataTable({
-            processing: true,
-            serverSide: true,
-            responsive: true,
-            order: [[0, "desc"]],
-            ajax: {
-                url: "../log",
-                method: "post",
-                data: { engine_id: engine_id, log_id: path }
-            },
-            columnDefs: [{
-                targets: [0, 1, 2, 3, 4],
-                responsivePriority: 1
-            }]
-        });
-        log_table.ajax.reload()
+    function retrieveLogRound(logId) {
+        pendingSpecialReload = true;
+        nextLogId = logId;
+        log_table.ajax.reload(() => {
+            nextLogId = null;
+            pendingSpecialReload = false;
+        }, false);
     }
 
+    $.fn.dataTable.ext.errMode = "none";
 
     function retrieveTrainingRound(path) {
         $.ajax({
