@@ -45,6 +45,8 @@
     z-index: 1;
     overflow: hidden;
     transition: height 0.1s ease;
+    overflow-y: auto;
+    resize: vertical;
 }
 
 
@@ -151,9 +153,9 @@
 
 /* Target status */
 .live-translate-form .engine-status-container .engine-status {
-   display: none;
-   z-index: 3;
-   position: relative;
+    display: none;
+    z-index: 3;
+    position: relative;
 }
 
 .live-translate-form[data-status="launching"] .engine-status-container .engine-launching {
@@ -181,6 +183,13 @@
 }
 
 @keyframes spinner {
-    20%, 80% { transform: rotate(0deg); }
-    50% { transform: rotate(360deg); }
+
+    20%,
+    80% {
+        transform: rotate(0deg);
+    }
+
+    50% {
+        transform: rotate(360deg);
+    }
 }
