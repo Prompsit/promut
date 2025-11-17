@@ -148,9 +148,10 @@ def get_opus_models():
                 source_l = UserLanguage.query.filter_by(id=engine.user_source_id).first()
                 target_l = UserLanguage.query.filter_by(id=engine.user_target_id).first()
                 
-                # get all models that match the source and target codes if they are also opus
+                # get all models that match the source and target codes 
+                # check also if they are opus model and not already finetuned
                 if source_l.code == src_lang and target_l.code == trg_lang:
-                    if engine.opus_engine:
+                    if engine.opus_engine and not engine.finetuned:
                         model_list_query.append(engine)
 
             for model_obj in model_list_query:

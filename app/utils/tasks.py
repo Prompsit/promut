@@ -832,7 +832,7 @@ def launch_engine(user_id, engine_id):
         src_lang_3 = iso639.Lang(source_lang.code).pt3
         trg_lang_3 = iso639.Lang(target_lang.code).pt3
 
-        translator = MarianWrapper(engine.model_path, engine.finetuned, engine.opus_engine, src_lang_3, trg_lang_3)
+        translator = MarianWrapper(engine.model_path, engine.finetuned, engine.opus_engine, src_lang_3, trg_lang_3, source_lang.code, target_lang.code)
 
     return translator
 
@@ -842,6 +842,11 @@ def translate_text(self, user_id, engine_id, lines):
     translations = []
     with app.app_context():
         try:
+            print("_________________", flush = True)
+            print("_________________", flush = True)
+            print("TASKS.TRANSLATE_TEXT", flush = True)
+            print("_________________", flush = True)
+            print("_________________", flush = True)
             engine = Engine.query.filter_by(id=engine_id).first()
             translator = launch_engine(user_id, engine_id)
 
@@ -859,6 +864,12 @@ def translate_text(self, user_id, engine_id, lines):
 @celery.task(bind=True)
 def translate_file(self, user_id, engine_id, user_file_path, as_tmx, tmx_mode):
     with app.app_context():
+        
+        print("_________________", flush = True)
+        print("_________________", flush = True)
+        print("TASKS.TRANSLATE_FILE", flush = True)
+        print("_________________", flush = True)
+        print("_________________", flush = True)
         translator = launch_engine(user_id, engine_id)
         engine = Engine.query.filter_by(id=engine_id).first()
         file_translation = FileTranslation(translator, engine_path = engine.path)

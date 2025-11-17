@@ -27,7 +27,7 @@ class ToursCollection(object):
                 {
                     'element': 'epochsText',
                     'title': 'Duration',
-                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 4 and 10 epochs in Promut.'
+                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 1 and 10 epochs in Promut.'
                 },
                 {
                     'element': 'patienceGroup',
@@ -87,7 +87,7 @@ class ToursCollection(object):
                 {
                     'element': 'epochsText',
                     'title': 'Duration',
-                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 4 and 10 epochs in Promut.'
+                    'description': 'This is the amount of epochs allowed in the training process. An epoch is a full training pass over the whole amount of sentences in the training set. Set it between 1 and 10 epochs in Promut.'
                 },
                 {
                     'element': 'patienceGroup',

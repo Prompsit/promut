@@ -5,9 +5,14 @@ import subprocess
 import os
 import yaml
 
+from sentence_splitter import SentenceSplitter
+
+sentence_splitter_langs = ["ca", "cs", "da", "nl", "en", "fi", "fr", "de", 
+                            "el", "hu", "is", "it", "lv", "lt", "no", "pl", 
+                            "pt", "ro", "ru", "sk", "sl", "es", "sv", "tr"]
 
 class MarianWrapper:
-    def __init__(self, engine_path, finetuned, opus_engine, src_lang_3, trg_lang_3):
+    def __init__(self, engine_path, finetuned, opus_engine, src_lang_3, trg_lang_3, src_lang_2, trg_lang_2):
         try:
             # for inference the model specified in the decoder.yml should be used
             self.model = os.path.join(engine_path, "model.npz.decoder.yml")
@@ -15,6 +20,8 @@ class MarianWrapper:
             self.opus_engine = opus_engine
             self.src_lang_3 = src_lang_3
             self.trg_lang_3 = trg_lang_3
+            self.src_lang = src_lang_2
+            self.trg_lang = trg_lang_2
 
         except Exception as ex:
             print("Exception in MarianWrapper init ----")
@@ -25,7 +32,27 @@ class MarianWrapper:
         output_tmp = tempfile.NamedTemporaryFile(delete=False)
         n_best_flag = "--n-best" if n_best else ""
         input_tmp = tempfile.NamedTemporaryFile(delete=False)
-        lines = [line.rstrip("\n") + "\n" for line in lines]
+        
+        #lines = [line.rstrip("\n") + "\n" for line in lines]
+
+        if self.src_lang in sentence_splitter_langs:
+            sent_spl_l = self.src_lang
+            if self.src_lang == "nn":
+                sent_spl_l = "no"
+        else:
+            sent_spl_l = "en"
+        
+        splitter = SentenceSplitter(language=sent_spl_l)
+        lines = splitter.split(text=" ".join(lines))
+
+        print("@@@@@@@@@@@@@@@@@@@@@@", flush = True)
+        print("@@@@@@@@@@@@@@@@@@@@@@", flush = True)
+        print(f"LANGUAGE: {self.src_lang_3}", flush = True)
+        print(f"LANGUAGE: {self.src_lang_3}", flush = True)
+        for l in lines:
+            print(l, flush = True)
+        print("@@@@@@@@@@@@@@@@@@@@@@", flush = True)
+        print("@@@@@@@@@@@@@@@@@@@@@@", flush = True)
 
         # if this is a multilingual finetuned model that comes from OPUS
         # we have to manually set the target language via a token
@@ -34,8 +61,12 @@ class MarianWrapper:
         #    lines = [f">>{self.trg_lang_3}<< " + line for line in lines]
             MULTILANG_CONCAT = f"| sed 's/^/>>{self.trg_lang_3}<< /'"
 
-        with open(input_tmp.name, "w") as f:
-            f.writelines(lines)
+        #with open(input_tmp.name, "w") as f:
+        #    f.writelines(lines)
+        
+        with open(input_tmp.name, 'w') as f:
+            for line in lines:
+                f.write(f"{line}\n")
 
         if use_opus_way:
             # preprocess.sh spmodel cmake_dir < input > output
@@ -93,13 +124,19 @@ class MarianWrapper:
         with open(output_tmp.name, "r") as temp_file:
             translations = [line.rstrip("\n") for line in temp_file.readlines()]
         
-        os.remove(input_tmp.name)
-        os.remove(output_tmp.name)
+        #os.remove(input_tmp.name)
+        #os.remove(output_tmp.name)
 
         return translations
 
     def translate_file(self, input_path, output_path, n_best = False, engine_path = None, use_opus_way = False):
         n_best_flag = "--n-best" if n_best else ""
+
+        print("_________________", flush = True)
+        print("_________________", flush = True)
+        print("TRANSLATE_FILE", flush = True)
+        print("_________________", flush = True)
+        print("_________________", flush = True)
 
         # if this is a multilingual finetuned model that comes from OPUS
         # we have to manually set the target language via a token

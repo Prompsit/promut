@@ -34,6 +34,15 @@ def translate_text():
     lines = request.form.getlist('text[]')
     detached = True
     translators.set_admin(user_utils.is_admin())
+
+    print("_____________________", flush = True)
+    print("_____________________", flush = True)
+    print("_____________________", flush = True)
+    print(lines, flush = True)
+    print("_____________________", flush = True)
+    print("_____________________", flush = True)
+    print("_____________________", flush = True)
+
     translation_task_id = translators.text(user_utils.get_uid(), engine_id, lines)
 
     return jsonify({ "result": 200, "task_id": translation_task_id })
