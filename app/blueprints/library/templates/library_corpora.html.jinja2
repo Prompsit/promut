@@ -246,7 +246,7 @@
 </form>
 {% endif %}
 
-{% if is_admin() or is_researcher() %}
+{% if is_admin() or is_researcher() or is_expert()%}
 <div class="opus-search-header mb-4">
   <h2><span>Download dataset from OPUS collection</span> <i
       class="fas fa-caret-up header-collapse-icon-opus d-none"></i>
