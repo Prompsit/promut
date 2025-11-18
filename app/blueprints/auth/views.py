@@ -151,15 +151,14 @@ def demo_log_in():
         logout_user()
 
     # If demo user is not present, add
-
     if User.query.filter_by(demo=True).first() is None:
         #demo_role = Role.query.filter_by(name=EnumRoles.DEMO).first()
-        demo_role = Role.query.filter_by(name=EnumRoles.ADMIN).first()
+        demo_role = Role.query.filter_by(name=EnumRoles.EXPERT).first()
         demo_user = User(
-            id=-1,
+            id=1,
             username="Amun",
             social_id="DEMO",
-            email="demo@example.com",
+            email="demo-second@example.com",
             demo=True,
             avatar_url="/img/profile.png",
             role=demo_role,
