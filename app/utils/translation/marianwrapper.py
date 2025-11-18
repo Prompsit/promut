@@ -45,24 +45,12 @@ class MarianWrapper:
         splitter = SentenceSplitter(language=sent_spl_l)
         lines = splitter.split(text=" ".join(lines))
 
-        print("@@@@@@@@@@@@@@@@@@@@@@", flush = True)
-        print("@@@@@@@@@@@@@@@@@@@@@@", flush = True)
-        print(f"LANGUAGE: {self.src_lang_3}", flush = True)
-        print(f"LANGUAGE: {self.src_lang_3}", flush = True)
-        for l in lines:
-            print(l, flush = True)
-        print("@@@@@@@@@@@@@@@@@@@@@@", flush = True)
-        print("@@@@@@@@@@@@@@@@@@@@@@", flush = True)
-
         # if this is a multilingual finetuned model that comes from OPUS
         # we have to manually set the target language via a token
         MULTILANG_CONCAT = ""
         if self.finetuned or self.opus_engine:
         #    lines = [f">>{self.trg_lang_3}<< " + line for line in lines]
             MULTILANG_CONCAT = f"| sed 's/^/>>{self.trg_lang_3}<< /'"
-
-        #with open(input_tmp.name, "w") as f:
-        #    f.writelines(lines)
         
         with open(input_tmp.name, 'w') as f:
             for line in lines:
@@ -124,19 +112,13 @@ class MarianWrapper:
         with open(output_tmp.name, "r") as temp_file:
             translations = [line.rstrip("\n") for line in temp_file.readlines()]
         
-        #os.remove(input_tmp.name)
-        #os.remove(output_tmp.name)
+        os.remove(input_tmp.name)
+        os.remove(output_tmp.name)
 
         return translations
 
     def translate_file(self, input_path, output_path, n_best = False, engine_path = None, use_opus_way = False):
         n_best_flag = "--n-best" if n_best else ""
-
-        print("_________________", flush = True)
-        print("_________________", flush = True)
-        print("TRANSLATE_FILE", flush = True)
-        print("_________________", flush = True)
-        print("_________________", flush = True)
 
         # if this is a multilingual finetuned model that comes from OPUS
         # we have to manually set the target language via a token

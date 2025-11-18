@@ -842,11 +842,6 @@ def translate_text(self, user_id, engine_id, lines):
     translations = []
     with app.app_context():
         try:
-            print("_________________", flush = True)
-            print("_________________", flush = True)
-            print("TASKS.TRANSLATE_TEXT", flush = True)
-            print("_________________", flush = True)
-            print("_________________", flush = True)
             engine = Engine.query.filter_by(id=engine_id).first()
             translator = launch_engine(user_id, engine_id)
 
