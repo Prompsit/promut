@@ -127,6 +127,8 @@ def training_failed(task_id):
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def get_opus_models():
     model_list = []
+    print(f"", flush = True)
+    print(f"---------------------------------", flush = True)
 
     try:
         USER_ID = user_utils.get_uid()

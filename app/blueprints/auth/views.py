@@ -139,6 +139,21 @@ def google_logged_in(blueprint, token):
             flash(_("User temporary banned"), "danger")
             return False
 
+        # Add languages to user
+        with open(
+            os.path.join(app.config["MUTNMT_FOLDER"], "scripts/langs.txt")
+        ) as langs_file:
+            user_languages_query = UserLanguage.query.filter_by(user_id = demo_user.id).all()
+            user_languages = [lang.code for lang in user_languages_query]
+
+            for line in langs_file:
+                code, name = line.split(",")
+                
+                if code not in user_languages:
+                    user_language = UserLanguage(code=code, name=name, user_id=demo_user.id)
+                    db.session.add(user_language)
+            db.session.commit()
+
         login_user(user)
 
     else:
@@ -180,6 +195,21 @@ def demo_log_in():
             db.session.commit()
 
     demo_user = User.query.filter_by(demo=True).first()
+
+    # Add languages to user
+    with open(
+        os.path.join(app.config["MUTNMT_FOLDER"], "scripts/langs.txt")
+    ) as langs_file:
+        user_languages_query = UserLanguage.query.filter_by(user_id = demo_user.id).all()
+        user_languages = [lang.code for lang in user_languages_query]
+
+        for line in langs_file:
+            code, name = line.split(",")
+            
+            if code not in user_languages:
+                user_language = UserLanguage(code=code, name=name, user_id=demo_user.id)
+                db.session.add(user_language)
+        db.session.commit()
 
     if demo_user:
         login_user(demo_user)
