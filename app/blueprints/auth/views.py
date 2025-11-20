@@ -143,14 +143,14 @@ def google_logged_in(blueprint, token):
         with open(
             os.path.join(app.config["MUTNMT_FOLDER"], "scripts/langs.txt")
         ) as langs_file:
-            user_languages_query = UserLanguage.query.filter_by(user_id = demo_user.id).all()
+            user_languages_query = UserLanguage.query.filter_by(user_id = user.id).all()
             user_languages = [lang.code for lang in user_languages_query]
 
             for line in langs_file:
                 code, name = line.split(",")
                 
                 if code not in user_languages:
-                    user_language = UserLanguage(code=code, name=name, user_id=demo_user.id)
+                    user_language = UserLanguage(code=code, name=name, user_id=user.id)
                     db.session.add(user_language)
             db.session.commit()
 
