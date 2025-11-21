@@ -92,8 +92,6 @@ def google_logged_in(blueprint, token):
             db.session.add(user)
             db.session.commit()
 
-            print("New user created")
-
             # Create user filesystem
             user_path = os.path.join(app.config["USERS_FOLDER"], "{}".format(user.id))
             os.mkdir(user_path)
@@ -120,17 +118,18 @@ def google_logged_in(blueprint, token):
 
         # Update admins
         for i in app.config["ADMINS"]:
-            try:
-                user_exists = User.query.filter(User.email == i).one()
+            if i == user.email:
+                try:
+                    user_exists = User.query.filter(User.email == i).one()
 
-                admin_role = Role.query.filter_by(name=EnumRoles.ADMIN).first()
-                user.admin = True
-                user.role = admin_role
-                db.session.commit()
+                    admin_role = Role.query.filter_by(name=EnumRoles.ADMIN).first()
+                    user.admin = True
+                    user.role = admin_role
+                    db.session.commit()
 
-            except Exception as ex:
-                print("Exception adding the user as admin: " + str(ex), flush = True)
-                pass
+                except Exception as ex:
+                    print("Exception adding the user as admin: " + str(ex), flush = True)
+                    pass
 
         db.session.commit()
 
@@ -169,7 +168,7 @@ def demo_log_in():
     if User.query.filter_by(demo=True).first() is None:
         demo_role = Role.query.filter_by(name=EnumRoles.DEMO).first()
         demo_user = User(
-            id=1,
+            id=-1,
             username="Amun",
             social_id="DEMO",
             email="demo-second@example.com",
