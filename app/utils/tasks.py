@@ -1112,7 +1112,7 @@ def spl(mt_path, ht_path, source_path):
         if gpu_id is not None:
             device_command = f"-d {gpu_id}"
 
-            comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl {4} --workspace 3000 --mini-batch 1".format(mt_path, src_path, ht_path, mt_path, device_command),
+            comet = subprocess.run("pymarian-eval -m wmt22-comet-da -l comet -t {0} {1} -r {2} -o {3}.cpl {4} --workspace 4000 --mini-batch 1".format(mt_path, src_path, ht_path, mt_path, device_command),
                                     shell=True, stdout=subprocess.PIPE)
 
             GPUManager.free_device(gpu_id)
