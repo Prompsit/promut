@@ -189,6 +189,7 @@ class Corpus_Engine(db.Model):
 
 class User(UserMixin, db.Model):
     __tablename__   = 'user'
+    __table_args__ = {'sqlite_autoincrement': True}
     id              = db.Column(db.Integer, primary_key=True)
     username        = db.Column(db.String(250))
     social_id       = db.Column(db.String(250))
