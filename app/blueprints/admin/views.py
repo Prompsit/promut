@@ -5,6 +5,7 @@ from app import db, app
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from flask_login import login_required
 from markupsafe import escape
+from app.utils.roles import EnumRoles
 
 import shutil
 import psutil
@@ -83,9 +84,10 @@ def user_datatables_feed():
 
     user_data = []
     for user in (rows_filtered if search else rows):
-        user_data.append([user.id, user.username, user.email,
-                          user.role.name,
-                          user.notes, ''])
+        if user.role.name != EnumRoles.DELETED_USER:
+            user_data.append([user.id, user.username, user.email,
+                            user.role.name,
+                            user.notes, ''])
 
     return dt.response(rows, rows_filtered, user_data)
 
@@ -180,7 +182,11 @@ def delete_user():
          
         if os.path.isdir(user_utils.get_user_folder(user_id=id)):
             shutil.rmtree(user_utils.get_user_folder(user_id=id))
-        db.session.delete(user)
+        
+        # Update the DB with the "deleted" user info
+        user.email = f"deleted_user_email{user.id}"
+        user.social_id = f"deleted_user_social_id{user.id}"
+        user.role = Role.query.filter_by(name=EnumRoles.DELETED_USER).first()
         db.session.commit()
         return jsonify({ "result": 200})
     except Exception as ex:

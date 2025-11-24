@@ -9,6 +9,7 @@ class EnumRoles(str, Enum):
     EXPERT = "Expert"
     RESEARCHER = "Researcher"
     DEMO = "Demo"
+    DELETED_USER = "Deleted"
     
     def __str__(self) -> str:
         """Return string representation of a EnumRoles object.
