@@ -36,14 +36,6 @@ if app.config["OAUTHLIB_INSECURE_TRANSPORT"]:
 login_manager.login_view = "google.login"
 login_manager.login_message = ""
 
-
-@auth_blueprint.route("/logout")
-@utils.condec(login_required, user_utils.isUserLoginEnabled())
-def logout():
-    logout_user()
-    return redirect(url_for("index"))
-
-
 google_blueprint = make_google_blueprint(
     scope=[
         "openid",
@@ -55,6 +47,25 @@ google_blueprint = make_google_blueprint(
 if user_utils.isUserLoginEnabled():
     app.register_blueprint(google_blueprint, url_prefix="/auth")
     google_blueprint.storage = SQLAlchemyStorage(OAuth, db.session, user=current_user)
+
+
+@auth_blueprint.route("/logout")
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def logout():
+    logout_user()
+    return redirect(url_for("index"))
+
+@auth_blueprint.route("/verify_user")
+@utils.condec(login_required, user_utils.isUserLoginEnabled())
+def verify_user():
+    session_email = request.form.get('session_email')
+    user = User.query.filter_by(id=user_utils.get_uid()).first()
+
+    if user.email != session_email:
+        logout_user()
+        return redirect(url_for("index"))
+
+    return jsonify({ "result": 200})
 
 
 @oauth_authorized.connect_via(google_blueprint)
