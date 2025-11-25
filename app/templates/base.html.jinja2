@@ -15,7 +15,9 @@
   <script>
     var isResearcher = "{{ is_researcher() }}";
     var isAdmin = "{{ is_admin() }}";
+    var isExpert = "{{ is_expert() }}"
     var userId = "{{ get_uid() }}"
+    var current_user_email = "{{ current_user.email}}"
   </script>
 </head>
 <body>

@@ -55,10 +55,10 @@ def logout():
     logout_user()
     return redirect(url_for("index"))
 
-@auth_blueprint.route("/verify_user")
+@auth_blueprint.route("/verify_user", methods=['POST'])
 @utils.condec(login_required, user_utils.isUserLoginEnabled())
 def verify_user():
-    session_email = request.form.get('session_email')
+    session_email = request.form.get("session_email")
     user = User.query.filter_by(id=user_utils.get_uid()).first()
 
     if user.email != session_email:

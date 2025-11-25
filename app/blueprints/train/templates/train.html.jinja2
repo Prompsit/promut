@@ -16,7 +16,7 @@
 
 
 
-{% if not is_admin() and not is_researcher()%}
+{% if is_normal() %}
 <div class="alert alert-warning alert-dismissible fade show" role="alert">
   <strong>Beginner users cannot train engines</strong>
   <br />
