@@ -273,22 +273,6 @@ $(document).ready(function () {
         })
     });
 
-
-    // $('.stop-btn').on('click', function () {
-    //     $.ajax({
-    //         url: `../stop/${engine_id}`,
-    //         method: 'POST',
-    //     }).done(function (result) {
-    //         console.log(result.result, "HOLA")
-    //         if (result.result === 200) {
-    //             window.location.reload();
-    //         }
-    //     })
-    // });
-
-
-
-
     /* Train status */
     longpoll(5000, {
         url: `../train_status`,

@@ -73,17 +73,19 @@
 
     <div class="row mt-3">
       <div class="col-12 mb-3">
-        <strong><i class="fas fa-file"></i> Engine corpora</strong>
+        <strong><i class="fas fa-file"></i> Engine datasets</strong>
       </div>
 
       <div class="col-6 col-sm-4 mb-4">
         <div class="h6"><i class="fas fa-file-alt"></i> Training</div>
-        {% for corpus, selected_size in corpora['train'] %}
-        <a href="{{ url_for('library.corpora_preview', id=corpus.id) }}"
-          title="{{ corpus.name }} ({{ corpus.source.name }} - {{ corpus.target.name }}, {{ corpus.lines(human=True, abbr=False)}} lines)">
-          {{ corpus.name }} ({{ corpus.source.code }}-{{ corpus.target.code }}, {{ selected_size }})
-        </a>
-        {% endfor %}
+        <ul style="margin: 0; padding-left: 1.25rem; list-style: disc; line-height: 1.6;">
+          {% for corpus, selected_size in corpora['train'] %}
+          <a href="{{ url_for('library.corpora_preview', id=corpus.id) }}"
+            title="{{ corpus.name }} ({{ corpus.source.name }} - {{ corpus.target.name }}, {{ corpus.lines(human=True, abbr=False)}} lines)">
+            <li> {{ corpus.name }} ({{ corpus.source.code }}-{{ corpus.target.code }}, {{ selected_size }})</li>
+          </a>
+          {% endfor %}
+        </ul>
       </div>
       <div class="col-6 col-sm-4 mb-4">
         <div class="h6"><i class="fas fa-file-alt"></i> Validation</div>
