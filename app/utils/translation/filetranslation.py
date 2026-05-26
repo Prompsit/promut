@@ -11,6 +11,7 @@ import re
 import shutil
 import glob
 import subprocess
+import uuid
 
 class FileTranslation:
     def __init__(self, translator, engine_path = None):
@@ -166,20 +167,33 @@ class FileTranslation:
             source_lang = engine.source.code
             target_lang = engine.target.code
 
+            XML_NS = "http://www.w3.org/XML/1998/namespace"
+
             with open(os.path.join(app.config['BASE_CONFIG_FOLDER'], 'base.tmx'), 'r') as tmx_file:
                 tmx = etree.parse(tmx_file, etree.XMLParser())
-                body = tmx.getroot().find("body")
+                root = tmx.getroot()
+
+                header = root.find("header")
+                header.set("srclang", source_lang)
+
+                body = root.find("body")
+
                 for sentence in sentences:
                     tu = etree.Element("tu")
+                    tu.set("tuid", str(uuid.uuid4()))
 
-                    tuv_source = etree.Element("tuv", { etree.QName("http://www.w3.org/XML/1998/namespace", "lang"): source_lang })
+                    tuv_source = etree.Element("tuv")
+                    tuv_source.set(f"{{{XML_NS}}}lang", source_lang)
+
                     seg_source = etree.Element("seg")
                     seg_source.text = sentence.get('source')
                     tuv_source.append(seg_source)
                     tu.append(tuv_source)
 
                     for target_sentence in sentence.get('target'):
-                        tuv_target = etree.Element("tuv", { etree.QName("http://www.w3.org/XML/1998/namespace", "lang"): target_lang })
+                        tuv_target = etree.Element("tuv")
+                        tuv_target.set(f"{{{XML_NS}}}lang", target_lang)
+
                         seg_target = etree.Element("seg")
                         seg_target.text = target_sentence
                         tuv_target.append(seg_target)
@@ -187,13 +201,13 @@ class FileTranslation:
 
                     body.append(tu)
 
-            tmx_path = utils.tmpfile('{}.{}-{}.tmx'.format(user_id, engine.source.code, engine.target.code))
-            tmx.write(tmx_path, encoding="UTF-8", xml_declaration=True)
+            tmx_path = utils.tmpfile(f'{user_id}.{source_lang}-{target_lang}.tmx')
+            tmx.write(tmx_path, encoding="UTF-8", xml_declaration=True, pretty_print=True)
 
-            format_proc = subprocess.Popen("xmllint --format {} > {}.format".format(tmx_path, tmx_path), shell=True)
-            format_proc.wait()
-
-            shutil.move("{}.format".format(tmx_path), tmx_path)
+            subprocess.run(
+                ["xmllint", "--format", tmx_path, "-o", tmx_path],
+                check=False
+            )
 
             return tmx_path
 
