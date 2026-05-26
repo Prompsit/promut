@@ -25,7 +25,7 @@ importlib_metadata
 markupsafe
 pyter3
 xlsxwriter
-namegenerator
+names-generator
 psutil
 pymarian
 chardet

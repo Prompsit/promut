@@ -10,7 +10,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, jsonif
 from flask_login import login_required, current_user
 from sqlalchemy import func
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-import namegenerator
+from names_generator import generate_name
 import datetime
 from werkzeug.datastructures import FileStorage
 from celery.result import AsyncResult
@@ -46,10 +46,10 @@ def train_index():
     if (len(currently_launching) > 0): 
         return redirect(url_for('train.train_launching', task_id=currently_launching[0].bg_task_id))
 
-    random_name = namegenerator.gen()
+    random_name = generate_name()
     tryout = 0
     while len(Engine.query.filter_by(name = random_name).all()):
-        random_name = namegenerator.gen()
+        random_name = generate_name()
         tryout += 1
 
         if tryout >= 5:
