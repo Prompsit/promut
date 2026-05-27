@@ -42,7 +42,7 @@ $(document).ready(function () {
 
     $(".btn-as-tmx").on("click", function (e) {
         e.preventDefault();
-
+        $('.tmx-download-preparing').removeClass("d-none");
         let text = [];
         for (let line of $('.live-translate-source').val().split('\n')) {
             text.push(line)
@@ -63,6 +63,7 @@ $(document).ready(function () {
                 data: { task_id: task_data.task_id }
             }, (data) => {
                 if (data.result == 200) {
+                    $('.tmx-download-preparing').addClass("d-none");
                     window.location.href = data.url;
                     return false;
                 }
@@ -197,7 +198,7 @@ $(document).ready(function () {
         $(this).closest(".custom-textarea").removeClass("focus");
         $(this).closest(".custom-textarea").find(".custom-textarea-placeholder").removeClass("d-none");
     });
-
+    $('.tmx-download-preparing').addClass("d-none");
     // File translation
     let translate_file = (file) => {
         $('.live-translate-form').attr('data-status', 'file-translating');
