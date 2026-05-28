@@ -27,6 +27,10 @@
     border: solid 2px var(--primary);
 }
 
+.tmx-buttons-area {
+    display: flex;
+}
+
 .custom-textarea .custom-textarea-container {
     padding: 1rem;
     padding-bottom: 2rem;

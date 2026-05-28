@@ -120,10 +120,20 @@
           <textarea readonly name="text" class="live-translate-target" autocomplete="off"></textarea>
         </div>
 
-        <div class="custom-textarea-tools">
+        <div class="custom-textarea-tools tmx-buttons-area">
           <button type=submit class="btn btn-link btn-as-tmx">
             <i class="fas fa-file-download"></i> Text as TMX
           </button>
+          <div class="tmx-status tmx-download-preparing h-100">
+            <div class="d-flex align-items-center justify-content-center w-100 h-100 ml-4">
+              <div class="h3 spinner mr-1 mt-2">
+                <i class="fas fa-cog"></i>
+              </div>
+              <div>
+                <p class="h6 mb-0">Preparing TMX download...</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div
@@ -152,16 +162,7 @@
               </div>
             </div>
           </div>
-          <div class="tmx-status tmx-download-preparing h-100">
-            <div class="d-flex align-items-center justify-content-center w-100 h-100">
-              <div class="h1 spinner mr-3">
-                <i class="fas fa-cog"></i>
-              </div>
-              <div>
-                <p class="h5 mb-0">Preparing TMX download...</p>
-              </div>
-            </div>
-          </div>
+
 
           <div class="engine-status engine-tmx-dialog w-75">
             <div class="tmx-mode-select border rounded border-primary">
